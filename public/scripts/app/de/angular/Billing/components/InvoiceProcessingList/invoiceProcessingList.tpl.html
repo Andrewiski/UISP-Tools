@@ -1,0 +1,31 @@
+﻿<div class="centered" ng-hide="invoiceProcessingListDoneLoading">
+    <h2 class="centered">
+        <span class="fa fa-refresh spin"></span>
+        Loading...
+    </h2>
+</div>
+<div class="container-fluid" ng-show="invoiceProcessingListDoneLoading">
+    <div class="row">
+        <!--<div class="col-xs-1">Select</div>-->
+        <div class="col-xs-2">Processed Date</div>
+        <div class="col-xs-1">Type</div>
+        <div class="col-xs-1">Processed By</div>
+        <div class="col-xs-1">Status</div>
+        <div class="col-xs-1">Total</div>
+        <div class="col-xs-2">Transaction</div>
+        <div class="col-xs-2">Payment</div>
+        <div class="col-xs-2">Shipping</div>
+    </div>
+    <div class="row" ng-repeat="invoiceProcessing in invoiceProcessingList">
+        <!--<div class="col-xs-1"><input type="checkbox" /></div>-->
+        <div class="col-xs-2">{{invoiceProcessing.processedDate | date : 'MM/dd/yyyy hh:mm:ss'}}</div>
+        <div class="col-xs-1"> {{ getStaticName('invoiceProcessingTypeList',invoiceProcessing.invoiceProcessingTypeId)}} </div>
+        <div class="col-xs-1"> {{ invoiceProcessing.processedBy }}</div>
+        <div class="col-xs-1"> {{ getStaticName('invoiceProcessingStatusList',invoiceProcessing.invoiceProcessingStatusId)}} </div>
+        <div class="col-xs-1"> {{ invoiceProcessing.Total | currency  }} </div>
+        <div class="col-xs-2"><a ui-sref="admin.invoiceTransaction({invoiceTransactionGuid: invoiceProcessing.invoiceTransaction.invoiceTransactionGuid})">{{invoiceProcessing.invoiceTransaction.invoiceTransactionGuid}}</a></div>
+        <div class="col-xs-2"><a ui-sref="admin.invoicePayment({invoicePaymentGuid: invoiceProcessing.invoicePayment.invoicePaymentGuid})">{{invoiceProcessing.invoicePayment.invoicePaymentGuid}}</a></div>
+        <div class="col-xs-2"><a ui-sref="admin.invoiceShipping({invoiceShippingGuid: invoiceProcessing.invoiceShipping.invoiceShippingGuid})">{{invoiceProcessing.invoiceShipping.invoiceShippingGuid}}</a></div>
+    </div>
+
+</div>

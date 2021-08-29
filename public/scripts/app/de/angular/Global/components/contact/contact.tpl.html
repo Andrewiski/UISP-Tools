@@ -1,0 +1,95 @@
+﻿<div class="centered" ng-hide="doneLoading">
+    <h2 class="centered">
+        <span class="fa fa-refresh spin"></span>
+        Loading...
+    </h2>
+</div>
+<div class="container" ng-show="doneLoading">
+    <div class="row">
+        <div class="col-md-8 ">
+            <div class="row" ng-show="options.showCompanyName">
+                <div class="col-sm-4">
+                    <div class="form-group" ng-class="{ 'has-error' : contact.companyName.$invalid && companyNameVisited }">
+                        <label class="control-label" for="firstName">Company Name</label>
+                        <input type="text" class="form-control" id="companyName" name="companyName" ng-model="contact.companyName" placeholder="Company Name" required="" ng-blur="companyNameVisited = true;" tabindex="1">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-4">
+                    <div class="form-group" ng-class="{ 'has-error' : contact.firstName.$invalid && firstNameVisited }">
+                        <label class="control-label" for="firstName">First Name</label>
+                        <i class="fas fa-asterisk required"></i>
+                        <input type="text" class="form-control" id="firstName" name="firstName" ng-model="contact.firstName" placeholder="First Name" required="" ng-blur="firstNameVisited = true;" tabindex="1">
+                    </div>
+                </div>
+                <div class="col-sm-4" ng-show="options.showMiddleName">
+                    <div class="form-group">
+                        <label class="control-label" for="middleName">Middle Name</label>
+                        <input type="text" class="form-control" ng-model="contact.middleName" placeholder="Middle Name" tabindex="2">
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="form-group" ng-class="{ 'has-error' : contact.lastName.$invalid && lastNameVisited }">
+                        <label class="control-label" for="lastname">
+                            Last Name
+                        </label>
+                        <i class="fas fa-asterisk required"></i>
+                        <input type="text" class="form-control" name="lastName" ng-model="contact.lastName" placeholder="Last Name" required="" ng-blur="lastNameVisited = true;" tabindex="3">
+                    </div>
+                </div>
+            </div>
+            <div ng-show="options.showEmailAddresses">
+                <div class="row" ng-repeat="emailAddressType in options.showEmailAddressOfType">
+                    <div class="row" ng-repeat="emailaddress in findEmailAddressesByType(contact.emailAddresses, emailAddressType.name, options.showEmptyEmailAddressTypes)">
+                        <div class="col-md-8">
+                            <div data-ctm-email-address data-email-address="emailaddress" id="{{emailAddressType.name + '_' + $index}}"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" ng-show="emailAddressType in options.showEmailAddressOfType">
+                    <div class="row" ng-repeat="emailaddress in findEmailAddressesByType(contact.emailAddresses, emailAddressType.name, options.showEmptyEmailAddressTypes)">
+                        <div class="col-md-8">
+                            <div data-ctm-email-address data-email-address="emailaddress" id="{{emailAddressType.name + '_' + $index}}"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" ng-show="options.showAddEmailAddress">
+                    <div class="col-md-8">
+                        <a href="" ng-click="addEmailAddress()"><span class="fas fa-plus"></span>Email</a>
+                    </div>
+                </div>
+            </div>
+            <!--<div ng-show="options.showPhones">
+                <div class="row" ng-repeat="phoneType in phoneTypes">
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            <label class="control-label" for="{{phoneType.name}}Phone">{{phoneType.name}} Phone</label>
+                            <div data-ctm-address data-address="contact.phones[phoneType.name]"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" ng-show="options.showAddPhone">
+                    <div class="col-md-8">
+                        <a href="" ng-click="addPhone()"><span class="fas fa-plus"></span>Phone</a>
+                    </div>
+                </div>
+            </div>
+            <div ng-show="options.showAddresses">
+                <div class="row" ng-repeat="addressType in AddressTypes">
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            <label class="control-label" for="{{addressType.name}}Address">{{addressType.name}} Address</label>
+                            <div data-ctm-address data-address="contact.addresses[addressType.name]"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" ng-show="options.showAddAddress">
+                    <div class="col-md-8">
+                        <a href="" ng-click="addAddress()"><span class="fas fa-plus"></span>Address</a>
+                    </div>
+                </div>
+            </div>-->
+        </div>
+    </div>
+</div>

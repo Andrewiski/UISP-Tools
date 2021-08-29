@@ -1,0 +1,15 @@
+﻿<div class="centered" ng-hide="doneLoading">
+    <h2 class="centered">
+        <span class="fa fa-refresh spin"></span>
+        Loading...
+    </h2>
+</div>
+<div class="container" ng-show="doneLoading">
+    <div class="row" ng-show="isAdmin()">
+        <a href="" ng-click="AdminEdit()">edit</a>
+    </div>
+    <div class="row">
+        <div ng-bind-html="pageContent.content">
+        </div>
+    </div>
+</div>

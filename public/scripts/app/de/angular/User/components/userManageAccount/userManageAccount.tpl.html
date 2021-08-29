@@ -1,0 +1,254 @@
+﻿<div class="container-fluid">
+    <div class="row">
+        <div class="h3">Manage Account</div>
+        <hr/>
+    </div>
+    <div class="centered" ng-hide="doneLoading">
+        <h2 class="centered">
+            <span class="fa fa-refresh spin"></span>
+            Loading...
+        </h2>
+    </div>
+    <div ng-show="doneLoading">
+        <div ng-show="manageInfoData.hasLocalAccount">
+            <div ng-show="manageInfoData.mode=='view'">
+                <div class="row">
+                    <label class="control-label" for="email">UserName/Email</label>
+                    <span class="form-control-static">{{manageInfoData.userInfo.email}}</span>
+                </div>
+
+                <div class="row">
+                    <label class="control-label" for="firstName">First Name</label>
+                    <span class="form-control-static">{{manageInfoData.userInfo.firstName}}</span>
+                </div>
+                <div class="row">
+                    <label class="control-label" for="lastName">Last Name</label>
+                    <span class="form-control-static">{{manageInfoData.userInfo.lastName}}</span>
+                </div>
+
+                <div class="row">
+                    <label class="control-label" for="phoneNumber">Cell Phone</label>
+                    <span class="form-control-static">{{manageInfoData.userInfo.phoneNumber}}</span>
+                </div>
+                <div class="row">
+                    <label class="control-label" for="phoneProvider">Phone Provider</label>
+                    <span class="form-control-static">{{manageInfoData.userInfo.phoneProvider}}</span>
+                </div>
+                   
+                <hr class="row" />
+                <div class="row">
+                    <div class="form-group">
+                        <button class="btn btn-primary" ng-click="EditUser()">Edit</button> <button class="btn btn-primary" ng-click="ChangePassword()">Change Password</button>
+                    </div>
+                </div>
+            </div>
+            <ng-form ng-show="manageInfoData.mode=='edit'" name="UserForm" novalidate class="css-form form-horizontal">
+                <div class="alert alert-danger" ng-show="showUserFormErrors || UserForm.$submitted && UserForm.$valid == false ">
+                    <ul>
+                        <li class="error" ng-show="showUserFormErrors">{{UserFormErrors}}</li>
+                        <li class="error" ng-show="UserForm.Password.$error.required">The Password field is required!</li>
+                        <li class="error" ng-show="UserForm.Password.$error.minlength">The Password must be at least 6 characters long!</li>
+                        <li class="error" ng-show="UserForm.Password.$error.maxlength">The Password must be at less then 100 characters long!</li>
+                        <li class="error" ng-show="UserForm.ConfirmPassword.$error.$invalid">The password and confirmation password do not match!</li>
+                    </ul>
+                </div>
+                <!--<div class="row">
+        <div class="has-feedback" bs-has>
+            <label class="control-label" for="userName">User Name</label>
+            <input type="text" class="form-control" name="userName" ng-model="user.userName" placeholder="User Name" tabindex="200">
+            <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+            <span class="fas fa-check form-control-feedback bs-success"></span>
+        </div>
+    </div>-->
+                <div class="row">
+                    <div class="has-feedback" bs-has>
+                        <label class="control-label" for="email">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" ng-model="manageInfoData.userInfo.email" placeholder="Email" tabindex="220">
+                        <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                        <span class="fas fa-check form-control-feedback bs-success"></span>
+                        <span ng-show="UserForm.email.$error.inuse">Email is already used!</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="has-feedback" bs-has>
+                        <label class="control-label" for="firstName">First Name</label>
+                        <input type="text" class="form-control" name="firstName" ng-model="manageInfoData.userInfo.firstName" placeholder="FirstName" tabindex="205">
+                        <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                        <span class="fas fa-check form-control-feedback bs-success"></span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="has-feedback" bs-has>
+                        <label class="control-label" for="lastName">Last Name</label>
+                        <input type="text" class="form-control" name="lastName" ng-model="manageInfoData.userInfo.lastName" placeholder="Last Name" tabindex="210">
+                        <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                        <span class="fas fa-check form-control-feedback bs-success"></span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="has-feedback" bs-has>
+                        <label class="control-label" for="phoneNumber">Cell Phone</label>
+                        <input type="text" class="form-control" name="phoneNumber" ng-model="manageInfoData.userInfo.phoneNumber" placeholder="Cell Phone" tabindex="230">
+                        <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                        <span class="fas fa-check form-control-feedback bs-success"></span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="has-feedback" bs-has>
+                        <label class="control-label" for="phoneProvider">Cell Phone Provider</label>
+                        <select class="form-control" name="Phone Provider" ng-model="manageInfoData.userInfo.phoneProvider" tabindex="240">
+                            <option value="">None</option>
+                            <option value="@mms.att.net">AT&T</option>
+                            <option value="@pm.sprint.net">Sprint</option>
+                            <option value="@tmomail.net">T-Mobile</option>
+                            <option value="@vtext.com">Verizon</option>
+
+                        </select>
+                        <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                        <span class="fas fa-check form-control-feedback bs-success"></span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group>
+                        <button class="btn btn-danger" ng-click="CancelSaveUser()">Cancel</button><button class="btn btn-primary" ng-click="SaveUser()">Save</button>
+                    </div>
+                </div>
+            </ng-form>
+
+
+            <div class="row">
+                <ng-form ng-show="manageInfoData.mode=='changepassword'" name="changePasswordForm" class="css-form form-horizontal" novalidate>
+                    <h4>Change your password</h4>
+                    <hr />
+                    <div class="alert alert-danger" ng-show="showChangePasswordErrors || changePasswordForm.$submitted && changePasswordForm.$valid == false ">
+                        <ul>
+                            <li class="error" ng-show="showChangePasswordErrors">{{changePasswordErrors}}</li>
+                            <li class="error" ng-show="changePasswordForm.ChangePasswordOldPassword.$error.required">The Old Password field is required!</li>
+                            <li class="error" ng-show="changePasswordForm.ChangePasswordOldPassword.$error.minlength">The Old Password must be at least 6 characters long!</li>
+                            <li class="error" ng-show="changePasswordForm.ChangePasswordOldPassword.$error.maxlength">The Old Password must be at less then 100 characters long!</li>
+                            <li class="error" ng-show="changePasswordForm.ChangePasswordNewPassword.$error.required">The New Password field is required!</li>
+                            <li class="error" ng-show="changePasswordForm.ChangePasswordNewPassword.$error.minlength">The New Password must be at least 6 characters long!</li>
+                            <li class="error" ng-show="changePasswordForm.ChangePasswordNewPassword.$error.maxlength">The New Password must be at less then 100 characters long!</li>
+                            <li class="error" ng-show="changePasswordForm.ConfirmPassword.$error.required">The password and confirmation password do not match!</li>
+                        </ul>
+                    </div>
+                    <div class="alert alert-success" ng-show="showChangePasswordSuccess">
+                        Password Changed Successfully!
+                    </div>
+                    <div class="col-md-6">
+                        <div class="row">
+                            <div class="has-feedback" bs-has>
+                                <label for="ChangePasswordOldPassword" class="control-label">Old password</label>
+                                <input type="password" id="ChangePasswordOldPassword" name="ChangePasswordOldPassword" class="form-control" ng-minlength="6" ng-maxlength="100" ng-required ng-model="changePwd.oldPassword" />
+                                <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                                <span class="fas fa-check form-control-feedback bs-success"></span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="has-feedback" bs-has>
+                                <label for="ChangePasswordNewPassword" class="control-label">New password</label>
+                                <input type="password" id="ChangePasswordNewPassword" name="ChangePasswordNewPassword" class="form-control" ng-required ng-minlength="6" ng-maxlength="100" ng-model="changePwd.newPassword" />
+                                <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                                <span class="fas fa-check form-control-feedback bs-success"></span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="has-feedback" bs-has>
+                                <label for="ChangePasswordConfirmPassword" class="control-label">Confirm new password</label>
+                                <input type="password" id="ChangePasswordConfirmPassword" name="ChangePasswordConfirmPassword" class="form-control" ng-required="passwordsMatch()" ng-model="changePwd.confirmPassword" />
+                                <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                                <span class="fas fa-check form-control-feedback bs-success"></span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="form-group col-md-6">
+                                <button class="btn btn-danger" ng-click="CancelChangePassword()">Cancel</button><button class="btn btn-primary" ng-click="SaveChangePassword()">Save Change Password</button>
+                            </div>
+                        </div>
+                    </div>
+                </ng-form>
+            </div>
+        </div>
+
+        <div class="row" ng-hide="manageInfoData.hasLocalAccount">
+            <!--I guess should be shown if they only have an Extrernal Account like Face Book-->
+            <p>You do not have a local username/password for this site. Add a local account so you can log in without an external login.</p>
+            <ng-form name="setPasswordForm">
+                <h4>Create Local Login</h4>
+                <hr />
+                <div class="alert alert-danger" ng-show="showChangePasswordErrors || setPasswordForm.$submitted && setPasswordForm.$valid == false ">
+                    <ul>
+                        <li class="error" ng-show="showChangePasswordErrors">{{changePasswordErrors}}</li>
+                        <li class="error" ng-show="setPasswordForm.Password.$error.required">The Password field is required!</li>
+                        <li class="error" ng-show="setPasswordForm.Password.$error.minlength">The Password must be at least 6 characters long!</li>
+                        <li class="error" ng-show="setPasswordForm.Password.$error.maxlength">The Password must be at less then 100 characters long!</li>
+                        <li class="error" ng-show="setPasswordForm.ConfirmPassword.$error.$invalid">The password and confirmation password do not match!</li>
+                    </ul>
+                </div>
+                <div class="form-group">
+                    <label for="SetPasswordNewPassword" class="col-md-2 control-label">New password</label>
+                    <div class="col-md-10">
+                        <input type="password" id="SetPasswordNewPassword" class="form-control" ng-model="setPwd.newPassword" />
+                        <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                        <span class="fas fa-check form-control-feedback bs-success"></span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="SetPasswordConfirmPassword" class="col-md-2 control-label">Confirm new password</label>
+                    <div class="col-md-10">
+                        <input type="password" id="SetPasswordConfirmPassword" class="form-control" ng-model="setPwd.confirmPassword" />
+                        <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                        <span class="fas fa-check form-control-feedback bs-success"></span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-offset-2 col-md-10">
+                        <button type="submit" class="btn btn-default" ng-click="setPassword();">Set password</button>
+                    </div>
+                </div>
+            </ng-form>
+        </div>
+
+        <div class="row" ng-show="manageInfoData.manageInfo.logins.length > 1">
+            <h4>Registered logins</h4>
+            <hr />
+            <div class="alert alert-danger" ng-show="showRegisteredLoginErrors">
+                <ul>
+                    <li class="error" ng-show="showRegisteredLoginErrors">{{RegisteredLoginErrors}}</li>
+                </ul>
+            </div>
+            <div class="row">
+                <div ng-repeat="login in manageInfoData.manageInfo.logins | filter: { loginProvider: '!www.digitalexample.com' }" class="col-md-3 h4">
+                    <div ng-click="removeExternalLogin(login)" ng-class="['btn','btn-block', 'btn-social' , 'btn-{{login.loginProvider | lowercase}}']"><i ng-class="['fa','{{getFontAwesomeClass(login.loginProvider)}}']"></i> Remove {{login.loginProvider}} </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!--<div ng-show="userManagment.externalLoginProviders == null || userManagment.externalLoginProviders.length == 0">
+
+            <p>
+                There are no external authentication services configured. See <a href="http://go.microsoft.com/fwlink/?LinkId=313242">this article</a>
+                for details on setting up this ASP.NET application to support logging in via external services.
+            </p>
+        </div>-->
+        <div class="form-horizontal row" ng-show="manageInfoData.manageInfo.externalLoginProviders != null && manageInfoData.manageInfo.externalLoginProviders.length > 0">
+            <!--hasExternalLogin()-->
+
+            <h4>Add an external login</h4>
+            <hr />
+            <div class="alert alert-danger" ng-show="showAddLoginErrors">
+                <ul>
+                    <li class="error" ng-show="showAddLoginErrors">{{AddLoginErrors}}</li>
+                </ul>
+            </div>
+            <div class="row">
+                <div ng-repeat="externalLoginProvider in manageInfoData.manageInfo.externalLoginProviders" class="col-md-3 h4">
+                    <div ng-click="addExternalLogin(externalLoginProvider)" ng-class="['btn','btn-block', 'btn-social' , 'btn-{{externalLoginProvider.name | lowercase}}']"><i ng-class="['fa','{{getFontAwesomeClass(externalLoginProvider.name)}}']"></i> Add {{externalLoginProvider.name}} Login </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

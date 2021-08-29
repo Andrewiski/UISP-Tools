@@ -1,0 +1,71 @@
+﻿<h5>Admin Invoice Recurrence</h5>
+<div class="container-fluid">
+    <div class="row">
+        <form class="form-inline">
+            <div class="form-group">
+                <label for="InvoiceSearch_Status">Status</label>
+                <select class="form-control" ng-model="invoiceRecurrenceListRequest.invoiceRecurrenceStatusId" name="InvoiceRecurrenceSearch_Status" ng-options="item.invoiceRecurrenceStatusId as item.name for item in invoiceRecurrenceStatusListSearch">
+                </select>
+            </div>
+            <!--<div class="form-group">
+                <label for="InvoiceSearch_Type">Type</label>
+                <select class="form-control" ng-model="invoiceListRequest.invoiceTypeId" name="InvoiceSearch_Type" ng-options="item.invoiceTypeId as item.name for item in invoiceServiceCommon.statics.invoiceTypeList">
+                    <option value="-1">All</option>
+                </select>
+            </div>-->
+            
+            <div class="form-group col-xs-7">
+                <label class="form-group col-xs-1" for="InvoiceRecurrenceSearch_Customer">Customer</label>
+                <div class="input-group col-xs-offset-1 col-xs-6">
+                    <ui-select name="InvoiceRecurrenceSearch_Customer" ng-model="invoiceRecurrenceListRequest.customerGuid"
+                               theme="bootstrap"
+                               ng-disabled="disabled"
+                               reset-search-input="false"
+                               class="input-group col-xs-6"
+                               style="width:300px">
+                        <ui-select-match placeholder="Enter an Name...">{{$select.selected.billingContact.lastName}}, {{$select.selected.billingContact.firstName}}</ui-select-match>
+                        <ui-select-choices repeat="customer.customerGuid as customer in customerSearchList"
+                                           refresh="refreshCustomers($select.search)"
+                                           refresh-delay="0">
+                            <div ng-bind-html="customer.billingContact.lastName + ',' + customer.billingContact.firstName  | highlight: $select.search"></div>
+                        </ui-select-choices>
+                    </ui-select>
+                </div>
+            </div>
+            <div class="form-group col-xs-5">
+                <button class="btn btn-primary" ng-click="refreshInvoices()">Search</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="container-fluid">
+    <hr />
+</div>
+<div class="centered" ng-hide="invoiceRecurrenceListDoneLoading">
+    <h2 class="centered">
+        <span class="fa fa-refresh spin"></span>
+        Loading...
+    </h2>
+</div>
+<div class="container-fluid" ng-show="invoiceRecurrenceListDoneLoading">
+    <div class="row">
+        <div class="col-xs-1">Select</div>
+        <div class="col-xs-1">Invoice #</div>
+        <div class="col-xs-1">Last Date</div>
+        <div class="col-xs-1">Start Date</div>
+        <div class="col-xs-1">Total</div>
+        <div class="col-xs-1">Status</div>
+        <div class="col-xs-2">Customer</div>
+        <div class="col-xs-4">Description</div>
+    </div>
+    <div class="row" ng-repeat="invoiceRecurrence in invoiceRecurrenceList">
+        <div class="col-xs-1"><input type="checkbox" /></div>
+        <div class="col-xs-1"><a ui-sref="admin.invoices.invoiceRecurrence({invoiceRecurrenceGuid: invoiceRecurrence.invoiceRecurrenceGuid})">INV-{{invoiceRecurrence.invoiceId}}</a></div>
+        <div class="col-xs-1">{{invoiceRecurrence.lastExecutionDate | date : 'MM/dd/yyyy'}} </div>
+        <div class="col-xs-1"> {{ invoiceRecurrence.invoice.total | currency  }} </div>
+        <div class="col-xs-1"> {{ getStaticName('invoiceRecurrenceStatusList',invoiceRecurrence.invoiceRecurrenceStatusId)}} </div>
+        <div class="col-xs-2"> {{ invoiceRecurrence.invoice.billingContact.firstName }} {{ invoiceRecurrence.invoice.billingContact.lastName }} </div>
+        <div class="col-xs-4"> {{ invoiceRecurrence.invoice.description}} </div>
+    </div>
+
+</div>

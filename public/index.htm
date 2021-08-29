@@ -1,0 +1,111 @@
+﻿<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>Digital Example</title>
+
+    <!--<link href="stylesheets/bootstrap.min.css" rel="stylesheet" />
+    <link href="stylesheets/bootstrap-theme.min.css" rel="stylesheet" />-->
+    <link href="/javascript/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/javascript/bootstrap/css/bootstrap-theme.min.css" rel="stylesheet" />
+    <link href="/javascript/fontawesome/css/font-awesome.min.css" rel="stylesheet" />
+    <link href="/javascript/animate-css/animate.min.css" rel="stylesheet" />
+    <link href="/stylesheets/style.css" rel="stylesheet" />
+    <!--Served up by the socket.io service directly as part of the IO service process-->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/javascript/jquery/jquery.min.js"></script>
+    <script src="/scripts/app/de/jquery.extensions.js"></script>
+    <script src="/javascript/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/javascript/moment/moment.min.js"></script>
+    <script src="/javascript/bootstrap-notify/bootstrap-notify.min.js"></script>
+
+    <link href="/javascript/jsoneditor/jsoneditor.min.css" rel="stylesheet" type="text/css">
+    <script src="/javascript/jsoneditor/jsoneditor.min.js"></script>
+
+    <script src="/scripts/app/de/deui.js?v=1"></script>
+
+    <script>
+        $(function () {
+            $.deui.appInit().then(
+                function () {
+
+                },
+                function (err) {
+                    console.log('error', err)
+                }
+
+            )
+        })
+    </script>
+</head>
+<body>
+
+
+        
+        <div class="navbar navbar-default navbar-fixed-top header" >
+            <div class="container">
+                <div>
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a class="navbar-brand delogo" href="/"><img class="de_logo" src="/images/WilcoLogo_Header.png" alt="Logo"></a>
+                    </div>
+                    <div class="navbar-collapse collapse">
+                        <ul class="nav navbar-nav navbar-right menuItems">
+                            <!-- ngRepeat: menuItem in menu.menuItems | filter: filterTopLevelMenuItem -->
+                                
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        
+
+    
+    <div class="container mainContent" style="">
+        <div class="row">
+            <div class="pageContent">
+
+            </div>    
+        </div>
+    </div>
+    
+
+    <footer class="navbar navbar-fixed-bottom navbar-default footer">
+        <p>© 2020 - Wilco Wireless Inc - 1402 Main St. Neodesha, KS 66757 - (620) 325-4342</p>                
+    </footer>
+
+    <div class="templates" style="display:none">
+        <div class="menuItemTemplate">
+            <ul>
+                <li class="menuItem">
+                    <a href="#">linkText</a>
+                </li>
+            </ul>
+        </div>
+        <!--<div class="menuItemLoginTemplate">
+            <ul>
+                <li class="menuItem">
+                    <a class="menuItemLogin" href="/login/login.htm?loginType=nms"><span class="glyphicon glyphicon-user"></span>Login</a>
+                </li>
+            </ul>
+        </div>
+        <div class="menuItemLogoutTemplate">
+            <ul>
+                <li class="menuItem">
+                    <a class="menuItemLogin" href="/login/login.htm?logout=true">Logout</a>
+                </li>
+            </ul>
+        </div>-->
+
+    </div>
+
+
+
+</body>
+</html>

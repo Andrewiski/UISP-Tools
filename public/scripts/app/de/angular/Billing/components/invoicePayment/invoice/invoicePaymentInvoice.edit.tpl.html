@@ -1,0 +1,23 @@
+﻿<div class="container-fluid">
+    <ng-form name="invoicePaymentinvoiceForm" novalidate class="css-form form-horizontal">
+        <div class="row">
+            <div class="col-xs-5" style="min-width:320px;">
+                    
+                <div data-invoice-mini></div>
+                   
+            </div>
+            <div class="col-xs-7">
+                    
+                <div class="has-feedback" bs-has>
+                    <label for="emailAddress">Email To Send Invoice To</label>
+                    <input type="email" name="emailAddress" class="form-control" ng-model="invoicePayment.invoice.emailAddress" placeholder="Enter email address" required="" data-mailcheck tabindex="4" />
+                    <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                    <span class="fas fa-check form-control-feedback bs-success"></span>
+                </div>
+                    
+            </div>
+            
+        </div> <!-- end .row -->
+
+    </ng-form>
+</div>  

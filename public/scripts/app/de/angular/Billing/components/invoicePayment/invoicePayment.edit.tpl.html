@@ -1,0 +1,26 @@
+﻿<div class="container-fluid">
+    <ng-form name="invoicePaymentForm" novalidate class="css-form form-horizontal">
+        <div class="row" >
+            <div class="col-xs-4 has-feedback" bs-has>
+                <label class="control-label" for="PaymentType">Payment Type</label>
+                <select class="form-control" ng-model="invoicePayment.invoicePaymentType" name="PaymentType" ng-options="item.invoicePaymentTypeId as item.name for item in invoiceServiceCommon.statics.invoicePaymentTypeList | filter : invoicePaymentTypesFilter" required tabindex="1"></select>
+                <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                <span class="fas fa-check form-control-feedback bs-success"></span>
+            </div>
+        </div>
+        <div class="row">
+            <div>&nbsp;</div>
+        </div>
+        <div class="row">
+            <div ng-switch="invoicePayment.invoicePaymentType">
+                <div ng-switch-when="0">Create Invoice Only</div>
+                <div ng-switch-when="1" data-is-edit-mode="true" data-invoice-payment-credit-card="invoicePayment"></div>
+                <div class="col-xs-4" ng-switch-when="2" data-is-edit-mode="true" data-invoice-payment-mail-payment="invoicePayment"></div>
+                <div ng-switch-when="4" data-invoice-payment-paypal="invoicePayment"></div>
+                <!--<div ng-switch-when="8" data-invoice-payment-electronic-debit="creditcard"></div>-->
+                <div ng-switch-when="16" data-is-edit-mode="true" data-invoice-payment-invoice="invoicePayment"></div>
+            </div>
+        </div>
+        
+    </ng-form>
+</div>

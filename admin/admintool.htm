@@ -1,0 +1,230 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <link href="/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+    <title>UCRM DE Tools Admin Page</title>
+    <base href="/">
+    <link href="/stylesheets/style.css" rel="stylesheet" />
+    <!--<link href="stylesheets/bootstrap.min.css" rel="stylesheet" />
+    <link href="stylesheets/bootstrap-theme.min.css" rel="stylesheet" />-->
+    <link href="/javascript/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/javascript/bootstrap/css/bootstrap-theme.min.css" rel="stylesheet" />
+    <link href="/javascript/fontawesome/css/font-awesome.min.css" rel="stylesheet" />
+    <link href="/javascript/animate-css/animate.min.css" rel="stylesheet" />
+    <!--Served up by the socket.io service directly as part of the IO service process-->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/javascript/jquery/jquery.min.js"></script>
+    <script src="/javascript/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/javascript/moment/moment.min.js"></script>
+    <script src="/javascript/bootstrap-notify/bootstrap-notify.min.js"></script>
+    
+    <link href="/javascript/jsoneditor/jsoneditor.min.css" rel="stylesheet" type="text/css">
+    <script src="/javascript/jsoneditor/jsoneditor.min.js"></script>
+   
+    <script src="/admintool.js"></script>
+
+    <style>
+
+
+        .select2 > .select2-choice.ui-select-match {
+            /* Because of the inclusion of Bootstrap */
+            height: 29px;
+        }
+
+        .selectize-control > .selectize-dropdown {
+            top: 36px;
+        }
+        /* Some additional styling to demonstrate that append-to-body helps achieve the proper z-index layering. */
+        .select-box {
+            background: #fff;
+            position: relative;
+            z-index: 1;
+        }
+
+        .alert-info.positioned {
+            margin-top: 1em;
+            position: relative;
+            z-index: 10000; /* The select2 dropdown has a z-index of 9999 */
+        }
+
+        .spanLabel {
+            font-weight: bold;
+        }
+        .audioStreamer{
+            cursor: pointer;
+        }
+        .btnRefreshServerLogs{
+           cursor: pointer;
+        }
+        .connected{
+            color:green;
+        }
+        .disconnected{
+            color:red;
+        }
+        .invalidCertificate{
+            color:yellow;
+        }
+        .text-danger{
+            color: #FF0000
+        }
+        .text-warning{
+           color: #FFFF00
+        }
+        .text-success{
+            color: #92D050
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="container-fluid">
+        <div id="errormsg"></div>
+        <div name="monitor" id="monitor" class="form sb">
+            <div class="page-header header">
+                <span class="h2">Ubiquiti® UCRM DE Tools</span> <span class="h2"><i class="fa fa-rss browserConnected text-success" title="Browser To Server"></i></span>
+            </div>
+            <div>
+
+                <ul class="nav nav-tabs" role="tablist">
+                    <li role="presentation" class="active"><a href="#clients" aria-controls="clients" role="tab" data-toggle="tab">Clients</a></li>
+                    <li role="presentation"><a href="#serverLogs" aria-controls="serverLogs" role="tab" data-toggle="tab">Server Logs</a></li>
+                    <li role="presentation"><a href="#serverCertificates" aria-controls="serverCertificates" role="tab" data-toggle="tab">Server Certificate</a></li>
+                    <li role="presentation"><a href="#serverSettings" aria-controls="serverSettings" role="tab" data-toggle="tab">Server Settings</a></li>
+                </ul>
+
+                <div class="tab-content">
+                    <div role="tabpanel" class="tab-pane fade" id="clients">
+                        <div>
+                            <div class="panel panel-default">
+                                <div class="panel-heading">Clients - <i class="fa fa-refresh btnRefreshClients"></i></div>
+                                <div class="panel-body">
+                                    <div class="container-fluid ">
+
+                                        <table class="table table-condensed">
+                                            <thead>
+                                                <tr><th>Timestamp</th><th>Message</th></tr>
+                                            </thead>
+                                            <tbody class="clientList">
+                                            </tbody>
+                                        </table>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div role="tabpanel" class="tab-pane fade" id="serverLogs">
+                        <div>
+                            <div class="panel panel-default">
+                                <div class="panel-heading">Server Logs - <i class="fa fa-refresh btnRefreshServerLogs"></i></div>
+                                <div class="panel-body">
+                                    <div class="container-fluid ">
+
+                                        <table class="table table-condensed">
+                                            <thead>
+                                                <tr><th>Timestamp</th><th>Message</th></tr>
+                                            </thead>
+                                            <tbody class="serverLogs">
+                                            </tbody>
+                                        </table>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div role="tabpanel" class="tab-pane fade" id="serverCertificates">
+                        <div>
+                            <div class="panel panel-default">
+                                <div class="panel-heading">Certificates</div>
+                                <div class="panel-body">
+                                    <div class="container-fluid">
+                                        <div class="well">
+                                            <div class="row">
+                                                <span class="h3">Local Webserver Certificates </span>
+                                            </div>
+                                            <div class="serverCertificates"></div>
+                                        </div>
+                                        <div>
+                                            <div style="font-size:x-small">Lets Encrypt requires a CCA DNS record to be present before it will allow Certificate to be issued. <br/>A wildcard DNS record should point to this server and accessable to Lets Encrypt servers on port 80. </div>
+                                            <button class="btn btn-info btnLetsEncrypt">Create/Renew Lets Encrypt Certificate</button>
+
+                                            <button class="btn btn-danger btnCreateDefaultApplianceCertificate">Create Default Appliance Certificate</button>
+
+                                        </div>
+                                        
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div role="tabpanel" class="tab-pane fade" id="serverSettings">
+                        <div>
+                            <div class="panel panel-default">
+                                <div class="panel-heading">Server Settings</div>
+                                <div class="panel-body">
+                                    <div class="container-fluid ">
+
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                    
+                </div> 
+            </div>
+        </div>
+
+        <div class="htmlTemplates" style="display:none">
+
+            <div class="clientTemplate">
+                <table>
+                    <tr class="Clients"><td class="logTs"></td><td class="logMsg"></td></tr>
+                </table>
+
+            </div>
+
+            <div class="serverLogsTemplate">
+                <table>
+                    <tr class="logRow"><td class="logTs"></td><td class="logMsg"></td></tr>
+                </table>
+
+            </div>
+
+            <div class="certificateDetailsTemplate">
+                <div>
+                    <div class="row"><div class="col-sm"><i class="h1 fa fa-key"></i></div></div>
+                    <div>
+                        <div class="row">
+                            <div class="col-sm-1"><span class="spanLabel" for="certSubject">Subject:</span></div>
+                            <div class="col-sm-11"><span class="certSubject"></span></div>
+                        </div>
+                        <div class="row"><div class="col-sm-1"><span class="spanLabel">Serial Number:</span></div><div class="col-sm-11"><span class="certSerialNumber"></span></div></div>
+                        <div class="row"><div class="col-sm-1"><span class="spanLabel">Dns Names:</span></div><div class="col-sm-11"><span class="certDnsNames"></span></div></div>
+                        <div class="row"><div class="col-sm-1"><span class="spanLabel">Issuer:</span></div><div class="col-sm-11"><span class="certIssuer"></span></div></div>
+
+                        <div class="row"><div class="col-sm-1"><span class="spanLabel">Algorithm:</span></div><div class="col-sm-11"><span class="certAlgorithm"></span></div></div>
+
+                        <div class="row"><div class="col-sm-1"><span class="spanLabel">Valid From:</span></div><div class="col-sm-11"><span class="certValidFrom"></span></div></div>
+
+                        <div class="row"><div class="col-sm-1"><span class="spanLabel">Valid To:</span></div><div class="col-sm-11"><span class="certValidTo"></span></div></div>
+                        <div class="row"><div class="col-sm-1"><span class="spanLabel">Is CA:</span></div><div class="col-sm-11"><span class="certIsCa"></span></div></div>
+                        <div class="row"><div class="col-sm-1"><span class="spanLabel">Private Key Valid:</span></div><div class="col-sm-11"><span class="certPrivateKeyValid"></span></div></div>
+                        <div class="row"><div class="col-sm-1"><span class="spanLabel">Issuer In Pem:</span></div><div class="col-sm-11"><span class="certIssuerInPem"></span></div></div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+     </div>
+</body>
+</html>

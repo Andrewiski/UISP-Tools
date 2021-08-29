@@ -1,3 +1,9 @@
+config/*
+config/certificates
+config/localdebug/*
+config/localdebug/certificates
+log
+
 # Logs
 logs
 *.log
@@ -74,3 +80,6 @@ typings/
 
 # FuseBox cache
 .fusebox/
+
+
+

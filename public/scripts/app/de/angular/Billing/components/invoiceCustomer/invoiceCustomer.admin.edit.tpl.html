@@ -1,0 +1,94 @@
+﻿
+    <div class="container-fluid">
+        <div class="centered" ng-hide="invoiceCustomerDoneLoading">
+            <h2 class="centered">
+                <span class="fa fa-refresh spin"></span>
+                Loading...
+            </h2>
+        </div>
+        <div ng-show="invoiceCustomerDoneLoading">
+            
+            <ng-form name="customerForm" novalidate class="css-form form-horizontal">
+                <div class="row">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Customer Info</h3>
+                        </div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-1 h4">User</div>
+                                <div class="col-md-12">
+                                    <div class="col-xs-3" ng-hide="userInfoSearchEnabled">
+                                        {{getUserInfoFormatedName(data.customer.userInfo)}}&nbsp;<a href="" ng-click="enableUserInfoSearch()"><i class="fa fa-search" aria-hidden="true"></i></a>
+                                        <!--<div class="col-xs-1"><a href="" ng-click="editCustomer(selectedCustomer.customer)">edit</a></div>-->
+                                    </div>
+                                    <div ng-show="userInfoSearchEnabled" class="input-group col-md-offset-1 col-md-10">
+                                        <ui-select name="Customer_UserInfo" ng-model="data.customer.userInfo"
+                                                   theme="bootstrap"
+                                                   reset-search-input="false"
+                                                   class="input-group col-xs-6"
+                                                   style="width:300px"
+                                                   autofocus="true"
+                                                   focus-on="Customer_UserInfo_Search"
+                                                   on-select="userInfoSelected($item, $model, data.customer)">
+                                            <ui-select-match placeholder=" enter an name...">
+                                                {{$select.selected.lastName}}, {{$select.selected.firstName}}
+                                            </ui-select-match>
+                                            <ui-select-choices repeat="userInfo in userInfoSearchList"
+                                                               refresh="refreshUserInfos($select.search)"
+                                                               refresh-delay="0">
+                                                <div ng-bind-html="userInfo.lastName + ', ' + userInfo.firstName  | highlight: $select.search"></div>
+                                            </ui-select-choices>
+                                        </ui-select>
+                                    </div>
+
+                                </div>
+
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-5">
+                                    <div>
+                                        <label class="control-label" for="companyName">Status</label>
+                                        <select class="form-control" ng-model="data.customer.customerStatusId" name="customerStatusType" ng-options="item.customerStatusId as item.name for item in invoiceServiceCommon.statics.customerStatusList"></select>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Contact Info</h3>
+                        </div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-5">
+                                    <div>
+                                        <label class="h4">Billing Contact</label>
+                                        <div data-invoice-contact="data.customer.billingContact" data-is-edit-mode="true" data-tabindex="100"></div>
+                                    </div>
+
+                                </div>
+
+                                <div class="col-md-5">
+                                    <div>
+                                        <label class="h4">Shipping Contact</label>
+                                        <span><a href="" ng-click="copyBillingAddress()">copy</a></span>
+                                        <div data-invoice-contact="data.customer.shippingContact" data-is-edit-mode="true" data-tabindex="200"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                    
+                <div class="row">
+                    <button ng-click="saveCustomer()" class="btn btn-primary">Save</button> <button ng-click="cancel()" class="btn btn-warning">Cancel</button>
+                </div>
+</ng-form>
+        </div>
+</div>

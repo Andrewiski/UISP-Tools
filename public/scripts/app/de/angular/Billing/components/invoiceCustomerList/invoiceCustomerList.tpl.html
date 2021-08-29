@@ -1,0 +1,25 @@
+﻿<div class="container-fluid">
+    <div class="row rowheader">
+        <!--<div class="col-xs-1"></div>-->
+        <div class="col-xs-2">Last Name</div>
+        <div class="col-xs-2">First Name</div>
+        <div class="col-xs-1">Login</div>
+        <div class="col-xs-4">Address</div>
+        <div class="col-xs-1">City</div>
+        <div class="col-xs-1">State</div>
+        <div class="col-xs-1">Zip</div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12" ng-hide="customerList.length">No Customers Found</div>
+    </div>
+    <div class="row" ng-repeat="customer in customerList">
+        <!--<div class="col-xs-1"><input type="checkbox" /></div>-->
+        <div class="col-xs-2"><a href="" ui-sref="admin.invoicecustomers.customer({customerGuid: customer.customerGuid})">{{customer.billingContact.lastName}}</a></div>
+        <div class="col-xs-2">{{customer.billingContact.firstName}} </div>
+        <div class="col-xs-1"><a ng-show="customer.userInfoGuid" href="" ui-sref="admin.users.userinfo({userInfoGuid: customer.userInfoGuid})">User</a> </div>
+        <div class="col-xs-4">{{customer.billingContact.address}}{{customer.billingContact.address2}}</div>
+        <div class="col-xs-1">{{customer.billingContact.city}} </div>
+        <div class="col-xs-1">{{customer.billingContact.state}}</div>
+        <div class="col-xs-1">{{customer.billingContact.zip}}</div>
+    </div>
+</div>

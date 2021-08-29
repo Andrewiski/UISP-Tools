@@ -1,0 +1,74 @@
+﻿
+<div class="container-fluid">
+    <div class="printHide">
+
+        <div class="row rowheader">
+            <div class="col-xs-1"><a href="" ng-click="selectAllUnpaid()">Select</a></div>
+            <div class="col-xs-2">Number</div>
+            <div class="col-xs-1">Date</div>
+            <div class="col-xs-1">Total</div>
+            <div class="col-xs-1">Status</div>
+            <div class="col-xs-2">Processing</div>
+            <div class="col-xs-2">Customer</div>
+
+        </div>
+        <div ng-hide="invoiceTransactionListDoneLoading">
+            <h2 class="centered">
+                <span class="fa fa-refresh spin"></span>
+                Loading...
+            </h2>
+        </div>
+        <div ng-show="invoiceTransactionListDoneLoading">
+            <div class="row">
+                <div class="col-xs-6" ng-hide="invoiceTransactionList.length">No Transactions Found</div>
+            </div>
+            <div class="row" ng-repeat="invoiceTransaction in invoiceTransactionList">
+                <div class="col-xs-1"><input type="checkbox" ng-model="invoice.selected" ng-disabled="showInvoicePayment" ng-show="invoice.invoiceStatusId == 0" />&nbsp;<a ng-show="isAdminMode" ui-sref="admin.invoices.invoice({invoiceGuid: invoice.invoiceGuid})"><i class="fa fa-edit"></i></a></div>
+                <div class="col-xs-2">
+                    <a ui-sref="user.invoice({invoiceGuid: invoice.invoiceGuid})">INV-{{ invoice.invoiceId}}</a>
+                </div>
+                <div class="col-xs-1"> {{ invoice.invoiceDate | date:'MM/dd/yyyy'}} </div>
+                <div class="col-xs-1"> {{ invoice.total | currency  }} </div>
+                <div class="col-xs-1"> {{ getStaticName('invoiceStatusList',invoice.invoiceStatusId)}} </div>
+                <div class="col-xs-2"> {{ getStaticName('invoiceProcessingStatusList',invoice.invoiceProcessingStatusId)}} </div>
+                <div class="col-xs-2"> {{ invoice.billingContact.firstName }} {{ invoice.billingContact.lastName }} </div>
+
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="form-group right" >
+                    <button ng-hide="showInvoicePayment" class="btn btn-primary btn-sm" ng-click="showPaySelected()">Pay Selected</button>
+                    <button ng-show="isAdminMode" class="btn btn-primary btn-sm" ng-click="sendPaymentReminder()"><i class="fa fa-envelope"></i> Send Reminder Email</button>
+                </div>
+            </div>
+        </div>
+        <div ng-show="showInvoicePayment">
+            <div class="row">
+                <div class="form-group">
+                    <div class="alert alert-danger" ng-show="showInvoicePaymentError">
+                        <div style="text-align: center; font-size: 1.5em;">{{invoicePaymentError}}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div data-invoice-payment="payInvoiceData.invoicePaymentInfo" is-edit-mode="true" is-valid="payInvoiceData.isValid"></div>
+            </div>
+            <div class="row">
+                <div class="col-md-offset-6 col-xs-4 headline">Total Amount:{{payInvoiceData.total | currency}}</div>
+            </div>
+            <div class="row">
+                <div class="col-md-offset-6 col-xs-5">
+                    <button class="btn btn-primary btn-sm" ng-disabled="!invoiceListDonePaying" ng-click="paySelectedInvoices()">Make Payment <span ng-show="!invoiceListDonePaying" class="fa fa-refresh spin"></span></button>
+                    <button class="btn btn-danger btn-sm" ng-disabled="!invoiceListDonePaying" ng-click="hidePaySelected()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--<div ng-show="showInvoice">
+        <div class="row">
+            <div data-invoice data-invoice-guid="selectedData.invoiceGuid"></div>
+        </div>
+    </div>-->
+</div>

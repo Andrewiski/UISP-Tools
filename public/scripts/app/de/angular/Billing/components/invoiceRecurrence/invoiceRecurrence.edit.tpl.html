@@ -1,0 +1,94 @@
+﻿<div class="container-fluid">
+    <ng-form name="invoicePaymentForm" novalidate class="css-form form-horizontal">
+        <div class="row">
+            <div class="col-xs-8 has-feedback" bs-has>
+                <label class="control-label" for="PaymentType">Recurence Status Type</label>
+                <select class="form-control" ng-model="invoiceRecurrence.invoiceRecurrenceStatusId" name="RecurrenceStatus" ng-options="item.invoiceRecurrenceStatusId as item.name for item in invoiceServiceCommon.statics.invoiceRecurrenceStatusList" required tabindex="1"></select>
+                <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                <span class="fas fa-check form-control-feedback bs-success"></span>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-8 has-feedback" bs-has>
+                <label class="control-label" for="invoiceLastExecutionDate">Last Execution Date</label>
+                <p class="input-group" moment-picker="invoiceRecurrence.lastExecutionDate" format="MM/DD/YYYY" today="true" keyboard="true">
+                    <input type="text" ng-model="invoiceRecurrence.lastExecutionDate" placeholder="Last Execution Date" name="invoiceLastExecutionDate" class="form-control" ng-model-options="{ updateOn: 'blur' }" ng-required="true" tabindex="2" />
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-default" ><i class="fa fa-calendar"></i></button>
+                    </span>
+                </p>
+                <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                <span class="fas fa-check form-control-feedback bs-success"></span>
+            </div>
+        </div>
+        <div class="row">
+
+            <div class="col-xs-8" bs-has>
+                <label class="control-label" for="invoiceStartDate">Start Date</label>
+                <p class="input-group" moment-picker="invoiceRecurrence.startDate" format="MM/DD/YYYY" today="true" keyboard="true">
+                    <input type="text" ng-model="invoiceRecurrence.startDate" placeholder="Start Date" name="invoiceStartDate" class="form-control" ng-model-options="{ updateOn: 'blur' }" ng-required="true" tabindex="3" />
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-default"><i class="fa fa-calendar"></i></button>
+                    </span>
+                </p>
+                <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                <span class="fas fa-check form-control-feedback bs-success"></span>
+            </div>
+        </div>
+        <div class="row">
+            
+            <div class="col-xs-8" bs-has>
+                <label class="control-label" for="invoiceEndDate">End Date</label>
+                <p class="input-group" moment-picker="invoiceRecurrence.endDate" format="MM/DD/YYYY" today="true" keyboard="true">
+                    <input type="text" ng-model="invoiceRecurrence.endDate" placeholder="End Date" name="invoiceEndDate" class="form-control" ng-required="true" ng-model-options="{ updateOn: 'blur' }" tabindex="4" />
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-default" ><i class="fa fa-calendar"></i></button>
+                    </span>
+                </p>
+                <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                <span class="fas fa-check form-control-feedback bs-success"></span>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-xs-4" bs-has>
+                <label class="control-label" for="rpInterval">Every</label>
+                <select class="form-control" ng-model="invoiceRecurrence.rrule.options.interval" ng-options="selectedItem.value as selectedItem.name for selectedItem in recurrenceData.interval" name="rpInterval" required tabindex="6">
+                   
+                </select>
+                <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                <span class="fas fa-check form-control-feedback bs-success"></span>
+            </div>
+            <div class="col-xs-4" bs-has>
+                <label class="control-label" for="rpFrequency">Frequency</label>
+                <select class="form-control" ng-model="invoiceRecurrence.rrule.options.freq" ng-options="selectedItem.value as selectedItem.name for selectedItem in recurrenceData.frequency" name="rpFrequency" required tabindex="7">
+                </select>
+                <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                <span class="fas fa-check form-control-feedback bs-success"></span>
+            </div>
+            <div class="col-xs-4" bs-has ng-show="invoiceRecurrence.rrule.options.freq==0">
+                <label class="control-label" for="rpMonth">Month</label>
+                <select class="form-control" ng-model="invoiceRecurrence.rrule.options.bymonth[0]" ng-options="selectedItem.value as selectedItem.name for selectedItem in recurrenceData.bymonth" name="rpmonthDay" required tabindex="8">
+                </select>
+                <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                <span class="fas fa-check form-control-feedback bs-success"></span>
+            </div>
+            <div class="col-xs-4" bs-has >
+                <label class="control-label" for="rpMonthDay">Day</label>
+                <select class="form-control" ng-model="invoiceRecurrence.rrule.options.bymonthday[0]" ng-options="selectedItem.value as selectedItem.name for selectedItem in recurrenceData.byday" name="rpmonthDay" required tabindex="9">
+                </select>
+                <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                <span class="fas fa-check form-control-feedback bs-success"></span>
+            </div>
+
+        </div>
+        <div class="row">
+            <div class="col-xs-8" bs-has>
+                <label class="control-label" for="RecurrenceInvoice">Invoice</label>
+                <select class="form-control" ng-model="invoiceRecurrence.invoiceId" name="RecurrenceInvoice" ng-options="item.invoiceId as item.description for item in invoiceServiceCommon.recurrenceInvoiceList" required tabindex="10"></select>
+                <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                <span class="fas fa-check form-control-feedback bs-success"></span>
+            </div>
+        </div>
+    </ng-form>
+</div>

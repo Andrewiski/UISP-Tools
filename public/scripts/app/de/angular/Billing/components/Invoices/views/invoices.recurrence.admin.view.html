@@ -1,0 +1,18 @@
+﻿<div class="container-fluid">
+    <div class="centered" ng-hide="invoiceTransactionListDoneLoading">
+        <h2 class="centered">
+            <span class="fa fa-refresh spin"></span>
+            Loading...
+        </h2>
+    </div>
+
+    <div ng-show="invoiceTransactionListDoneLoading">
+
+        <div class="row">
+            <div ui-view>
+                <div data-invoice-list data-invoice-list-request="{invoiceTypeId:2}">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

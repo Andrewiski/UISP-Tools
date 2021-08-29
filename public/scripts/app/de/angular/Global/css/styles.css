@@ -1,0 +1,189 @@
+﻿.fadeout {
+    opacity: 1;
+}
+
+.fadeout.ng-hide {
+    opacity: 0;
+}
+
+.fadeout.ng-hide-add,
+.fadeout.ng-hide-remove {
+    -webkit-transition: 0.5s linear all;
+    transition: 0.5s linear all;
+}
+
+.drop-area {
+    border: dotted 1px #ccc !important;
+    height: 80px;
+    border-radius: 0px;
+    min-height: 20px !important;
+    padding: 19px !important;
+    background-color: #f5f5f5 !important;
+    border-radius: 0px !important;
+    -webkit-box-shadow: none !important;
+    box-shadow: none !important;
+}
+
+.drop-area-over {
+    border: dotted 1px #6e72b2 !important;
+    background-color: #d1d0e9 !important;
+}
+
+.uploadContainer {
+    
+    margin-left: auto;
+    margin-right: auto;
+    font-family: Verdana;
+    font-size: 11px;
+    line-height: 17px;
+}
+
+    .uploadContainer .table > thead > tr > th,
+    .uploadContainer .table > tbody > tr > th,
+    .uploadContainer .table > tfoot > tr > th,
+    .uploadContainer .table > thead > tr > td,
+    .uploadContainer .table > tbody > tr > td,
+    .uploadContainer .table > tfoot > tr > td {
+        padding-top: 4px !important;
+        line-height: 19px;
+        height: 19px;
+        padding-bottom: 4px !important;
+        border-top: 1px solid #cacaca;
+    }
+
+    .uploadContainer h3 {
+        font-family: Verdana;
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    .uploadContainer th, .uploadContainer td {
+        padding: 0 !important;
+    }
+
+    .uploadContainer .row {
+        margin: 0;
+    }
+
+    .uploadContainer .btn-sm, .uploadContainer .btn-group-sm > .btn {
+        padding: 2px 4px;
+        font-size: 11px;
+        font-weight: bold;
+        line-height: 1.5;
+        border-radius: 0;
+    }
+
+    /*.uploadContainer .btn-success, .btn-success {
+        color: #fff;
+        background-color: #6e72b2 !important;
+        border-color: #6e72b2 !important;
+    }
+
+        .btn-success:hover {
+            background-color: #494fa8 !important;
+        }
+        */
+    .uploadContainer .progress-bar {
+        background-color: #d1d0e9;
+        -webkit-box-shadow: none !important;
+        box-shadow: none !important;
+    }
+
+    .uploadContainer .error {
+        color: #E90600;
+    }
+
+    .uploadContainer .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 1000;
+        display: none;
+        float: left;
+        min-width: 160px;
+        padding: 2px;
+        margin: 2px 0 0;
+        font-size: 11px;
+        text-align: left;
+        list-style: none;
+        background-color: #fff;
+        -webkit-background-clip: padding-box;
+        border-radius: 0px;
+        background-clip: padding-box;
+        border: 1px solid #ccc;
+    }
+
+        .uploadContainer .dropdown-menu li > a:hover,
+        .uploadContainer .dropdown-menu li:active
+        {
+            background-color: #6e72b2;
+            
+        }
+
+    .uploadContainer .success {
+        color: #6e72b2;
+    }
+
+    .uploadContainer strong {
+        font-weight: normal !important;
+    }
+
+
+
+    .uploadContainer .btn {
+        display: inline-block;
+        padding: 2px 4px;
+        margin-bottom: 0;
+        font-size: 11px;
+        font-weight: normal;
+        line-height: 1.42857143;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: middle;
+        cursor: pointer;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+        background-image: none;
+        border: 1px solid transparent;
+        border-radius: 0px;
+    }
+
+    .uploadContainer ul {
+        padding: 0;
+        list-style-type: none;
+    }
+
+    .uploadContainer .progress {
+        margin-top: 3px;
+        height: 13px;
+        overflow: hidden;
+        background-color: #f5f5f5;
+        border-radius: 0px;
+        -webkit-box-shadow: none !important;
+        box-shadow: none !important;
+    }
+
+    .uploadContainer .table > thead > tr > th {
+        vertical-align: bottom;
+        border-bottom: 1px solid #ddd;
+        padding-bottom: 2px !important;
+    }
+
+    .uploadContainer .form-control {
+        outline: 0;
+        border-color: #ddd;
+        border-style: solid;
+        border-width: 1px;
+        width: 95%;
+        background-color: #ffffff;
+        padding: 2px;
+        border-radius: 0;
+        font-size: 11px;
+        height: 19px;
+        -webkit-box-shadow: none !important;
+        box-shadow: none !important;
+        -webkit-transition: border-color ease-in-out .15s, -webkit-box-shadow ease-in-out .15s;
+        -o-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+        transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+    }

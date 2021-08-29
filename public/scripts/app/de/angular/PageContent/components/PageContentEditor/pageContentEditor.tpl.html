@@ -1,0 +1,32 @@
+﻿<style>
+    .ta-editor {
+  min-height: 300px;
+  height: auto;
+  overflow: auto;
+  font-family: inherit;
+  font-size: 100%;
+}
+</style>
+<div class="centered" ng-hide="doneLoading">
+    <h2 class="centered">
+        <span class="fa fa-refresh spin"></span>
+        Loading...
+    </h2>
+</div>
+<div class="container" ng-show="doneLoading">
+    <h3>Editor</h3>
+    <button ng-click="isRawView = !isRawView" unselectable>Preview</button>
+    <div ng-hide="isRawView">
+        <div text-angular="text-angular" name="htmlcontent" ng-model="pageContent.content"></div>
+    </div>
+    <div ng-show="isRawView">
+        <textarea ng-model="pageContent.content" style="width: 100%"></textarea>
+    </div>
+    <h4>Preview</h4>
+    <div>
+        <div ta-bind="text" ng-model="pageContent.content" ta-readonly='disabled'></div>
+    </div>
+
+    <button type="button" class="btn btn-warning" ng-click="pageContent.content = originalContent">Reset</button>
+    <button type="button" class="btn btn-primary" ng-click="save()">save</button>
+</div>

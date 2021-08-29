@@ -1,0 +1,13 @@
+﻿<div class="container-fluid">
+    <div class="centered" ng-hide="invoiceTransactionAdminDoneLoading">
+        <h2 class="centered">
+            <span class="fa fa-refresh spin"></span>
+            Loading...
+        </h2>
+    </div>
+
+    <div ng-show="invoiceTransactionAdminDoneLoading">
+        <div data-invoice-transaction-list-admin>
+        </div>   
+    </div>
+</div>

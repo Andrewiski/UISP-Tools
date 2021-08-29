@@ -1,0 +1,14 @@
+﻿<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-3">{{ getStaticName('invoicePaymentTypeList',invoicePayment.invoicePaymentTypeId)}}</div>
+        <div class="col-sm-9" ng-switch="invoicePayment.invoicePaymentType">
+            <div ng-switch-when="0">Create Invoice Only</div>
+            <div ng-switch-when="1" data-is-edit-mode="false" data-is-list-mode="true" data-invoice-payment-credit-card="invoicePayment"></div>
+            <div ng-switch-when="2" data-is-edit-mode="false" data-is-list-mode="true" data-invoice-payment-mail-payment="invoicePayment"></div>
+        <!--<div ng-switch-when="4" data-invoice-payment-paypal="creditcard"></div>
+        <div ng-switch-when="8" data-invoice-payment-electronic-debit="creditcard"></div>-->
+            <div ng-switch-when="16" data-is-edit-mode="false" data-is-list-mode="true" data-is-admin-mode="isAdminMode" data-invoice-payment-invoice="invoicePayment"></div>
+        </div>
+    </div>
+
+</div>

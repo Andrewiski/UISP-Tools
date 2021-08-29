@@ -1,0 +1,13 @@
+﻿<div class="invoiceContact">
+    <div ng-show="contact.companyName != ''" class="invoiceContactName">{{contact.companyName}}</div>
+    <div ng-show="contact.firstName != '' || contact.lastName != ''" class="invoiceContactName"><span ng-show="contact.firstName !='' ">{{contact.firstName}}</span><span ng-show="contact.lastName != ''">&nbsp;{{contact.lastName}}</span></div>
+    <div>            
+        <div ng-show="contact.address != ''">{{contact.address}}</div>
+        <div ng-show="contact.address2 != ''">{{contact.address2}}</div>
+        <div ng-show="contact.address3 != ''">{{contact.address3}}</div>
+        <div><span ng-show="contact.city != ''">{{contact.city}},</span><span ng-show="contact.state != ''">&nbsp;{{contact.state}}</span><span ng-show="contact.zip != ''">&nbsp;{{contact.zip}}</span></div>   
+        <div ng-show="contact.phone != ''">{{contact.phone}}</div>
+        <div ng-show="contact.email != ''">{{contact.email}}</div>
+    </div>
+</div>
+                

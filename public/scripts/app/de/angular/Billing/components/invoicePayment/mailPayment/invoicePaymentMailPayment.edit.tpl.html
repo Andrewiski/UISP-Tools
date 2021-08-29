@@ -1,0 +1,48 @@
+﻿<div class="container-fluid">
+    <ng-form name="invoicePaymentMailPaymentForm" novalidate class="css-form form-horizontal">
+        <div class="row">
+            <div class="check-information-wrapper">
+
+                <div style="min-width:500px;">
+
+
+                    <div class="row">
+                        <div class="col-xs-12 has-feedback" bs-has>
+                            <label for="checkNumber">Check Number</label>
+                            <input type="text" name="checkNumber" id="checkNumber" class="form-control" ng-model="invoicePayment.mailPayment.checkNumber" ng-required="true" placeholder="Check Number" value="{{invoicePayment.mailPayment.checkNumber}}">
+                            <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                            <span class="fas fa-check form-control-feedback bs-success"></span>
+                        </div>
+                        <div class="col-xs-12 has-feedback" bs-has>
+                            <label for="mailPaymentType">Payment Type</label>
+                            <select name="checkNumber" id="checkNumber" class="form-control" ng-model="invoicePayment.mailPayment.mailPaymentType" ng-required="true" placeholder="Payment Type">
+                                <option ="1">Personal Check</option>
+                                <option ="1">Money Order</option>
+                                <option ="1">Cashiers Check</option>
+ 
+                            </select>
+                            <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                            <span class="fas fa-check form-control-feedback bs-success"></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <div>Make&nbsp;Check&nbsp;Payable&nbsp;To:&nbsp;<h4>{{invoicePayment.mailPayment.merchantSettings.companyName}}</h4></div>
+                        </div>
+                        <div class="col-xs-12">
+                            <div>
+                                Mail&nbsp;Payment To:&nbsp;
+                                <h4>
+                                    {{invoicePayment.mailPayment.merchantSettings.companyName}}<br />
+                                    {{invoicePayment.mailPayment.merchantSettings.addressLine1}}<br />
+                                    {{invoicePayment.mailPayment.merchantSettings.addressCity}}, {{invoicePayment.mailPayment.merchantSettings.addressState}} {{invoicePayment.mailPayment.merchantSettings.zipCode}}  <br />
+                                </h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </ng-form>
+</div>

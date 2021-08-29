@@ -1,0 +1,81 @@
+﻿
+<div class="container-fluid">
+
+    <div class="centered" ng-hide="doneLoading">
+        <h2 class="centered">
+            <span class="fa fa-refresh spin"></span>
+            Loading...
+        </h2>
+    </div>
+    <div ng-show="doneLoading">
+        <div class="emailEditor">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="has-feedback" bs-has>
+                        <label class="control-label" for="companyName">To</label>
+                        <input type="text" class="form-control" name="to" ng-model="email.to" placeholder="To Email Address" tabindex="10">
+                        <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                        <span class="fas fa-check form-control-feedback bs-success"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="has-feedback" bs-has>
+                        <label class="control-label" for="companyName">CC</label>
+                        <input type="text" class="form-control" name="cc" ng-model="email.cc" placeholder="CC Email Address" tabindex="20">
+                        <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                        <span class="fas fa-check form-control-feedback bs-success"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="has-feedback" bs-has>
+                        <label class="control-label" for="companyName">BCC</label>
+                        <input type="text" class="form-control" name="bcc" ng-model="email.bcc" placeholder="BCC Email Address" tabindex="30">
+                        <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                        <span class="fas fa-check form-control-feedback bs-success"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="has-feedback" bs-has>
+                        <label class="control-label" for="companyName">Subject</label>
+                        <input type="text" class="form-control" name="subject" ng-model="email.subject" placeholder="Email Subject" tabindex="20">
+                        <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                        <span class="fas fa-check form-control-feedback bs-success"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+
+                <div class="col-md-12">
+                    <label class="control-label" for="email_body">Body</label>
+                    <div text-angular="text-angular" name="email_body" ng-model="email.body">
+                            
+
+                    </div>
+                    
+                </div>
+            </div>
+            <div ng-show="hasError" class="row">
+                <div class="col-md-12">
+                    <div class="alert alert-danger">
+                        <p ng-bind="errorMessage"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group right">
+                        <button class="btn btn-primary btn-sm" ng-click="sendEmail()"><i class="fa fa-envelope"></i> Send Reminder Email</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="display:none"-->
+            <div ng-show="doneLoading" class="emailBody" data-invoice-payment-reminder-email-body="data"></div>
+        </div>
+    </div>

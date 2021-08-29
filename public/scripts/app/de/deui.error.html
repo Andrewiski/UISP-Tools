@@ -1,0 +1,54 @@
+﻿<div>
+    <div class="modal-header">
+        <h3>An Error has Occurred</h3><span style="float:right;" ng-show="displayMessageContent"><a href="javascript:void(0);" onclick="$('#deui_error_dialog_messageContent').toggle();$('#deui_error_dialog_errorMessage_details').toggle();">show details</a></span>
+    </div>
+    <div class="modal-body">
+        <div style="height: 200px; width: 100%;">
+            <div>
+                <div id="deui_error_dialog_messageContent" style="width:100%;height:200px;">
+                    <span id="deui_error_dialog_messageContent_Default" style="display:none">
+                        An Error has occured that prevent the request from completing. We Appoligize for the issue and would like your feed back.<br />
+                        Please Click the Retry button to retry the request to the server.<br /><br />
+                        Thank you,<br />
+                        Digital Example Support Staff.
+                    </span>
+                    
+                    <span id="deui_error_dialog_messageContent_NoInternet" style="display:none">
+                        Unable to Connect to the Digital Example Servers. Please Check your Internet Connection and then Click Retry.<br /><br />
+                        Thank you,<br />
+                        Digital Example Support Staff.
+                    </span>
+                    
+                    <span id="deui_error_dialog_messageContent_AccessDenied" style="display:none">
+                        You do not have access to the document you are requesting. Please Contact the Document Owner and Request Access<br /><br />
+                        Thank you,<br />
+                        Digital Example Support Staff.
+                    </span>
+                    
+                    <span id="deui_error_dialog_messageContent_NotFound" style="display:none">
+                        The Document or Page you request could not be found<br /><br />
+                        Thank you,<br />
+                        CDigital Example Support Staff.
+                    </span>
+                    
+                </div>
+                
+                <div id="deui_error_dialog_errorMessage_details" style="width:100%;height:200px;overflow:scroll;display:none">
+                    <div><b>Error&nbsp;Message:&nbsp;</b><span style="white-space: pre;" id="deui_error_dialog_errorMessageDetails_displayedErrorMessage"></span></div>
+                    <div><b>Exception&nbsp;Type:&nbsp;</b><span style="white-space: pre;" id="deui_error_dialog_errorMessageDetails_ExceptionType"></span></div>
+                    <div><b>Error&nbsp;Details:&nbsp;</b><span style="white-space: pre;" id="deui_error_dialog_errorMessageDetails_ExceptionMessage"></span></div>
+                    <div><b>Stack&nbsp;Trace:&nbsp;</b><div style="white-space: pre;" id="deui_error_dialog_errorMessageDetails_StackTrace"></div></div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+    <div class="modal-footer">
+
+        <button class="btn btn-primary" ng-hide="allowRetry" id="deui_error_dialog_btnOk">OK</button>
+        <button class="btn btn-primary" ng-show="allowRetry" id="deui_error_dialog_btnRetry">Retry</button>
+        <button class="btn btn-warning" ng-show="allowRetry" id="deui_error_dialog_btnCancel">Cancel</button>
+
+    </div>
+</div>

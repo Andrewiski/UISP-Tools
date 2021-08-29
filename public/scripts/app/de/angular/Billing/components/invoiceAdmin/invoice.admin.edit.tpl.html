@@ -1,0 +1,306 @@
+﻿<div class="container-fluid">
+    <div class="centered" ng-hide="invoiceDoneLoading">
+        <h2 class="centered">
+            <span class="fa fa-refresh spin"></span>
+            Loading...
+        </h2>
+    </div>
+    <div class="container-fluid" ng-show="invoiceDoneLoading">
+        <ng-form name="invoiceDetailsForm">
+
+            <div class="row">
+                <div class="col-xs-12">
+                    <div class="invoiceProcessingList">
+                        <div class="row">
+                            <div class="col-xs-2">Date</div>
+                            <div class="col-xs-2">Type</div>
+                            <div class="col-xs-2">Details</div>
+                        </div>
+                        <div ng-repeat="invoiceProcessing in invoice.invoiceProcessings" class="row">
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-1 h4">Customer</div>
+                <div class="col-md-10">
+                    <div ng-hide="customerSearchEnabled">
+                        <div class="col-xs-3">{{getContactFormatedName(selectedCustomer.customer.billingContact)}}</div>
+                        <div class="col-xs-1"><a href="" ng-click="enableCustomerSearch()"><i class="fa fa-search" aria-hidden="true"></i></a></div>
+                        <!--<div class="col-xs-1"><a href="" ng-click="editCustomer(selectedCustomer.customer)">edit</a></div>-->
+                    </div>
+                    <div ng-show="customerSearchEnabled" class="input-group col-md-offset-1 col-md-10">
+                        <ui-select name="Invoice_Customer" ng-model="selectedCustomer.customer"
+                                   theme="bootstrap"
+                                   reset-search-input="false"
+                                   class="input-group col-xs-6"
+                                   style="width:300px"
+                                   autofocus="true"
+                                   focus-on="Invoice_Customer_Search"
+                                   on-select="customerSelected($item, $model, invoice.customer)">
+                            <ui-select-match placeholder=" enter an name...">
+                                {{$select.selected.billingContact.lastName}}, {{$select.selected.billingContact.firstName}}
+                            </ui-select-match>
+                            <ui-select-choices repeat="customer in customerSearchList"
+                                               refresh="refreshCustomers($select.search)"
+                                               refresh-delay="0">
+                                <div ng-bind-html="customer.billingContact.lastName + ',' + customer.billingContact.firstName  | highlight: $select.search"></div>
+                            </ui-select-choices>
+                        </ui-select>
+                    </div>
+
+                </div>
+
+            </div>
+            <!--<div class="row">
+                <div>
+                    <label class="h4">invoice Payment Info</label><span class="col-xs-1"><a href="" ng-click="invoicePaymentIsEditMode = !invoicePaymentIsEditMode">edit</a></span>
+                    <div data-invoice-payment="invoice.invoicePayment" data-is-edit-mode="invoicePaymentIsEditMode" data-is-admin-mode="true"></div>
+                </div>
+            </div>-->
+            <div class="row ">
+
+                <div class="col-xs-12 invoiceInfo">
+                    <span class="folded-corner"></span>
+                    <div class="row" style="padding-right: 0;">
+                        <div class="col-xs-6">
+                            <div class="businessLogo"><img border="0" alt="" ng-src="{{invoiceServiceCommon.merchantSettings.logoUrl}}"></div>
+                            <div class="businfobox">
+                                <div class="headline">{{invoiceServiceCommon.merchantSettings.companyName}}</div>
+                                <div ng-show="invoiceServiceCommon.merchantSettings.firstName != ''">{{invoiceServiceCommon.merchantSettings.firstName}}&nbsp;{{invoiceServiceCommon.merchantSettings.lastName}}</div>
+                                <div>{{invoiceServiceCommon.merchantSettings.addressLine1}}</div>
+                                <div>{{invoiceServiceCommon.merchantSettings.addressCity}},&nbsp;{{invoiceServiceCommon.merchantSettings.addressState}}&nbsp;{{invoiceServiceCommon.merchantSettings.zipCode}}</div>
+                                <div>{{invoiceServiceCommon.merchantSettings.phone}}</div>
+                                <div>{{invoiceServiceCommon.merchantSettings.email}}</div>
+                                <div>{{invoiceServiceCommon.merchantSettings.website}}</div>
+                            </div>
+
+                        </div>
+                        <div class="col-xs-6 ">
+                            <div class="row">
+                                <div class="col-xs-5"></div>
+                                <div class="col-xs-7" style="text-align: left; padding-left: 3px;">
+                                    <div class="pageCurl">INVOICE</div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-5"></div>
+                                <div class="col-xs-7" style="text-align: left; padding-left: 3px;padding-right: 0;">
+                                    <div class="row" style="padding-right: 0;">
+                                        <div class="invoiceStatus" ng-show="isOverDue">
+                                            <div style="padding-right: 163px;">Overdue</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row invsummary">
+                                <div class="col-xs-7" style="text-align: right; padding-right: 10px;"><label>Invoice #:</label></div>
+                                <div class="col-xs-5" style="padding-left: 3px;">INV-{{invoice.invoiceId}}</div>
+                            </div>
+                            <div class="row invsummary">
+                                <div class="col-xs-7" style="text-align: right; padding-right: 10px;"><label>Invoice Date:</label></div>
+                                <div class="col-xs-5" style="padding-left: 3px;">
+                                    <div class="input-group" moment-picker="invoice.invoiceDate" today="true" keyboard="true" format="MM/DD/YYYY" min-view="year" max-view="day" start-view="year">
+                                        <input  ng-model="invoice.invoiceDate" placeholder="Invoice Date" id="invoiceDate" name="invoiceDate" class="form-control" ng-model-options="{ updateOn: 'blur' }" />
+                                        <!--{{invoice.invoiceDate}}-->
+                                        <span class="input-group-addon">
+                                            <i class="fa fa-calendar"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row form-group">
+                                <div class="col-xs-7" style="text-align: right; padding-right: 10px;"><label for="InvoiceSearch_Status">Status:</label></div>
+                                <div class="col-xs-5" style="padding-left: 3px;"><select class="form-control" ng-model="invoice.invoiceStatusId" name="invoiceStatus" ng-options="item.invoiceStatusId as item.name for item in invoiceServiceCommon.statics.invoiceStatusList"></select></div>
+                            </div>
+                            <div class="row invsummary">
+                                <div class="col-xs-7" style="text-align: right; padding-right: 10px;"><label>Terms:</label></div>
+                                <div class="col-xs-5" style="padding-left: 3px;"><select class="form-control" ng-model="invoice.invoiceTermTypeId" name="invoiceTermType" ng-options="item.invoiceTermTypeId as item.name for item in invoiceServiceCommon.statics.invoiceTermTypeList"></select></div>
+                            </div>
+
+                            <div class="row invsummary">
+                                <div class="col-xs-7" style="text-align: right; padding-right: 10px;"></div>
+                                <div class="col-xs-5" style="padding-left: 3px;">
+                                    <div class="paySummary text-center">
+                                        <div>Amount due:</div>
+                                        <div class="amount"><strong>{{getInvoiceTotal(invoice) | currency}}</strong></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="sectionBottom"></div>
+
+                    <div class="row">
+                        <div class="col-xs-5">
+                            <div class="row">
+                                <label class="col-xs-4">Bill To:</label>
+                                <span class="col-xs-1"><a href="" ng-click="billingContactIsEditMode = !billingContactIsEditMode">edit</a></span>
+                            </div>
+
+                            <div class="businfobox recipientInfo">
+                                <div data-invoice-contact="invoice.billingContact" is-edit-mode="billingContactIsEditMode"></div>
+                            </div>
+                        </div>
+                        <div class="col-xs-1 col-xs-offset-1">
+                        </div>
+                        <div class="col-xs-5">
+                            <div class="row">
+                                <label class="col-xs-4">Bill To:</label>
+                                <span class="col-xs-1"><a href="" ng-click="shippingContactIsEditMode = !shippingContactIsEditMode">edit</a></span>
+                                <span class="col-xs-1"><a href="" ng-click="copyBillingAddress()">copy</a></span>
+                            </div>
+
+                            <div class="businfobox recipientInfo">
+                                <div data-invoice-contact="invoice.shippingContact" is-edit-mode="shippingContactIsEditMode"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="invoiceItemsAndTotals">
+                        <div class="invoiceitemheader">
+                            <div class="col-xs-3">Product #</div>
+                            <div class="col-xs-4">Description</div>
+                            <div class="col-xs-1 itemquantity text-right">Qty</div>
+                            <div class="col-xs-2 itemprice text-right">Price</div>
+                            <div class="col-xs-1 itemtax text-right">No Tax</div>
+                            <div class="col-xs-1 itemamount text-right">Amount</div>
+                        </div>
+                        <div class="clearfix"></div>
+                        <div class="form-group" ng-repeat="invoiceItem in invoice.invoiceItems | filter:isDeleted">
+
+                            <div class="col-xs-3">
+
+                                <a href="" ng-click="removeInvoiceItem(invoiceItem,$index)"><i class="fa fa-minus-circle" aria-hidden="true"></i></a>
+                                <span class="col-xs-10"><input type="text" ng-model="invoiceItem.productNumber" ng-attr-name="InvoiceItem_ProductNumber_{{$index}}" class="form-control input-sm" ng-required="true" /></span>
+                                <span class="alert-danger" ng-show="invoiceDetailsForm['InvoiceItem_ProductNumber_' + $index].$error.required">*</span>
+                                <a href="" ng-click="enableProductSearch($index)"><i class="pull-right fa fa-search"></i></a>
+
+                                <div ng-show="productSearchEnabled($index)">
+                                    <ui-select name="InvoiceItem_ProductSearch"
+                                               on-select="productSelected($item, $model, invoiceItem, $index)"
+                                               theme="bootstrap"
+                                               reset-search-input="false"
+                                               class="input-group col-xs-6"
+                                               style="width:300px"
+                                               autofocus="true"
+                                               focus-on="InvoiceItem_ProductNumber_{{$index}}"
+                                               ng-model="selectedProduct">
+                                        <ui-select-match placeholder="Enter a ProductNumber">{{$select.selected.productNumber}}</ui-select-match>
+                                        <ui-select-choices repeat="product in productSearchList"
+                                                           refresh="refreshProducts($select.search)"
+                                                           refresh-delay="0">
+                                            <div ng-bind-html="product.productNumber + ' ' + productItem.Name  | highlight: $select.search"></div>
+                                        </ui-select-choices>
+                                    </ui-select>
+                                </div>
+                            </div>
+                            <div class="col-xs-4">
+                                <input type="text" ng-model="invoiceItem.description" ng-attr-name="InvoiceItem_Description_{{$index}}" class="form-control input-sm" ng-required="true" />
+                                <span class="alert-danger" ng-show="invoiceDetailsForm['InvoiceItem_Description_' + $index].$error.required">*</span>
+                            </div>
+                            <div class="col-xs-1">
+                                <input type="number" min="1" step="1" max="100" ng-model="invoiceItem.quantity" ng-attr-name="InvoiceItem_Quantity_{{$index}}" class="form-control input-sm text-right" ng-required="true" />
+                                <span class="alert-danger" ng-show="invoiceDetailsForm['InvoiceItem_Quantity_' + $index].$error.required || invoiceDetailsForm['InvoiceItem_Quantity_' + $index].$invalid">*</span>
+                            </div>
+                            <div class="col-xs-2">
+                                <input type="number" step="0.01" ng-model="invoiceItem.price" ng-attr-name="InvoiceItem_Price_{{$index}}" class="form-control input-sm text-right" ng-required="true" />
+                                <span class="alert-danger" ng-show="invoiceDetailsForm['InvoiceItem_Price_' + $index].$error.required || invoiceDetailsForm['InvoiceItem_Price_' + $index].$invalid">*</span>
+                            </div>
+                            <div class="col-xs-1">
+                                <input type="checkbox" ng-model="invoiceItem.taxExempt" ng-attr-name="InvoiceItem_TaxExempt_{{$index}}" />
+                            </div>
+                            <div class="col-xs-1 itemamount text-right">{{(invoiceItem.price * invoiceItem.quantity) | currency}}</div>
+                        </div>
+                        <div class="clearfix"></div>
+                        <div class="">
+                            <div class="col-xs-1"><a href="" ng-click="addInvoiceItem()"><i class="pull-left fa fa-plus-circle"></i></a></div>
+                        </div>
+                        <div class="clearfix"></div>
+                        <div class="invoiceTotals">
+                            <div>
+                                <div class="col-xs-9">&nbsp;</div>
+                                <div class="col-xs-2 text-right">Subtotal</div>
+                                <div class="col-xs-1 text-right">{{getInvoiceSubTotal(invoice) | currency}}</div>
+                            </div>
+                            <div class="clearfix"></div>
+                            <div ng-show="invoice.shippingCharge">
+                                <div class="col-xs-9">&nbsp;</div>
+                                <div class="col-xs-2 text-right">Shipping/Handling</div>
+                                <div class="col-xs-1 text-right">{{invoice.shippingCharge | currency}}</div>
+                            </div>
+                            <div class="clearfix"></div>
+                            <div>
+                                <div class="col-xs-9">&nbsp;</div>
+                                <div class="col-xs-2 text-right">Tax {{invoice.taxRatePercentage * 100 | number:2}}%</div>
+                                <div class="col-xs-1 text-right">{{getInvoiceTax(invoice) | currency}}</div>
+                            </div>
+                            <div class="clearfix"></div>
+                            <div class="invoiceTotal">
+                                <div class="col-xs-9">&nbsp;</div>
+                                <div class="col-xs-2 text-right">Total</div>
+                                <div class="col-xs-1 text-right">{{getInvoiceTotal(invoice) | currency}}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="clearfix"></div>
+                    <div style="margin-top: 20px;"></div>
+                    <div class="clearfix"></div>
+                    <div>
+                        <div class="col-xs-7">Invoice Tax Rate</div>
+                        <div class="col-xs-5" style="padding-left: 3px;"><select class="form-control" ng-model="invoice.taxRatePercentage" name="invoiceTaxRatePercentage" ng-options="item.taxRatePercentage as item.name for item in invoiceServiceCommon.statics.invoiceTaxRateTypeList"></select></div>
+                    </div>
+                    <div class="clearfix"></div>
+                    <div style="margin-top: 20px;"></div>
+                    <div class="clearfix"></div>
+                    <div>
+                        <div class="col-xs-12">
+                            <div>
+                                <label>Description</label>
+                                <input type="text" ng-model="invoice.description" class="form-control input-sm" ng-required="true" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="clearfix"></div>
+                    <div>
+                        <div class="col-xs-12">
+                            <div>
+                                <label>Comments</label>
+                                <div text-angular="text-angular" name="invoiceComments" ng-model="invoice.comments"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-10">
+                    <div class="row">
+                        <div class="col-xs-1">
+                            <button class="btn btn-success" ng-disabled="!invoiceDetailsForm.$dirty" ng-click="saveAdminInvoice()">Save</button>
+                        </div>
+                        <div class="col-xs-1">
+                            dirty:{{invoiceDetailsForm.$dirty}}
+                        </div>
+                        <div class="col-xs-1">
+                            Valid:{{invoiceDetailsForm.$valid}}
+                        </div>
+                        <div class="col-xs-5">
+                            <div class="row" ng-repeat="etype in invoiceDetailsForm.$error">
+                                <div class="col-xs-2">type:{{etype}}</div>
+                                <div class="col-xs-10">
+                                    <div class="row" ng-repeat="errorval in invoiceDetailsForm.$error[etype]">
+                                        <div class="col-xs-12">name:{{errorval.name}}</div>
+
+                                    </div>
+                                </div>
+                            </div>
+                            error:{{invoiceDetailsForm.$error}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </ng-form>
+    </div>
+</div>

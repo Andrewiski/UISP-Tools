@@ -1,0 +1,80 @@
+﻿<div class="container-fluid">
+    <div class="centered" ng-hide="invoiceCustomerDoneLoading">
+        <h2 class="centered">
+            <span class="fa fa-refresh spin"></span>
+            Loading...
+        </h2>
+    </div>
+    <div ng-show="invoiceCustomerDoneLoading">
+        <div class="row">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Contact Info</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-xs-5">
+                            <div class="row">
+                                <span class="h4 col-xs-4">Bill To: </span>
+                            </div>
+
+                            <div class="businfobox recipientInfo">
+                                <div data-invoice-contact="data.customer.billingContact" data-is-edit-mode="false"></div>
+                            </div>
+                        </div>
+                        <div class="col-xs-1 col-xs-offset-1">
+                        </div>
+                        <div class="col-xs-5">
+                            <div class="row">
+                                <span class="h4 col-xs-4">Ship To:</span>
+
+                            </div>
+
+                            <div class="businfobox recipientInfo">
+                                <div data-invoice-contact="data.customer.shippingContact" data-is-edit-mode="false"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Payment Methods</h3>
+                </div>
+                <div class="panel-body">
+                    <div>
+                        <div>
+                            <button class="btn btn-default btn-sm" ng-click="addCustomerInvoicePayment()"><i class="fa fa-plus" aria-hidden="true"></i>Add</button>
+                        </div>
+                    </div>
+                    <div class="row" ng-repeat="customerInvoicePayment in data.customer.customerInvoicePaymentCons | filter:{isDeleted:false}">
+                        <div class="col-sm-1">{{customerInvoicePayment.createdDate| date : 'MM/dd/yyyy'}}</div>
+                        <div class="col-sm-8">
+                            <div data-invoice-payment="customerInvoicePayment.invoicePayment.invoicePaymentInfo" data-is-edit-mode="customerInvoicePayment.isInEditMode == true" data-is-list-mode="true" data-is-admin-mode="true"></div>
+                        </div>
+                        <div class="col-sm-2">
+                            <button ng-hide="customerInvoicePayment.isInEditMode == true" class="btn btn-default btn-sm" ng-click="editCustomerInvoicePayment(customerInvoicePayment)"><i class="fa fa-pencil-alt" aria-hidden="true"></i></button>
+                            <button ng-hide="customerInvoicePayment.isInEditMode == true" class="btn btn-default btn-sm" ng-click="deleteCustomerInvoicePayment(customerInvoicePayment)"><i class="fa fa-trash-alt" aria-hidden="true"></i></button>
+                            <button ng-show="customerInvoicePayment.isInEditMode == true" class="btn btn-default btn-sm" ng-click="saveCustomerInvoicePayment(customerInvoicePayment)"><i class="fa fa-save" aria-hidden="true"></i></button>
+                            <button ng-show="customerInvoicePayment.isInEditMode == true" class="btn btn-default btn-sm" ng-click="cancelEditCustomerInvoicePayment(customerInvoicePayment)"><i class="fa fa-window-close-o" aria-hidden="true"></i></button>
+
+                        </div>
+                    </div>
+                    <div class="row" ng-hide="data.customer.customerInvoicePaymentCons.length">
+                        <div>No Payment Methods On File</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        
+
+
+        
+
+        
+    </div>
+</div>
+

@@ -1,0 +1,67 @@
+﻿<h5>Invoice Transactions - Admin</h5>
+<div class="container-fluid">
+    <div class="row">
+        <form class="form-inline">
+            <div class="form-group">
+                <label for="InvoiceSearch_Status">Status</label>
+                <select class="form-control" ng-model="invoiceTransactionListRequest.invoiceTransactionStatusId" name="InvoiceTransactionSearch_Status" ng-options="item.invoiceTransactionStatusId as item.name for item in invoiceTransactionStatusListSearch">
+                </select>
+            </div>
+            <!--<div class="form-group">
+                <label for="InvoiceSearch_Type">Type</label>
+                <select class="form-control" ng-model="invoiceListRequest.invoiceTypeId" name="InvoiceSearch_Type" ng-options="item.invoiceTypeId as item.name for item in invoiceServiceCommon.statics.invoiceTypeList">
+                    <option value="-1">All</option>
+                </select>
+            </div>-->
+            
+            <div class="form-group col-xs-9">
+                <label class="col-xs-1" for="InvoiceTransactionSearch_Customer">Customer</label>
+                <div class="input-group col-xs-offset-1 col-xs-7">
+                    <ui-select name="InvoiceTransactionSearch_Customer" ng-model="invoiceTransactionListRequest.customerGuid"
+                               theme="bootstrap"
+                               ng-disabled="disabled"
+                               reset-search-input="false"
+                               >
+                        <ui-select-match  placeholder="Enter an Name...">{{$select.selected.billingContact.lastName}}, {{$select.selected.billingContact.firstName}}</ui-select-match>
+                        <ui-select-choices repeat="customer.customerGuid as customer in customerSearchList"
+                                           refresh="refreshCustomers($select.search)"
+                                           refresh-delay="0">
+                            <div ng-bind-html="customer.billingContact.lastName + ',' + customer.billingContact.firstName  | highlight: $select.search"></div>
+                        </ui-select-choices>
+                    </ui-select>
+                </div>
+            </div>
+            <div class="form-group col-xs-3">
+                <button class="btn btn-primary" ng-click="refreshInvoiceTransactions()">Search</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="container-fluid">
+    <hr />
+</div>
+<div class="centered" ng-hide="invoiceTransactionListDoneLoading">
+    <h2 class="centered">
+        <span class="fa fa-refresh spin"></span>
+        Loading...
+    </h2>
+</div>
+<div class="container-fluid" ng-show="invoiceTransactionListDoneLoading">
+    <div class="row">
+        <!--<div class="col-xs-1">Select</div>-->
+        <div class="col-xs-2">Transaction Date</div>
+        <div class="col-xs-1">Total</div>
+        <div class="col-xs-1">Status</div>
+        <div class="col-xs-2">Customer</div>
+        <div class="col-xs-6">Description</div>
+    </div>
+    <div class="row" ng-repeat="invoiceTransaction in invoiceTransactionList">
+        <!--<div class="col-xs-1"><input type="checkbox" /></div>-->
+        <div class="col-xs-2"><a ui-sref="admin.invoiceTransaction({invoiceTransactionGuid: invoiceTransaction.invoiceTransactionGuid})">{{invoiceTransaction.transactionDate | date : 'MM/dd/yyyy hh:mm:ss'}}</a></div>
+        <div class="col-xs-1"> {{ invoiceTransaction.transactionAmount | currency  }} </div>
+        <div class="col-xs-1"> {{ getStaticName('invoiceTransactionStatusList',invoiceTransaction.invoiceTransactionStatusId)}} </div>
+        <div class="col-xs-2"> {{ invoiceTransaction.customerInvoiceTransactionCons[0].customer.billingContact.firstName }} {{ invoiceTransaction.customerInvoiceTransactionCons[0].customer.billingContact.lastName }} </div>
+        <div class="col-xs-6"> {{ invoiceTransaction.transactionResponseReason}} </div>
+    </div>
+
+</div>

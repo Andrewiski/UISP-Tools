@@ -1,0 +1,118 @@
+﻿<div class="container">
+    <div class="row">
+        <div class="col-md-10">
+            <div>
+                <label class="control-label">Address</label>
+            </div>
+            <div class="row">
+                <div class="col-sm-2">
+                    <div class="form-group" ng-class="{'has-error': StreetNumber.$invalid && StreetNumberVisited }">
+                        <label class="control-label" ng-attr-for="{{ id + '_streetnumber'}}">St. Number</label>
+                        <i class="fas fa-asterisk required"></i>
+                        <div><input type="text" class="form-control" ng-attr-name="{{ id + '_streetnumber'}}" ng-attr-id="{{ id + '_streetnumber'}}" ng-model="address.StreetNumber" placeholder="St. Number" ng-blur="StreetNumberVisited=true;" required="" tabindex="14"></div>
+                    </div>
+                </div>
+                <div class="col-sm-2">
+                    <div class="form-group" ng-class="{'has-error': StreetDirection.$invalid && StreetDirectionVisited }">
+                        <label class="control-label" for="StreetDirection">
+                            St. Direction
+                        </label>
+                        <i class="fas fa-asterisk required"></i>
+                        <div>
+                            <ui-select ng-model="address.StreetDirection" name="StreetDirection" id="StreetDirection" theme="bootstrap" search-enabled="true" tabindex="13">
+                                <ui-select-match placeholder="Select a Street Direction">{{ $select.selected.StreetDirection }}</ui-select-match>
+                                <ui-select-choices repeat="StreetDirection in StreetDirectionList |  filter: $select.search">
+                                    <div ng-bind-html="StreetDirection.name | highlight: $select.search"></div>
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-4">
+                    <div class="form-group" ng-class="{'has-error': StreetName.$invalid && StreetNameVisited }">
+                        <label class="control-label" for="StreetName">Street Name</label>
+                        <i class="fas fa-asterisk required"></i>
+                        <input type="text" class="form-control" name="StreetName" id="StreetName" ng-model="address.StreetName" placeholder="Street Name" ng-blur="StreetNameVisited=true;" required="" tabindex="14">
+                    </div>
+                </div>
+                <div class="col-sm-2">
+                    <div class="form-group">
+                        <label class="control-label" for="brokerState">Street Suffix</label>
+                        <i class="fas fa-asterisk required"></i>
+                        <div>
+                            <ui-select ng-model="address.streetSuffix" name="StreetSuffix" id="StreetSuffix" theme="bootstrap" search-enabled="true" tabindex="13">
+                                <ui-select-match placeholder="Select a Street Suffix">{{ $select.selected.StreetSuffix }}</ui-select-match>
+                                <ui-select-choices repeat="Suffix in StreetSuffixList |  filter: $select.search">
+                                    <div ng-bind-html="Suffix.name | highlight: $select.search"></div>
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <label class="control-label" for="brokerState">Unit Type</label>
+                        <i class="fas fa-asterisk required"></i>
+                        <div>
+                            <ui-select ng-model="address.UnitType" name="UnitType" id="UnitType" theme="bootstrap" search-enabled="true" tabindex="13">
+                                <ui-select-match placeholder="Select a UnitType">{{ $select.selected.UnitType }}</ui-select-match>
+                                <ui-select-choices repeat="UnitType in UnitTypeList |  filter: $select.search">
+                                    <div ng-bind-html="UnitType.name | highlight: $select.search"></div>
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="form-group" ng-class="{'has-error': Unit.$invalid && UnitVisited }">
+                        <label class="control-label" for="Unit">Unit Number</label>
+                        <i class="fas fa-asterisk required"></i>
+                        <div>
+                            <input type="text" class="form-control" name="Unit" id="Unit" ng-model="address.Unit" placeholder="Unit" ng-blur="UnitVisited=true;" required="" tabindex="14">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-4">
+                    <div class="form-group" ng-class="{'has-error': City.$invalid && CityVisited }">
+                        <label class="control-label" for="brokerCity">
+                            City
+                        </label>
+                        <i class="fas fa-asterisk required"></i>
+                        <input type="text" class="form-control" ng-model="formData.brokerCity" id="brokerCity" name="brokerCity" placeholder="City" required=""
+                               ng-blur="brokerCityVisited = true;" tabindex="12"
+                               typeahead="city.CityName for city in queryCities($viewValue) | limitTo:8">
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <label class="control-label" for="brokerState">State</label>
+                        <i class="fas fa-asterisk required"></i>
+                        <div>
+                            <ui-select ng-model="formData.state" name="brokerState" id="brokerState" theme="bootstrap" search-enabled="true" tabindex="13">
+                                <ui-select-match placeholder="Select a state">{{ $select.selected.StateName }}</ui-select-match>
+                                <ui-select-choices repeat="state in stateCodes |  filter: $select.search">
+                                    <div ng-bind-html="state.StateName | highlight: $select.search"></div>
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="form-group" ng-class="{'has-error': signupForm.brokerZip.$invalid && brokerZipVisited }">
+                        <label class="control-label" for="brokerZip">Zip</label>
+                        <i class="fas fa-asterisk required"></i>
+                        <input type="text" class="form-control" name="brokerZip" id="brokerZip" ng-model="formData.brokerZip" placeholder="Zip Code" ng-pattern="/^\d{5}(-\d{4})?$/" ng-blur=" brokerZipVisited=true;" required="" tabindex="14">
+                    </div>
+                </div>
+            </div>
+        </div> <!-- .col-md-8 -->
+
+    </div> <!-- .row -->
+</div>

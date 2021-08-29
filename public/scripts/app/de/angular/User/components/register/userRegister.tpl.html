@@ -1,0 +1,88 @@
+﻿<div class="container-fluid">
+    <div class="centered" ng-hide="doneLoading">
+        <h2 class="centered">
+            <span class="fa fa-refresh spin"></span>
+            Loading...
+        </h2>
+    </div>
+    <div ng-show="doneLoading" class="row">
+        <div class="col-md-6">
+            <ng-form name="registerUser" class="css-form form-horizontal" novalidate>
+                <div class="row">
+                    <h4>Create a new account.</h4>
+                    <hr />
+                </div>
+                <div class="alert alert-danger" ng-show="showErrors || registerUser.$submitted && registerUser.$valid == false ">
+                    <ul>
+                        <li class="error" ng-show="showErrors">{{errors}}</li>
+                        <li class="error" ng-show="registerUser.Email.$error.alreadyinuse">The Email Address is Already assigned to another account!</li>
+                        <li class="error" ng-show="registerUser.Email.$error.required">The Email field is required!</li>
+                        <li class="error" ng-show="registerUser.Email.$error.email">The email field is not a valid e-mail address!</li>
+                        <li class="error" ng-show="registerUser.FirstName.$error.required">The First Name field is required!</li>
+                        <li class="error" ng-show="registerUser.LastName.$error.required">The Last Name field is required!</li>
+                        <li class="error" ng-show="registerUser.HomeTown.$error.required">The Hometown field is required!</li>
+                        <li class="error" ng-show="registerUser.Password.$error.required">The Password field is required!</li>
+                        <li class="error" ng-show="registerUser.Password.$error.minlength">The Password must be at least 6 characters long!</li>
+                        <li class="error" ng-show="registerUser.Password.$error.maxlength">The Password must be at less then 100 characters long!</li>
+                        <li class="error" ng-show="registerUser.ConfirmPassword.$error.$invalid">The password and confirmation password do not match!</li>
+                    </ul>
+                </div>
+                <div class="row">
+                    <div class="has-feedback" bs-has>
+                        <label class="control-label" for="Email">Email</label>
+                        <input ng-model="user.Email" class="form-control" placeholder="Email Address" required id="Email" name="Email" type="email" value="" />
+                        <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                        <span class="fas fa-check form-control-feedback bs-success"></span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="has-feedback" bs-has>
+                        <label class="control-label" for="FirstName">First Name</label>
+                        <input ng-model="user.FirstName" class="form-control" placeholder="First Name" required id="FirstName" name="FirstName" type="text" value="" />
+                        <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                        <span class="fas fa-check form-control-feedback bs-success"></span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="has-feedback" bs-has>
+                        <label class="control-label" for="LastName">Last Name</label>
+                        <input ng-model="user.LastName" class="form-control" id="LastName" name="LastName" type="text" value="" required />
+                        <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                        <span class="fas fa-check form-control-feedback bs-success"></span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="has-feedback" bs-has>
+                        <label class="control-label" for="PhoneNumber">Cell Phone Number</label>
+                        <input ng-model="user.PhoneNumber" class="form-control" required id="PhoneNumber" name="PhoneNumber" type="text" value="" />
+                        <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                        <span class="fas fa-check form-control-feedback bs-success"></span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="has-feedback" bs-has>
+                        <label class="control-label" for="Password">Password</label>
+                        <input ng-model="user.Password" class="form-control" id="Password" name="Password" type="password" required />
+                        <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                        <span class="fas fa-check form-control-feedback bs-success"></span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="has-feedback" bs-has>
+                        <label class="control-label" for="ConfirmPassword">Confirm password</label>
+                        <input ng-model="user.ConfirmPassword" class="form-control" id="ConfirmPassword" name="ConfirmPassword" type="password" ngrequired="passwordsMatch()" />
+                        <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                        <span class="fas fa-check form-control-feedback bs-success"></span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="pull-right">
+                        <br />
+                        <button class="btn btn-primary btn-sm" ng-click="UserRegister()">Register</button>
+                    </div>
+                </div>
+
+            </ng-form>
+        </div>
+    </div>
+</div>

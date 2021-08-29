@@ -1,0 +1,43 @@
+﻿
+<div class="container-fluid">
+    <h4>Customer Search</h4>
+    <div class="row">
+        <ng-form class="form-inline">
+            <div class="row">
+                <div class="col-md-4">
+                    <label class="control-label" for="email">
+                        Customer Name:
+                    </label>
+                    <input type="text" class="form-control" ng-model="persistedData.customerSearch.name" ng-change="refreshCustomers()" placeholder="Enter Customer Name to Search" tabindex="4" />
+                </div>
+                <div class="col-md-4">
+                    <label class="control-label" for="email">
+                        Status:
+                    </label>
+                    <select class="form-control" ng-model="persistedData.customerSearch.customerStatus" ng-change="refreshCustomers()" tabindex="5">
+                        <option value="-1">All</option>
+                        <option value="1">Active</option>
+                        <option value="2">Inactive</option>
+                    </select>
+                    
+                </div>
+                <div class="col-md-4">
+                    
+                    <a ui-sref="admin.invoicecustomers.customerEdit({customerGuid:'new'})" tabindex="6" class=" btn btn-default btn-sm" ng-click><i class="fa fa-plus"></i>Add</a>
+                </div>
+            </div>
+        </ng-form>
+    </div>
+    <hr />
+
+    <div class="centered" ng-hide="doneLoading">
+        <h2 class="centered">
+            <span class="fa fa-refresh spin"></span>
+            Loading...
+        </h2>
+    </div>
+    <div ng-show="doneLoading">
+        <div data-invoice-customer-list="persistedData.customerSearchList"></div>
+
+    </div>
+</div>

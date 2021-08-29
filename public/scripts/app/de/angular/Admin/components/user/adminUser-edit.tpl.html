@@ -1,0 +1,138 @@
+﻿<div class="container-fluid">
+
+    <div class="centered" ng-hide="doneLoading">
+        <h2 class="centered">
+            <span class="fa fa-refresh spin"></span>
+            Loading...
+        </h2>
+    </div>
+    <div ng-show="doneLoading">
+        <div ng-show="mode=='view'">
+            <div class="row">
+                <label class="control-label" for="email">UserName/Email</label>
+                <span class="form-control-static">{{user.email}}</span>
+            </div>
+
+            <div class="row">
+                <label class="control-label" for="firstName">First Name</label>
+                <span class="form-control-static">{{user.firstName}}</span>
+            </div>
+            <div class="row">
+                <label class="control-label" for="lastName">Last Name</label>
+                <span class="form-control-static">{{user.lastName}}</span>
+            </div>
+
+            <div class="row">
+                <label class="control-label" for="phoneNumber">Cell Phone</label>
+                <span class="form-control-static">{{user.phoneNumber}}</span>
+            </div>
+            <div class="row">
+                <label class="control-label" for="phoneProvider">Phone Provider</label>
+                <span class="form-control-static">{{user.phoneProvider}}</span>
+            </div>
+            <div class="row">
+                <h4>Customer</h4>
+                <div data-invoice-customer-list="customers"></div>
+            </div>
+            <hr class="row" />
+            <div class="row">
+                <div class="form-group col-xs-5">
+                    <button class="btn btn-danger" ng-click="DeleteUser()">Delete</button> <button class="btn btn-primary" ng-click="EditUser()">Edit</button> <button class="btn btn-primary" ng-click="ChangePassword()">Change Password</button>
+                </div>
+            </div>
+        </div>
+        <ng-form ng-show="mode=='edit'" name="UserForm" novalidate class="css-form form-horizontal">
+            <!--<div class="row">
+                <div class="has-feedback" bs-has>
+                    <label class="control-label" for="userName">User Name</label>
+                    <input type="text" class="form-control" name="userName" ng-model="user.userName" placeholder="User Name" tabindex="200">
+                    <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                    <span class="fas fa-check form-control-feedback bs-success"></span>
+                </div>
+            </div>-->
+            <div class="row">
+                <div class="has-feedback" bs-has>
+                    <label class="control-label" for="email">UserName/Email</label>
+                    <input type="email" class="form-control" name="email" ng-model="user.email" placeholder="Email" tabindex="220">
+                    <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                    <span class="fas fa-check form-control-feedback bs-success"></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="has-feedback" bs-has>
+                    <label class="control-label" for="firstName">First Name</label>
+                    <input type="text" class="form-control" name="firstName" ng-model="user.firstName" placeholder="FirstName" tabindex="205">
+                    <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                    <span class="fas fa-check form-control-feedback bs-success"></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="has-feedback" bs-has>
+                    <label class="control-label" for="lastName">Last Name</label>
+                    <input type="text" class="form-control" name="lastName" ng-model="user.lastName" placeholder="Last Name" tabindex="210">
+                    <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                    <span class="fas fa-check form-control-feedback bs-success"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="has-feedback" bs-has>
+                    <label class="control-label" for="phoneNumber">Cell Phone</label>
+                    <input type="text" class="form-control" name="phoneNumber" ng-model="user.phoneNumber" placeholder="Cell Phone" tabindex="230">
+                    <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                    <span class="fas fa-check form-control-feedback bs-success"></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="has-feedback" bs-has>
+                    <label class="control-label" for="phoneProvider">Phone Provider</label>
+                    <select class="form-control" name="Phone Provider" ng-model="user.phoneProvider" tabindex="240">
+                        <option value="">None</option>
+                        <option value="@mms.att.net">AT&T</option>
+                        <option value="@pm.sprint.net">Sprint</option>
+                        <option value="@tmomail.net">T-Mobile</option>
+                        <option value="@vtext.com">Verizon</option>
+
+                    </select>
+                    <input type="text" class="form-control" name="phone" ng-model="user.phoneProvider" placeholder="Phone Provider" tabindex="241">
+                    <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                    <span class="fas fa-check form-control-feedback bs-success"></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-xs-5">
+                    <button class="btn btn-danger" ng-click="CancelSaveUser()">Cancel</button><button class="btn btn-primary" ng-click="SaveUser()">Save</button>
+                </div>
+            </div>
+        </ng-form>
+        <ng-form ng-show="mode=='changepassword'" name="ChangePasswordForm" novalidate class="css-form form-horizontal">
+            <div class="row">
+                <div class="has-feedback" bs-has>
+                    <label class="control-label" for="password">Password</label>
+                    <input type="password" class="form-control" name="password" ng-model="pwdchange.password" placeholder="Password" tabindex="250">
+                    <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                    <span class="fas fa-check form-control-feedback bs-success"></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="has-feedback" bs-has>
+                    <label class="control-label" for="confirm">Confirm Password</label>
+                    <input type="password" class="form-control" name="confirm" ng-model="pwdchange.confirm" placeholder="Confirm Password" tabindex="260">
+                    <span class="fas fa-remove form-control-feedback bs-error bs-invalid"></span>
+                    <span class="fas fa-check form-control-feedback bs-success"></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group col-xs-5">
+                    <button class="btn btn-danger" ng-click="CancelChangePassword()">Cancel</button><button class="btn btn-primary" ng-click="SaveChangePassword()">Save Change Password</button>
+                </div>
+
+            </div>
+
+        </ng-form>
+
+    </div>   
+
+</div>
+
+
