@@ -1,5 +1,11 @@
 FROM node:12.14-alpine3.11 
 
+# get the latest openssl
+#RUN apt-get update
+#RUN apt-get install -y openssl
+RUN apk update
+RUN apk add openssl
+
 # Create app directory
 WORKDIR /usr/src/UISPTools
 # Install app dependencies
