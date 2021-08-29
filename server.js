@@ -25,8 +25,8 @@ const ACMEHttp01 = require('./acme-http-01-memory.js');
 const OpenSSL = require('./openssl.js');
 const ConfigHandler = require("./configHandler.js");
 const Logger = require("./logger.js");
-
-const UispApiRequestHandler = require("./usipApiRequestHandler.js");
+const ioServer = require('socket.io');
+const UispApiRequestHandler = require("./uispApiRequestHandler.js");
 const DeuiApiRequestHandler = require("./deuiApiRequestHandler.js");
 
 var configFileName = 'config/config.json';
@@ -166,7 +166,14 @@ var getSocketInfo = function (socket) {
     return { ip: ip };
 };
 
+//config public files are used before public folder files to allow overwrite.
+
+if(fs.existsSync(path.join(__dirname, objOptions.configDirectory, 'public'))){
+    app.use(express.static(path.join(__dirname, objOptions.configDirectory, 'public')));
+}
+
 app.use(express.static(path.join(__dirname, 'public')));
+
 
 // disable the x-power-by express message in the header
 app.disable('x-powered-by');
@@ -207,8 +214,8 @@ var addAllFolderFilesToZip = function (folderpath, filename, zip) {
 
 
 
-if (fs.existsSync(path.join(__dirname, 'log')) === false) {
-    fs.mkdirSync(path.join(__dirname, 'log'));
+if (fs.existsSync(path.join(__dirname, 'logs')) === false) {
+    fs.mkdirSync(path.join(__dirname, 'logs'));
 }
 
 
@@ -315,9 +322,10 @@ app.use('/javascript/moment', express.static(path.join(__dirname, 'node_modules'
 app.use('/javascript/bootstrap-notify', express.static(path.join(__dirname, 'node_modules', 'bootstrap-notify')));
 app.use('/javascript/animate-css', express.static(path.join(__dirname, 'node_modules', 'animate.css')));
 app.use('/javascript/jsoneditor', express.static(path.join(__dirname, 'node_modules', 'jsoneditor', 'dist')));
-app.use(favicon(__dirname + '/public/favicon.ico'));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+if(fs.existsSync(path.join(__dirname,configFolder, '/public/images', 'favicon.ico' ))){
+    app.use(favicon(path.join(__dirname,configFolder, '/public/images', 'favicon.ico' )));
+}
+app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 app.use(fileUpload({
@@ -742,7 +750,7 @@ app.use('/', routes);
 
 
 
-const ioServer = require('socket.io');
+
 var io = null;
 //Only Wire up Admin Page and ??
 

@@ -1,0 +1,122 @@
+name: UISPTools_DockerPackage
+
+on:
+  push:
+    # Publish `master` as Docker `latest` image.
+    branches:
+      - '**'
+    #  - master
+    #  - '!master'
+    # Publish `v1.2.3` tags as releases.
+    #tags:
+    # - v*
+    # - v*
+
+  # Run tests for any PRs.
+
+env:
+  IMAGE_NAME: uisptools
+
+jobs:
+  # Run tests.
+  # See also https://docs.docker.com/docker-hub/builds/automated-testing/
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run tests
+        run: |
+          if [ -f docker-compose.test.yml ]; then
+            docker-compose --file docker-compose.test.yml build
+            docker-compose --file docker-compose.test.yml run sut
+          else
+            echo Nothing to do here yet...
+          fi
+      # echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+      # IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/sipsrv:latest
+      # docker pull $IMAGE_ID
+      # docker tag $IMAGE_ID sipsrv:latest
+
+      #docker build . --file Dockerfile    
+        
+
+  # See also https://docs.docker.com/docker-hub/builds/
+  build:
+    # Ensure test job passes before pushing image.
+    runs-on: ubuntu-latest
+    #if: github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v2          
+      - name: Get package version
+        id: step_1
+        run: |
+          cat package.json
+          grep -m1 version package.json
+          APP_VERSION=$(jq -r .version package.json)
+          echo "app_version=$APP_VERSION" >> $GITHUB_ENV
+          
+          echo Node Package Version $APP_VERSION
+
+      - name: set pakagename
+        run: |
+          PACKAGE_NAME=${{ env.IMAGE_NAME }}
+          echo "package_name=$PACKAGE_NAME" >> $GITHUB_ENV
+          echo Package Name $PACKAGE_NAME
+      
+      - name: update pakage name
+        if: ${{ github.ref != 'refs/heads/main' }}
+        run: |
+          echo Old Package Name $PACKAGE_NAME
+          BRANCH_NAME=${GITHUB_REF#refs/heads/}
+          # Force Lower Case
+          BRANCH_NAME=$(echo $BRANCH_NAME | sed -e 's/\(.*\)/\L\1/')
+          # remove spaces
+          BRANCH_NAME=$(echo $BRANCH_NAME | sed -e 's/ /_/g')
+          echo Branch Name $BRANCH_NAME
+          PACKAGE_NAME=${{ env.IMAGE_NAME }}_$BRANCH_NAME
+          echo "package_name=$PACKAGE_NAME" >> $GITHUB_ENV
+          echo New Package Name $PACKAGE_NAME
+
+      - name: Build
+        id: step_2
+        run: |
+          APP_VERSION=${{ env.app_version }}
+          PACKAGE_NAME=${{ env.package_name }}
+          echo App Version $APP_VERSION
+          echo Package Name $PACKAGE_NAME
+          docker build . --file Dockerfile --tag $PACKAGE_NAME
+          
+          IMAGE_ID=ghcr.io/${{ github.repository }}/$PACKAGE_NAME
+          # Change all uppercase to lowercase
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+          # Strip git ref prefix from version
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+          # Strip "v" prefix from tag name
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+          [ "$VERSION" == "master" ] && VERSION=latest
+          echo "version=$VERSION" >> $GITHUB_ENV
+          echo "image_id=$IMAGE_ID" >> $GITHUB_ENV
+      - name: Log in to the Container registry
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        with:
+          registry: 'ghcr.io'
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push
+        id: step_3
+        run: |
+          IMAGE_ID=${{ env.image_id }}
+          PACKAGE_NAME=${{ env.package_name }}
+          APP_VERSION=${{ env.app_version }}
+          VERSION=${{ env.version }}
+          echo ------------
+          echo PACKAGE_NAME: $PACKAGE_NAME
+          echo IMAGE_ID: $IMAGE_ID
+          echo APP_VERSION: $APP_VERSION
+          echo ------------
+          echo Try: "$IMAGE_ID:$APP_VERSION"
+          echo push step - Node Package Version $APP_VERSION
+          # VERSION=latest
+          docker tag $PACKAGE_NAME $IMAGE_ID:$APP_VERSION
+          docker push $IMAGE_ID:$APP_VERSION

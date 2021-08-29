@@ -16,7 +16,9 @@ var ConfigHandler = function (options) {
     var getConfig = function () {
         var defaultConfig = {
             "configDirectory": "config",
-            "logDirectory": "log",
+            "mongoDbServerUrl": "mongodb://Username:Password@ServerHostName:27017?connectTimeoutMS=300000&authSource=DatabaseName",
+            "mongoDbDatabaseName": "DatabaseName",
+            "logDirectory": "logs",
             "adminRoute": "/admin",
             "logLevel": "info",
             "useHttp": true,
@@ -27,7 +29,11 @@ var ConfigHandler = function (options) {
             "adminPasswordHash": "25d5241c69a02505c7440e2b4fa7804c",  //  DEToolsPassword
             "httpsServerKey": "server.key",
             "httpsServerCert": "server.cert",
-            "opensslPath":""
+            "unmsUrl": "https://uisp.example.com/nms/api/v2.1/",
+            "ucrmUrl": "https://uisp.example.com/crm/api/v1.0/",
+            "ucrmAppKey": "CreateAppKeyFromUISPWebSite",
+            "opensslPath": "",
+            "rejectUnauthorized": false
         };
 
         //localDebugOverides for testing runing localy add environment localDebug=True  or Set LocalDebug=True on Windows
