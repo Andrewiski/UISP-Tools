@@ -1,0 +1,27 @@
+services:
+  uisptools:
+    build: .
+    ports:
+      - "49443:49443"
+      - "49080:49080"
+    volumes:
+      - /usr/src/uisptools/config:/usr/src/uisptools/config
+      - /var/log:/usr/src/uisptools/logs
+    container_name: uisptools
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: uisptools
+      ME_CONFIG_MONGODB_ADMINPASSWORD: U!spT00l$!
+      ME_CONFIG_MONGODB_URL: mongodb://uisptools:U!spT00l$!@mongo:27017/
+    depends_on:
+      - mongo
+  image: mongo
+    restart: always
+    container_name: uisptools_mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: uisptools
+      MONGO_INITDB_ROOT_PASSWORD: U!spT00l$!
+      MONGO_INITDB_DATABASE: uisptools
+    volumes:
+      - /usr/src/uisptools/data/mongodb:/data/db
+    ports:
+      - "27017:27017"

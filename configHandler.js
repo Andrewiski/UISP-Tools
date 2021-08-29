@@ -22,9 +22,9 @@ var ConfigHandler = function (options) {
             "adminRoute": "/admin",
             "logLevel": "info",
             "useHttp": true,
-            "useHttps": true,
-            "httpport": 1336,
-            "httpsport": 1337,
+            "useHttps": false,
+            "httpport": 49080,
+            "httpsport": 49443,
             "adminUsername": "admin",
             "adminPasswordHash": "25d5241c69a02505c7440e2b4fa7804c",  //  DEToolsPassword
             "httpsServerKey": "server.key",

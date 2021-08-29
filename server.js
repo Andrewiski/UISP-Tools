@@ -29,8 +29,10 @@ const ioServer = require('socket.io');
 const UispApiRequestHandler = require("./uispApiRequestHandler.js");
 const DeuiApiRequestHandler = require("./deuiApiRequestHandler.js");
 
+//this does not account for configDirectory passed in for options need to fix that 08/29/2021
 var configFileName = 'config/config.json';
 if (process.env.localDebug === 'true') {
+    console.log("localDebug is enabled")
     configFileName = 'config/localDebug/config.json';
 }
 

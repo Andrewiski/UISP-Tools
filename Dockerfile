@@ -7,7 +7,7 @@ RUN apk update
 RUN apk add openssl
 
 # Create app directory
-WORKDIR /usr/src/UISPTools
+WORKDIR /usr/src/uisptools
 # Install app dependencies
 # A wildcard is used to ensure both package.json AND package-lock.json are copied
 # where available (npm@5+)
@@ -18,6 +18,6 @@ RUN npm install
 # RUN npm ci --only=production
 # Bundle app source
 COPY . .
-EXPOSE 1336 1337
+EXPOSE 49080 49443
 
 CMD [ "npm", "run", "start" ]
