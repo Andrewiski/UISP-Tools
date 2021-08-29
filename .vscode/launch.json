@@ -5,11 +5,20 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "env": {"localDebug":"true", "debug": "server"},
+            "command": "npm start",
+            "name": "LocalDebug Run npm start",
+            "request": "launch",
+            "type": "node-terminal"
+        },
+
+        {
+            "env": {"debug": "server"},
             "command": "npm start",
             "name": "Run npm start",
             "request": "launch",
             "type": "node-terminal"
-        },
+        }
         
     ]
 }
