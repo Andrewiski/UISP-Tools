@@ -6,7 +6,10 @@ npm-debug.log
 .gitattributes
 .gitignore
 README*.md
+config
+config/*
 config/localDebug
+config/localDebug/*
 config/config.json
 Dockerfile
 config/ca.cert
