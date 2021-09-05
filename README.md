@@ -22,7 +22,7 @@ mkdir -p /usr/src/uisptools/config
 sudo chown "$USER":"docker" /usr/src/uisptools/config
 mkdir -p /usr/src/uisptools/data/mongodb
 sudo chown "$USER":"docker" /usr/src/uisptools/data/mongodb
-docker run --name=uisptools --restart unless-stopped -p 8443:443 -p 8080:80 -v /usr/src/uisptools/config:/usr/src/uisptools/config -v /var/log:/usr/src/uisptools/logs -v /usr/src/uisptools/data/mongodb:/data/db -d ghcr.io/andrewiski/uisp-tools/uisptools:latest
+docker run --name=uisptools --restart unless-stopped -p 49443:49443 -p 49080:49080 -v /usr/src/uisptools/config:/usr/src/uisptools/config -v /var/log:/usr/src/uisptools/logs -v /usr/src/uisptools/data/mongodb:/data/db -d ghcr.io/andrewiski/uisp-tools/uisptools:latest
 ```
 
 
