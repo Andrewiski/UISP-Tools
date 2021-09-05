@@ -14,8 +14,8 @@ services:
       ME_CONFIG_MONGODB_URL: mongodb://uisptools:U!spT00l$!@mongo:27017/
     depends_on:
       - mongo
-  image: mongo
-    restart: always
+  mongo:
+    image: mongo
     container_name: uisptools_mongodb
     environment:
       MONGO_INITDB_ROOT_USERNAME: uisptools
@@ -23,5 +23,7 @@ services:
       MONGO_INITDB_DATABASE: uisptools
     volumes:
       - /usr/src/uisptools/data/mongodb:/data/db
+      - ./mongodb/createDatabase.js:/docker-entrypoint-initdb.d/createDatabase.js:ro
     ports:
       - "27017:27017"
+    restart: always
