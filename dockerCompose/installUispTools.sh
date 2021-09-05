@@ -204,9 +204,9 @@ confirm_success() {
 
 # prepare --silent option for curl
 curlSilent=""
-if [ "${UNATTENDED}" = "true" ]; then
-  curlSilent="--silent"
-fi
+#if [ "${UNATTENDED}" = "true" ]; then
+#  curlSilent="--silent"
+#fi
 
 create_user
 create_app_folder
