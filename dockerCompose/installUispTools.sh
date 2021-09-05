@@ -30,7 +30,7 @@ else
 fi
 
 # UISPTOOLS variables
-export UISPTOOLS_REPO="https://https://raw.githubusercontent.com/Andrewiski/UISP-Tools/main"
+export UISPTOOLS_REPO="https://raw.githubusercontent.com/Andrewiski/UISP-Tools/main"
 export UISPTOOLS_DOCKER_IMAGE="ghcr.io/andrewiski/uisp-tools/uisptools"
 export UISPTOOLS_VERSION="0.0.3"
 export UISPTOOLS_APP_DIR="${HOME_DIR}/app/uisptools"
