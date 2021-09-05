@@ -37,8 +37,8 @@ export UISPTOOLS_DATA_DIR="${HOME_DIR}/data/uisptools"
 #export NODE_ENV="production"
 
 
-if [ "${SCRIPT_DIR}" = "${APP_DIR}" ]; then
-  echo >&2 "Please don't run the installation script in the application directory ${APP_DIR}"
+if [ "${SCRIPT_DIR}" = "${UISPTOOLS_APP_DIR}" ]; then
+  echo >&2 "Please don't run the installation script in the application directory ${UISPTOOLS_APP_DIR}"
   exit 1
 fi
 
@@ -69,7 +69,7 @@ create_data_volumes() {
 
   volumes=(
     "${UISPTOOLS_DATA_DIR}"
-    "${DATA_DIR}/mongodb"
+    "${UISPTOOLS_DATA_DIR}/mongodb"
   )
 
   for volume in "${volumes[@]}"; do
@@ -168,26 +168,11 @@ change_owner() {
       exit 1
     fi
 
-    oldUninstallScript="${APP_DIR}/uninstall.sh"
-    if [ -f "${oldUninstallScript}" ]; then
-      if rm "${oldUninstallScript}"; then
-        echo "Removed ${oldUninstallScript}"
-      else
-        echo >&2 "Failed to remove ${oldUninstallScript}"
-      fi
-    fi
-  else
-    echo "Not running as root - will not change config files owner"
-  fi
-
-  if ! chmod +x "${APP_DIR}/unms-cli"; then
-    echo >&2 "Failed to change permissions on ${APP_DIR}/unms-cli"
-    exit 1
-  fi
+    
 }
 
 start_docker_containers() {
-  echo "Starting docker containers."
+  echo "Starting uisptools docker containers."
   docker-compose -p uisptools -f "${DOCKER_COMPOSE_PATH}" up -d uisptools || fail "Failed to start docker containers"
 }
 
