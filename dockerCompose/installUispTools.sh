@@ -51,6 +51,13 @@ fi
 #sudo chown "$USER":"docker" /usr/src/uisptools/data
 #sudo chown "$USER":"docker" /usr/src/uisptools/data/mongodb
 
+cleanup() {
+  # Cleanup temp install dir.
+  if [ "${TMP_INSTALL_DIR}" != "${SCRIPT_DIR}" ] ; then
+    #rm -rf "${TMP_INSTALL_DIR}" || true;
+    echo "Cleanup Disabled for now"
+  fi
+}
 
 fail() {
   echo -e "ERROR: $1" >&2
