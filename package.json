@@ -1,10 +1,14 @@
 {
-  "name": "ucrm-de-tools",
-  "version": "0.0.1",
-  "description": "Digital Example Tools for UNMS/UCRM",
+  "name": "uisp-tools",
+  "version": "0.0.2",
+  "description": "Tools for UISP",
   "main": "server.js",
-  "license": "mit",
+  "license": "GPLV3",
   "private": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Andrewiski/UISP-Tools"
+  },
   "author": {
     "name": "Andrew DeVries",
     "email": "adevries@digitalexample.com",
@@ -40,7 +44,7 @@
     "path": "^0.12.7",
     "punycode": "^2.1.1",
     "serve-favicon": "^2.5.0",
-    "socket.io": "^2.2.0",
+    "socket.io": "^2.4.1",
     "uuid": "^3.2.1",
     "winston": "^3.2.1",
     "winston-daily-rotate-file": "^4.4.2"
