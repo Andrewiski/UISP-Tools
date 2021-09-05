@@ -3,10 +3,10 @@
 UISP-Tools is an open-source node server that extend the functionality of [UISP](https://https://uisp.ui.com/). 
 This Node.js application runs in a seperate docker instance will interface to your instance of UISP using an Application Key using the UISP API's. [Read more](https://ucrm.docs.apiary.io/#).
 
-UCRM-DE-Tools is compatible with UCRM 2.10.0+
+UISP-Tools is compatible with UCRM 2.10.0+
 
 ## How does it work?
-* install uisptools using Docker 
+* install uisptools using docker-compose 
 * using a web browser connect to UISPTools docker container [http://127.0.0.0](http://127.0.0.0)
 * using a web browser login to the admin page using default username and password "admin" and "UISPToolsPassword" [http://127.0.0.0/admin](http://127.0.0.0/admin)
  * That's it, .
@@ -22,7 +22,9 @@ mkdir -p /usr/src/uisptools/config
 sudo chown "$USER":"docker" /usr/src/uisptools/config
 mkdir -p /usr/src/uisptools/data/mongodb
 sudo chown "$USER":"docker" /usr/src/uisptools/data/mongodb
-docker run --name=uisptools --restart unless-stopped -p 49443:49443 -p 49080:49080 -v /usr/src/uisptools/config:/usr/src/uisptools/config -v /var/log:/usr/src/uisptools/logs -v /usr/src/uisptools/data/mongodb:/data/db -d ghcr.io/andrewiski/uisp-tools/uisptools:latest
+wget -c https://raw.githubusercontent.com/Andrewiski/UISP-Tools/main/docker-compose.yml -o /usr/src/uisptools/docker-compose.yml
+docker-compose -f /usr/src/uisptools/docker-compose.yml up
+
 ```
 
 

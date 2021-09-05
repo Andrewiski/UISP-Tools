@@ -1,7 +1,8 @@
 version: "3.7"
 services:
   uisptools:
-    image: "ghcr.io/andrewiski/uisptools:latest"
+    build: .
+    image: "ghcr.io/andrewiski/uisp-tools/uisptools:latest"
     ports:
       - "49443:49443"
       - "49080:49080"
