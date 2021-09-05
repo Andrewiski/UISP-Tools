@@ -23,8 +23,11 @@ sudo chown "$USER":"docker" /usr/src/uisptools/config
 mkdir -p /usr/src/uisptools/data/mongodb
 sudo chown "$USER":"docker" /usr/src/uisptools/data
 sudo chown "$USER":"docker" /usr/src/uisptools/data/mongodb
-wget -c https://raw.githubusercontent.com/Andrewiski/UISP-Tools/main/docker-compose.yml -O /usr/src/uisptools/docker-compose.yml
-docker-compose -f /usr/src/uisptools/docker-compose.yml up
+
+mkdir ~/uisptools
+
+wget -c https://raw.githubusercontent.com/Andrewiski/UISP-Tools/main/docker-compose.yml -O ~/uisptools/docker-compose.yml
+docker-compose -f ~/uisptools/docker-compose.yml up --force-recreate -d
 
 ```
 
