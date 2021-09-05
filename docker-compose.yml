@@ -29,8 +29,8 @@ services:
     volumes:
       - /usr/src/uisptools/data/mongodb:/data/db
       - ./mongodb/createDatabase.js:/docker-entrypoint-initdb.d/createDatabase.js:ro
-    expose:
-      - 27017
+    ports:
+      - "27017:27017"  # remove this for Production as only need to Expose to internal services inside of Docker
     restart: always
     networks:
     - express-mongo
