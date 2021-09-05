@@ -1,12 +1,13 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # installUispTools.sh
+set -o nounset
+set -o errexit
+set -o pipefail
 
 VERSION=1.0.0  #2021-09-05:1111
 echo installUispTools version $VERSION
 
-set -o nounset
-set -o errexit
-set -o pipefail
+
 
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -50,6 +51,12 @@ fi
 #sudo chown "$USER":"docker" /usr/src/uisptools/data
 #sudo chown "$USER":"docker" /usr/src/uisptools/data/mongodb
 
+
+fail() {
+  echo -e "ERROR: $1" >&2
+  cleanup || true;
+  exit 1
+}
 
 pull_install_files(){
 	curl -sL "${UISPTOOLS_REPO}/docker-compose.yml" -o ${UISPTOOLS_APP_DIR}/docker-compose.yml || fail "Download of docker-compose.yml failed."
