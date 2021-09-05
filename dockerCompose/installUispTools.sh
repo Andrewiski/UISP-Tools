@@ -66,7 +66,9 @@ fail() {
 }
 
 pull_install_files(){
+  echo "downloading ${UISPTOOLS_REPO}/docker-compose.yml"
 	curl -sL "${UISPTOOLS_REPO}/docker-compose.yml" -o ${UISPTOOLS_APP_DIR}/docker-compose.yml || fail "Download of docker-compose.yml failed."
+  echo "downloading ${UISPTOOLS_REPO}/mongodb/createDatabase.js"
 	curl -sL "${UISPTOOLS_REPO}/mongodb/createDatabase.js" -o ${UISPTOOLS_APP_DIR}/createDatabase.js || fail "Download of createDatabase.js failed."
 
 }
