@@ -167,7 +167,7 @@ change_owner() {
       echo >&2 "Failed to change config files owner"
       exit 1
     fi
-
+  fi
     
 }
 
