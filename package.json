@@ -3,7 +3,7 @@
   "version": "0.0.3",
   "description": "Tools for UISP",
   "main": "server.js",
-  "license": "GPLV3",
+  "license": "GPL-3.0-or-later",
   "private": false,
   "repository": {
     "type": "git",
