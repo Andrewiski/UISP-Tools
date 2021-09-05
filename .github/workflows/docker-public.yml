@@ -85,7 +85,14 @@ jobs:
           PACKAGE_NAME=${{ env.package_name }}
           echo App Version $APP_VERSION
           echo Package Name $PACKAGE_NAME
-          docker build . --file Dockerfile --tag $PACKAGE_NAME
+          if [ -f docker-compose.yml ]; then
+            docker-compose --file docker-compose.yml build
+            #docker-compose --file docker-compose.yml run sut
+          else
+            #echo Nothing to do here yet...
+            docker build . --file Dockerfile --tag $PACKAGE_NAME
+          fi
+          
           
           IMAGE_ID=ghcr.io/${{ github.repository }}/$PACKAGE_NAME
           # Change all uppercase to lowercase
