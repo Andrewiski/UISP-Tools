@@ -9,18 +9,18 @@ services:
       - /var/log:/usr/src/uisptools/logs
     container_name: uisptools
     environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: uisptools
-      ME_CONFIG_MONGODB_ADMINPASSWORD: U!spT00l$!
-      ME_CONFIG_MONGODB_URL: mongodb://uisptools:U!spT00l$!@mongo:27017/
+      ME_CONFIG_MONGODB_ADMINUSERNAME: "uisptools"
+      ME_CONFIG_MONGODB_ADMINPASSWORD: "U!spT00l$!"
+      ME_CONFIG_MONGODB_URL: "mongodb://uisptools:U!spT00l$!@mongo:27017/"
     depends_on:
       - mongo
   mongo:
     image: mongo
     container_name: uisptools_mongodb
     environment:
-      MONGO_INITDB_ROOT_USERNAME: uisptools
-      MONGO_INITDB_ROOT_PASSWORD: U!spT00l$!
-      MONGO_INITDB_DATABASE: uisptools
+      MONGO_INITDB_ROOT_USERNAME: "uisptools"
+      MONGO_INITDB_ROOT_PASSWORD: "U!spT00l$!"
+      MONGO_INITDB_DATABASE: "uisptools"
     volumes:
       - /usr/src/uisptools/data/mongodb:/data/db
       - ./mongodb/createDatabase.js:/docker-entrypoint-initdb.d/createDatabase.js:ro
