@@ -20,7 +20,7 @@ RUN if [ "$USER_GID" != "1000" ] || [ "$USER_UID" != "1000" ]; then groupmod --g
      && apt-get -y install --no-install-recommends openssl
 
 # Ensure we have a config and config/localDebug 
- RUN mkdir /workspace/config/localDebug
+ RUN mkdir -p /workspace/config/localDebug
 # [Optional] Uncomment if you want to install an additional version of node using nvm
 # ARG EXTRA_NODE_VERSION=10
 # RUN su node -c "source /usr/local/share/nvm/nvm.sh && nvm install ${EXTRA_NODE_VERSION}"

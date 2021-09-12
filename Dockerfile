@@ -18,6 +18,8 @@ WORKDIR /usr/src/uisptools
 # where available (npm@5+)
 COPY package*.json ./
 
+RUN mkdir -p /usr/src/uisptools/config
+
 RUN npm install
 # If you are building your code for production
 # RUN npm ci --only=production
