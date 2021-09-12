@@ -28,7 +28,7 @@ const Logger = require("./logger.js");
 const ioServer = require('socket.io');
 const UispApiRequestHandler = require("./uispApiRequestHandler.js");
 const DeuiApiRequestHandler = require("./deuiApiRequestHandler.js");
-
+const { networkInterfaces } = require('os');
 
 var configFileOptions = {
     "configDirectory": "config",
@@ -60,7 +60,19 @@ var defaultConfig = {
     "rejectUnauthorized": false
 };
 
-
+let envDebug = process.env.DEBUG ;
+if (envDebug){
+    console.log ("environment DEBUG = " + envDebug )
+}else{
+    console.log ("environment DEBUG is not set" )
+    
+}
+let envLocalDebug = process.env.localDebug;
+if(envLocalDebug){
+    console.log ("environment localDebug = " + envLocalDebug )
+}else{
+    console.log ("environment localDebug is not set")
+}
 
 var configHandler = new ConfigHandler(configFileOptions, defaultConfig);
 //let hash = crypto.createHash('md5').update('DEToolsPassword').digest("hex");
@@ -831,6 +843,29 @@ var startWebServers = function () {
         } catch (ex) {
             appLogger.log('error', 'Failed to Start Express server on http port ' + objOptions.httpport, ex);
         }
+    }
+
+    try{
+        
+
+        const nets = networkInterfaces();
+        const results = Object.create(null); // Or just '{}', an empty object
+        
+        for (const name of Object.keys(nets)) {
+            for (const net of nets[name]) {
+                // Skip over non-IPv4 and internal (i.e. 127.0.0.1) addresses
+                if (net.family === 'IPv4' && !net.internal) {
+                    if (!results[name]) {
+                        results[name] = [];
+                    }
+                    results[name].push(net.address);
+                }
+            }
+        }
+        appLogger.log("info", "interface ipv4 addresses", results)
+
+    }catch (ex) {
+        appLogger.log('error', 'Failed to Get Ip Infomation', ex);
     }
 };
 
