@@ -51,7 +51,7 @@ var ConfigHandler = function (options) {
         var configFileSettings = {};
         try {
             if(fs.existsSync(path.join(__dirname, self.objOptions.configFileName)) === false){
-                console.log("info", "Config File Missing Creating with Defaults", ex);
+                console.log("info", "Config File Missing Creating with Defaults");
                 try {
                     //if we Can't read the config its a new config or a broken config so we create it using the defaults
                     fs.writeFileSync(path.join(__dirname, self.objOptions.configFileName), JSON.stringify(defaultConfig, null, 2));
