@@ -29,14 +29,40 @@ const ioServer = require('socket.io');
 const UispApiRequestHandler = require("./uispApiRequestHandler.js");
 const DeuiApiRequestHandler = require("./deuiApiRequestHandler.js");
 
-//this does not account for configDirectory passed in for options need to fix that 08/29/2021
-var configFileName = 'config/config.json';
+
+var configFileOptions = {
+    "configDirectory": "config",
+    "configFileName": "config.json"
+}
 if (process.env.localDebug === 'true') {
     console.log("localDebug is enabled")
-    configFileName = 'config/localDebug/config.json';
+    configFileOptions.configDirectory = "config/localDebug"
 }
+var defaultConfig = {
+    "configDirectory": configFileOptions.configDirectory,
+    "mongoDbServerUrl": "mongodb://Username:Password@ServerHostName:27017?connectTimeoutMS=300000&authSource=DatabaseName",
+    "mongoDbDatabaseName": "DatabaseName",
+    "logDirectory": "logs",
+    "adminRoute": "/admin",
+    "logLevel": "info",
+    "useHttp": true,
+    "useHttps": false,
+    "httpport": 49080,
+    "httpsport": 49443,
+    "adminUsername": "admin",
+    "adminPasswordHash": "25d5241c69a02505c7440e2b4fa7804c",  //  DEToolsPassword
+    "httpsServerKey": "server.key",
+    "httpsServerCert": "server.cert",
+    "unmsUrl": "https://uisp.example.com/nms/api/v2.1/",
+    "ucrmUrl": "https://uisp.example.com/crm/api/v1.0/",
+    "ucrmAppKey": "CreateAppKeyFromUISPWebSite",
+    "opensslPath": "",
+    "rejectUnauthorized": false
+};
 
-var configHandler = new ConfigHandler({ configFileName: configFileName });
+
+
+var configHandler = new ConfigHandler(configFileOptions, defaultConfig);
 //let hash = crypto.createHash('md5').update('DEToolsPassword').digest("hex");
 //console.log('hash ' + hash);
 
