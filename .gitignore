@@ -3,6 +3,8 @@ config/certificates
 config/localdebug/*
 config/localdebug/certificates
 log
+!config/placeholder.txt
+!placeholder.txt
 
 # Logs
 logs
