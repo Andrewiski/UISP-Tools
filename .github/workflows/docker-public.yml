@@ -1,17 +1,19 @@
 name: UISPTools_DockerPackage
 
 on:
-  push:
+  # push:
     # Publish `master` as Docker `latest` image.
-    branches:
-      - '**'
+    #branches:
+    #  - '**'
     #  - master
     #  - '!master'
     # Publish `v1.2.3` tags as releases.
     #tags:
     # - v*
     # - v*
-
+  release:
+    types: 
+      - created
   # Run tests for any PRs.
 
 env:
