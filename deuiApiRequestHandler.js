@@ -12,7 +12,8 @@ var DeApiRequestHandler = function (options) {
     var self = this;
     var defaultOptions = {
         mongoDbServerUrl: "",
-        mongoDbDatabaseName:""
+        mongoDbDatabaseName:"",
+        mongoClientOptions: {useUnifiedTopology: true}
     };
     var objOptions = extend({}, defaultOptions, options);
     self.objOptions = objOptions;
@@ -83,7 +84,7 @@ var DeApiRequestHandler = function (options) {
 
     var getMenuItems = function (req, res) {
         try {
-            const client = new MongoClient(objOptions.mongoDbServerUrl);
+            const client = new MongoClient(objOptions.mongoDbServerUrl,objOptions.mongoClientOptions);
             // Use connect method to connect to the Server
             client.connect(function (err, client) {
                 try {
@@ -123,7 +124,7 @@ var DeApiRequestHandler = function (options) {
         try {
             let findDefaults = { deleted: false }
 
-            const client = new MongoClient(objOptions.mongoDbServerUrl);
+            const client = new MongoClient(objOptions.mongoDbServerUrl,objOptions.mongoClientOptions);
             // Use connect method to connect to the Server
             client.connect(function (err, client) {
                 try {
