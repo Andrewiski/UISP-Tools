@@ -92,8 +92,8 @@ var DeApiRequestHandler = function (options) {
 
                     const db = client.db(objOptions.mongoDbDatabaseName);
                     const collection = db.collection('de_PageContent');
-                    var findQuery = { linkMenuDisplay: true };
-                    var projections = { linkText: 1, linkUrl: 1, linkTarget: 1, pageContentGuid: 1 };
+                    var findQuery = { linkMenuDisplay: true, deleted: false };
+                    var projections = { linkText: 1, linkUrl: 1, linkTarget: 1, pageContentGuid: 1, roleId: 1 };
                     var sort = [['displayOrder', 1]];
                     if (collection) {
                         collection.find(findQuery)

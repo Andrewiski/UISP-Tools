@@ -76,6 +76,18 @@
             return foundRole;
 
         },
+
+        isUserLoggedIn: function () {
+            
+            if ($.deui.common.login.isUserLoggedIn === true ) {
+                        return true;
+            
+            }else{
+                return false;
+            }
+
+        },
+
         appInit: function () {
             var deferred = $.Deferred();
 
@@ -254,20 +266,32 @@
                     let $menuItemsContainer = $(".menuItems");
                     $menuItemsContainer.empty();
                     $.each(menuItems, function (index, item) {
-                        let $menuItem = $menuItemTemplate.clone();
-                        //$menuItem.find("a").attr("href", item.linkUrl + "?lt=" + item.linkText).attr("target", item.linkTarget).text(item.linkText);
-                        if (item.linkUrl.startsWith("https://") || item.linkUrl.startsWith("https://")) {
-                            $menuItem.find("a").attr("href", item.linkUrl).attr("data-id", item.pageContentGuid).text(item.linkText);    
-                            if (item.linkTarget) {
-                                $menuItem.find("a").attr("target", item.linkTarget);
+                        if (item.roleId === undefined || item.roleId === null || item.roleId === '' || $.deui.isUserInRoleName(item.roleId)){
+                            let $menuItem = $menuItemTemplate.clone();
+                            //$menuItem.find("a").attr("href", item.linkUrl + "?lt=" + item.linkText).attr("target", item.linkTarget).text(item.linkText);
+                            if (item.linkUrl.startsWith("https://") || item.linkUrl.startsWith("https://")) {
+                                $menuItem.find("a").attr("href", item.linkUrl).attr("data-id", item.pageContentGuid).text(item.linkText);    
+                                if (item.linkTarget) {
+                                    $menuItem.find("a").attr("target", item.linkTarget);
+                                }
+                            }else if (item.linkTarget === "site") {
+                                $menuItem.find("a").attr("href", item.linkUrl).attr("data-id", item.pageContentGuid).text(item.linkText);
+                            } else {
+                                $menuItem.find("a").attr("href", "javascript:void(0)").attr("data-id", item.pageContentGuid).text(item.linkText).on("click", $.deui.menuItemClick);
                             }
-                        }else if (item.linkTarget === "site") {
-                            $menuItem.find("a").attr("href", item.linkUrl).attr("data-id", item.pageContentGuid).text(item.linkText);
-                        } else {
-                            $menuItem.find("a").attr("href", "javascript:void(0)").attr("data-id", item.pageContentGuid).text(item.linkText).on("click", $.deui.menuItemClick);
+                            $menuItemsContainer.append($menuItem);
                         }
-                        $menuItemsContainer.append($menuItem);
                     });
+                    
+                    if($.deui.isUserLoggedIn === true){
+                        //add Login MenuItem menuItemLoginTemplate
+                        let $logoutMenuItem = $(".menuItemLogoutTemplate").find(".menuItem").clone();
+                        $menuItemsContainer.append($logoutMenuItem);
+                    }else{
+                        //add Login MenuItem menuItemLoginTemplate
+                        let $loginMenuItem = $(".menuItemLoginTemplate").find(".menuItem").clone();
+                        $menuItemsContainer.append($loginMenuItem);
+                    }
                     deferred.resolve();
                 },
                 function (reason) {
@@ -976,32 +1000,131 @@
             }
         },
 
-        //hasAspNetApplicationCookie: function () {
-        //    var myAspNetApplicationCookies = $.deui.getAspNetCookies();
-        //    if (myAspNetApplicationCookies && myAspNetApplicationCookies.AspNetApplicationCookie) {
-        //        return true;
-        //    } else {
-        //        return false;
-        //    }
-        //},
+        getAccessToken: function () {
+            
+            var accessToken;
 
-        //hasAspNetExternalCookie: function () {
-        //    var myAspNetApplicationCookies = $.deui.getAspNetCookies();
-        //    if (myAspNetApplicationCookies && myAspNetApplicationCookies.AspNetExternalCookie) {
-        //        return true;
-        //    } else {
-        //        return false;
-        //    }
-        //},
+            if ($.deui.common.login.accessToken) {
+                accessToken = $.deui.common.login.accessToken
+            }
+            if (accessToken) {
+                if ($.deui.isClientSideDebugging()) {
+                    $.logToConsole("Debug: $.deui.getAccessToken Found access Token in $.deui.common.login.accessToken");
+                }
 
-        /*
-          // This Function is used instead of a call $.ajax() it has the advantage of automatic handling of Login if 401 is returned,
-          // it will automaticaly handle an accessToken expiration and use the refreshToken to request a new one.  
-          // If a 401 is thrown and no refresh token is found it will pop a login modal and set the accessToken and refresh Token.
-          // It will also handle errors that are not login errors and unless the allowRetryOnError:false is set will pop an error dialog to 
-          // allow the user to retry the request.
-          // This is all transparent to the caller.  If for some reason the user cancels the auto login and/or the 
-        */
+                return accessToken;
+            }
+
+            
+
+            
+            $.logToConsole("Debug: $.deui.getAccessToken no acess token found in js storage or cookies");
+            
+            return;
+        },
+
+        getNewAccessToken: function (options) {
+            //console.log('in refreshToken()');
+            var defaults = {
+                data: {
+                    grant_type: "refresh_token",
+                    refresh_token: $.deui.getRefreshToken()
+                }
+            }
+            var objOptions = $.extend({}, defaults, options);
+
+            var myDeferred = $.Deferred();
+            $.logToConsole("Debug: $.deui.getNewAccessToken called");
+            try {
+                if ($.deui.authGlobal.getNewAccessToken.isPending == true) {
+                    $.logToConsole("$.deui.getNewAccessToken Already In Progress Queueing Promise");
+                    $.deui.authGlobal.getNewAccessToken.queuedRequests.push(myDeferred);
+                } else {
+                    $.deui.authGlobal.getNewAccessToken.isPending = true;
+
+                    if (objOptions.data.grant_type == "refresh_token" && $.deui.hasRefreshToken() == false) {
+                        //console.log('refreshToken() - myRefreshToken not found');
+                        throw (new Error("Missing Refresh Token"));
+                    }
+                    // call login with the refresh_token
+                    $.deui.login(objOptions.data).then(function (result) {
+                        console.log('getNewAccessToken() resolving because its all good');
+                        $.deui.authGlobal.getNewAccessToken.isPending = false;
+                        myDeferred.resolve(result);
+                        while ($.deui.authGlobal.getNewAccessToken.queuedRequests.length > 0) {
+                            var myQueueDefered = $.deui.authGlobal.getNewAccessToken.queuedRequests.pop();
+                            myQueueDefered.resolve(result);
+                        }                        
+                    },
+                    function (objError) {
+                        $.deui.authGlobal.getNewAccessToken.isPending = false;
+                        myDeferred.reject(objError);
+                        while ($.deui.authGlobal.getNewAccessToken.queuedRequests.length > 0) {
+                            var myQueueDefered = $.deui.authGlobal.getNewAccessToken.queuedRequests.pop();
+                            myQueueDefered.reject(objError);
+                        }
+                        
+                    }
+                    )
+                    
+
+                    
+                } //end if
+            }
+            catch (ex) {
+                $.deui.common.login.isUserLoggedIn = false;
+                $.logToConsole("ERROR deui.getNewAccessToken: " + ex.toString());
+                var objError = $.deui.createErrorFromScriptException(ex, "Server error during getNewAccessToken.");
+                console.log('getNewAccessToken() CAUGHT EXCEPTION - REJECTING', ex);
+                myDeferred.reject(objError);
+            }
+            
+            return myDeferred.promise();
+        },
+
+        getRefreshToken: function () {
+            if ($.deui.isClientSideDebugging()) {
+                $.logToConsole("Debug: $.deui.getRefreshToken Called");
+            }
+            var refreshToken;
+
+            if (typeof (window.sessionStorage) !== "undefined") {
+                if ($.deui.isClientSideDebugging()) {
+                    $.logToConsole("Debug: $.deui.getRefreshToken Browser Supports javascript Storage");
+                }
+
+                refreshToken = window.localStorage.deuiRefreshToken;
+
+                if (refreshToken) {
+                    if ($.deui.isClientSideDebugging()) {
+                        $.logToConsole("Debug: $.deui.getRefreshToken Found Refresh Token in localStorage");
+                    }
+
+                    return refreshToken;
+                }
+
+                refreshToken = window.sessionStorage.deuiRefreshToken;
+
+                if (refreshToken) {
+                    if ($.deui.isClientSideDebugging()) {
+                        $.logToConsole("Debug: $.deui.getRefreshToken Found Token in Temp sessionStorage");
+                    }
+
+                    return refreshToken;
+                }
+            }
+            if ($.cookie("deuiRefreshToken")) {
+                if ($.deui.isClientSideDebugging()) {
+                    $.logToConsole("Debug: $.deui.getRefreshToken Found Refresh Token in Cookies");
+                }                    
+                return $.cookie("deuiRefreshToken");
+            }
+
+            if ($.deui.isClientSideDebugging()) {
+                $.logToConsole("Debug: $.deui.getRefreshToken no refresh token found in js storage or cookies");
+            }
+            return;
+        },
 
         ajax: function (url, options) {
             var deferred = $.Deferred(),
