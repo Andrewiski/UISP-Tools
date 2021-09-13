@@ -1,0 +1,62 @@
+version: '3.7'
+
+services:
+  uisptools:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # [Choice] Node.js version: 16, 14, 12
+        VARIANT: 14
+        # On Linux, you may need to update USER_UID and USER_GID below if not your local UID is not 1000.
+        USER_UID: 1000
+        USER_GID: 1000
+
+    volumes:
+      - ..:/workspace:cached
+    container_name: uisptools
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: "uisptools"
+      ME_CONFIG_MONGODB_ADMINPASSWORD: "U!spT00ls!"
+      ME_CONFIG_MONGODB_URL: "mongodb://uisptools:U!spT00ls!@mongo:27017/"
+    # Overrides default command so things don't shut down after the process ends.
+    command: sleep infinity
+
+    # Runs app on the same network as the database container, allows "forwardPorts" in devcontainer.json function.
+    #network_mode: service:db
+
+    # Uncomment the next line to use a non-root user for all processes.
+    # user: node
+
+    # Use "forwardPorts" in **devcontainer.json** to forward an app port locally. 
+    # (Adding the "ports" property to this file will not forward from a Codespace.)
+    depends_on:
+      - mongo
+    ports:
+      - "49443:49443"
+      - "49080:49080"
+    networks:
+    - express-mongo
+  mongo:
+    image: mongo:latest
+    container_name: uisptools_mongodb
+    restart: unless-stopped
+    volumes:
+      - mongodb-data:/data/db
+      - ./mongodb/createDatabase.js:/docker-entrypoint-initdb.d/createDatabase.js:ro
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "uisptools"
+      MONGO_INITDB_ROOT_PASSWORD: "U!spT00ls!"
+      MONGO_INITDB_DATABASE: "uisptools"
+
+    # Add "forwardPorts": ["27017"] to **devcontainer.json** to forward MongoDB locally.
+    # (Adding the "ports" property to this file will not forward from a Codespace.)
+     ports:
+      - "27017:27017"
+    networks:
+    - express-mongo
+volumes:
+  mongodb-data:
+  
+networks:
+  express-mongo:

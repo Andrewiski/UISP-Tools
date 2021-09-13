@@ -6,7 +6,7 @@
     "configurations": [
         
         {
-            "env": {"localDebug":"true", "debug": "server"},
+            "env": {"localDebug":"true", "DEBUG": "server"},
             "command": "npm start",
             "name": "LocalDebug Run npm start",
             "request": "launch",
@@ -14,7 +14,7 @@
         },
 
         {
-            "env": {"debug": "server"},
+            "env": {"DEBUG": "server"},
             "command": "npm start",
             "name": "Run npm start",
             "request": "launch",

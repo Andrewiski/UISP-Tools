@@ -6,12 +6,19 @@ FROM node:12.14-alpine3.11
 RUN apk update
 RUN apk add openssl
 
+# Update args in docker-compose.yaml to set the UID/GID of the "node" user.
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+RUN if [ "$USER_GID" != "1000" ] || [ "$USER_UID" != "1000" ]; then groupmod --gid $USER_GID node && usermod --uid $USER_UID --gid $USER_GID node; fi
+
 # Create app directory
 WORKDIR /usr/src/uisptools
 # Install app dependencies
 # A wildcard is used to ensure both package.json AND package-lock.json are copied
 # where available (npm@5+)
 COPY package*.json ./
+
+RUN mkdir -p /usr/src/uisptools/config
 
 RUN npm install
 # If you are building your code for production
