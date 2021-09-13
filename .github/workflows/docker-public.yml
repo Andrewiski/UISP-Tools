@@ -66,19 +66,19 @@ jobs:
           echo "package_name=$PACKAGE_NAME" >> $GITHUB_ENV
           echo Package Name $PACKAGE_NAME
       
-      - name: update pakage name
-        if: ${{ github.ref != 'refs/heads/main' }}
-        run: |
-          echo Old Package Name $PACKAGE_NAME
-          BRANCH_NAME=${GITHUB_REF#refs/heads/}
-          # Force Lower Case
-          BRANCH_NAME=$(echo $BRANCH_NAME | sed -e 's/\(.*\)/\L\1/')
-          # remove spaces
-          BRANCH_NAME=$(echo $BRANCH_NAME | sed -e 's/ /_/g')
-          echo Branch Name $BRANCH_NAME
-          PACKAGE_NAME=${{ env.IMAGE_NAME }}_$BRANCH_NAME
-          echo "package_name=$PACKAGE_NAME" >> $GITHUB_ENV
-          echo New Package Name $PACKAGE_NAME
+      #- name: update pakage name
+        #if: ${{ github.ref != 'refs/heads/main' }}
+        #run: |
+        #  echo Old Package Name $PACKAGE_NAME
+        #  BRANCH_NAME=${GITHUB_REF#refs/heads/}
+        #  # Force Lower Case
+        #  BRANCH_NAME=$(echo $BRANCH_NAME | sed -e 's/\(.*\)/\L\1/')
+        #  # remove spaces
+        #  BRANCH_NAME=$(echo $BRANCH_NAME | sed -e 's/ /_/g')
+        #  echo Branch Name $BRANCH_NAME
+        #  PACKAGE_NAME=${{ env.IMAGE_NAME }}_$BRANCH_NAME
+        #  echo "package_name=$PACKAGE_NAME" >> $GITHUB_ENV
+        #  echo New Package Name $PACKAGE_NAME
 
       - name: Build
         id: step_2
