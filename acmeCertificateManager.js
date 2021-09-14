@@ -1,10 +1,10 @@
 'use strict';
-
+const appName = "acmeCertificateManager"
 const ACME = require('@root/acme');
 //const ACME = require('acme');
 
 const fs = require('fs');
-const debug = require('debug')('acmeCertificateManager');
+
 const Keypairs = require('@root/keypairs');
 const CSR = require('@root/csr');
 const PEM = require('@root/pem');
@@ -16,6 +16,32 @@ const punycode = require('punycode');
 const { Certificate, PrivateKey } = require('@fidm/x509');
 
 module.exports.create = function (defaults) {
+
+    var debug = null;
+    if (defaults.appLogger){
+        debug = function(loglevel){
+            let args = []
+            for (let i = 0; i < arguments.length; i++) {
+                if (arguments[i] === undefined) {
+                    args.push("undefined")
+                } else if (arguments[i] === null) {
+                    args.push("null")
+                }
+                else {
+                    args.push(JSON.parse(JSON.stringify(arguments[i])))
+                }
+                
+            }
+            if (args.length > 1) {
+                args.shift(); //remove the loglevel from the array
+            }
+            defaults.appLogger.log(appName, "app", loglevel, args);
+        }
+    }else{
+        debug = require('debug')(appName);
+    }
+    
+
     var handlers = {
         getOptions: function () {
             return handlers._private.options;

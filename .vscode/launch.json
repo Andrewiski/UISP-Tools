@@ -6,7 +6,7 @@
     "configurations": [
         
         {
-            "env": {"localDebug":"true", "DEBUG": "server"},
+            "env": {"localDebug":"true", "DEBUG": "uisptools"},
             "command": "npm start",
             "name": "LocalDebug Run npm start",
             "request": "launch",
@@ -14,7 +14,7 @@
         },
 
         {
-            "env": {"DEBUG": "server"},
+            "env": {"DEBUG": "uisptools"},
             "command": "npm start",
             "name": "Run npm start",
             "request": "launch",

@@ -8,14 +8,18 @@ require('winston-daily-rotate-file');
 var Logger = function (options) {
     var self = this;
     var defaultOptions = {
-        logLevel: "info",
-        logName: "application",
+        appLogLevels:{
+            application:{"app": "info"}
+        },
         logEventHandler: null,
-        logFolder: "log"
+        logFolder: "log",
+        debugUtilEnabled: true,
+        debugUtilName:"app"
     }
     var objOptions = extend({}, defaultOptions, options);
     self.objOptions = objOptions;
    
+    const debug = require('debug')(objOptions.debugUtilName);
 
     let winstonstreamerLogLevel = objOptions.logLevel;
     switch (options.logLevel) {
@@ -101,23 +105,34 @@ var Logger = function (options) {
         'trace': 56
     };
 
-    var getLogLevel = function (logLevelName) {
+    var getLevelIntegerValue = function (logLevelName) {
 
         if (logLevels[logLevelName]) {
             return logLevels[logLevelName];
         } else {
-            return 100;
+            return 100;  // Not found dump it to the screen like its a trace
         }
     };
-    var shouldLog = function (logLevelName, logLevel) {
 
-        if (getLogLevel(logLevelName) <= getLogLevel(logLevel)) {
+    var getLogLevel = function ( appName, appSubname) {
+
+        if (objOptions.appLogLevels[appName] && objOptions.appLogLevels[appName][appSubname]) {
+            return getLevelIntegerValue(objOptions.appLogLevels[appName][appSubname]);
+        } else {
+            return 100;  // Not found dump it to the screen like its a trace
+        }
+    };
+
+    var shouldLog = function ( appName, appSubname, logLevelName) {
+
+        if (getLevelIntegerValue(logLevelName) <= getLogLevel( appName, appSubname) ) {
             return true;
         } else {
             return false;
         }
     };
-    var log = function (logLevel) {
+
+    var log = function (appName, appSubname, logLevel) {
         try {
             let args = []
             for (let i = 0; i < arguments.length; i++) {
@@ -131,11 +146,24 @@ var Logger = function (options) {
                 }
                 
             }
-            if (args.length > 1) {
-                args.shift(); //remove the loglevel from the array
-            }
-            let logData = { timestamp: new Date(), logLevel: logLevel, args: args };
-            if (shouldLog(logLevel, objOptions.logLevel) === true) {
+
+            
+            if (shouldLog(appName, appSubname, logLevel, objOptions.logLevel) === true) {
+
+                if(objOptions.debugUtilEnabled){
+                    debug(arrayPrint(args));
+                }
+    
+                if (args.length > 1) {
+                    args.shift(); //remove the appName from the array
+                }
+                if (args.length > 1) {
+                    args.shift(); //remove the appSubname from the array
+                }
+                if (args.length > 1) {
+                    args.shift(); //remove the loglevel from the array
+                }
+                let logData = { timestamp: new Date(), appName: appName, appSubname:appSubname, logLevel: logLevel, args: args };
 
                 let winstonLogLevel = logLevel;
                 switch (logLevel) {
@@ -153,7 +181,10 @@ var Logger = function (options) {
                         winstonLogLevel = "silly";
                         break;
                 }
-                logFile.log({ timestamp: new Date(), level: winstonLogLevel, message: args });
+                logFile.log({ timestamp: new Date(), level: winstonLogLevel, appName: appName, appSubname:appSubname, message: args });
+
+                
+                
 
                 try {
                     if (objOptions.logEventHandler) {

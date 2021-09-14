@@ -1,5 +1,5 @@
 "use strict";
-const debug = require('debug')('deApiRequestHandler');
+const appName = "deApiRequestHandler";
 const extend = require('extend');
 const Defer = require('node-promise').defer;
 const Logger = require("./logger.js");
@@ -17,53 +17,35 @@ var DeApiRequestHandler = function (options) {
     };
     var objOptions = extend({}, defaultOptions, options);
     self.objOptions = objOptions;
-    self.appLogger = null;
-    self.cache = {};
-    var appLogHandler = function (logData) {
-        //add to the top of the
-        privateData.logs.push(logData);
 
-        if (privateData.logs.length > objOptions.maxLogLength) {
-            privateData.logs.shift();
-        }
-        var debugArgs = [];
-        //debugArgs.push(logData.timestamp);
-        debugArgs.push(logData.logLevel);
-        for (let i = 0; i < logData.args.length; i++) {
-            debugArgs.push(logData.args[i]);
-        }
-        debug(appLogger.arrayPrint(debugArgs));
-    }
-    if (objOptions.enableLog) {
-        self.appLogger = new Logger({
-            logLevel: objOptions.logLevel,
-            logName: "deapirequesthandler",
-            logEventHandler: appLogHandler,
-            logFolder: objOptions.logDirectory
-        })
-    }
-
-    var writeToLog = function (loglevel) {
-
-        if (self.appLogger) {
-            self.appLogger(arguments);
-        } else {
+    var debug = null;
+    if (self.objOptions.appLogger){
+        debug = function(loglevel){
             let args = []
             for (let i = 0; i < arguments.length; i++) {
                 if (arguments[i] === undefined) {
-                    args.push("undefined");
+                    args.push("undefined")
                 } else if (arguments[i] === null) {
-                    args.push("null");
+                    args.push("null")
                 }
                 else {
                     args.push(JSON.parse(JSON.stringify(arguments[i])))
                 }
-
             }
-            debug(args);
+            if (args.length > 1) {
+                args.shift(); //remove the loglevel from the array
+            }
+            self.objOptions.appLogger.log(appName, "app", loglevel, args);
         }
-    };
+    }else{
+        debug = require('debug')(appName);
+    }
 
+    
+    self.cache = {};
+    
+
+    
 
     var BindRoutes = function (routes) {
         
@@ -80,7 +62,43 @@ var DeApiRequestHandler = function (options) {
         
     }
 
-    
+    var createRefreshToken = function (data){
+        var deferred = Defer();
+        
+        try {
+            const client = new MongoClient(objOptions.mongoDbServerUrl,objOptions.mongoClientOptions);
+            // Use connect method to connect to the Server
+            client.connect(function (err, client) {
+                try {
+                    assert.equal(null, err);
+                    const db = client.db(objOptions.mongoDbDatabaseName);
+                    const collection = db.collection('de_RefreshToken');
+                    if (collection) {
+                        collection.insertOne(data,                            
+                                function (err, doc) {
+                                    assert.equal(err, null);
+                                    
+                                    client.close();
+                                    deferred.resolve(doc);
+                                });
+                    } else {
+                        debug("error", "createRefreshToken", { "msg": "Not Able to Open MongoDB Connection", "stack": "" });
+                        client.close();
+                        deferred.reject({ "code": 500, "msg": "Not Able to Open MongoDB Connection", "error": "collection is null"});
+                    }
+                } catch (ex) {
+                    debug("error", "createRefreshToken", { "msg": ex.message, "stack": ex.stack });
+                    client.close();
+                    deferred.reject({ "code": 500, "msg": ex.message, "error": ex });
+                }
+            });
+        } catch (ex) {
+            debug('error', 'createRefreshToken',  { "msg": ex.message, "stack": ex.stack });
+            deferred.reject({ "code": 500, "msg": "An Error Occured!", "error": ex });
+        }
+        
+        return deferred.promise;     
+    }
 
     var getMenuItems = function (req, res) {
         try {
@@ -89,8 +107,6 @@ var DeApiRequestHandler = function (options) {
             client.connect(function (err, client) {
                 try {
                     assert.equal(null, err);
-                    console.log("Connected correctly to server");
-
                     const db = client.db(objOptions.mongoDbDatabaseName);
                     const collection = db.collection('de_PageContent');
                     var findQuery = { linkMenuDisplay: true, deleted: false };
@@ -110,11 +126,13 @@ var DeApiRequestHandler = function (options) {
                         return null;
                     }
                 } catch (ex) {
+                    debug("error", "getMenuItems", { "msg": ex.message, "stack": ex.stack });
                     res.status(500).json({ "msg": "An Error Occured!", "error": ex });
                     client.close();
                 }
             });
         } catch (ex) {
+            debug("error", "getMenuItems", { "msg": ex.message, "stack": ex.stack });
             res.status(500).json({ "msg": "An Error Occured!", "error": ex });
         }
 
@@ -123,14 +141,11 @@ var DeApiRequestHandler = function (options) {
     var getPage = function (req, res, options) {
         try {
             let findDefaults = { deleted: false }
-
             const client = new MongoClient(objOptions.mongoDbServerUrl,objOptions.mongoClientOptions);
             // Use connect method to connect to the Server
             client.connect(function (err, client) {
                 try {
                     assert.equal(null, err);
-                    console.log("Connected correctly to server");
-
                     const db = client.db(objOptions.mongoDbDatabaseName);
                     const collection = db.collection('de_PageContent');
                     var findQuery = extend({}, options.find, findDefaults);
@@ -146,12 +161,14 @@ var DeApiRequestHandler = function (options) {
                         return null;
                     }
                 } catch (ex) {
+                    debug("error", "getPage", { "msg": ex.message, "stack": ex.stack });
                     res.status(500).json({ "msg": "An Error Occured!", "error": ex });
                     client.close();
                 }
 
             });
         } catch (ex) {
+            debug("error", "getPage", { "msg": ex.message, "stack": ex.stack });
             res.status(500).json({ "msg": "An Error Occured!", "error": ex });
         }
     };

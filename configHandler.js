@@ -43,6 +43,7 @@ var ConfigHandler = function (options, defaultConfig) {
                 console.log("error", "Error Reading or Creating a Config File", configFileFullPath, ex);
                 //if we Can't read the config its a new config or a broken config so we create it using the defaults
                 if(fs.existsSync(configFileFullPath) === true){
+                    let now = new Date();
                     var badConfigFilePath = configFileFolder +  now.getFullYear() + "-"+ now.getMonth() + "-" + now.getDate() + "-" + now.getHours() + "-" + now.getMinutes() + "-" + now.getSeconds() + "-" + self.objOptions.configFileName +  ".bad";
                     console.log("error", "Error Reading Existing Config File moving to ", badConfigFilePath);
                     fs.copyFileSync(configFileFullPath, badConfigFilePath);

@@ -1,8 +1,7 @@
 'use strict';
-
+const appName = "server"
 const http = require('http');
 const https = require('https');
-const debug = require('debug')('server');
 const path = require('path');
 const extend = require('extend');
 const express = require('express');
@@ -57,22 +56,30 @@ var defaultConfig = {
     "ucrmUrl": "https://uisp.example.com/crm/api/v1.0/",
     "ucrmAppKey": "CreateAppKeyFromUISPWebSite",
     "opensslPath": "",
-    "rejectUnauthorized": false
+    "rejectUnauthorized": false,
+    "appLogLevels":{
+        "server": {
+            "app":"info"
+        },
+        "ucrmApiRequestHandler":{"app":"info"},
+        "deApiRequestHandler":{"app":"info"},
+
+    }
 };
 
-let envDebug = process.env.DEBUG ;
-if (envDebug){
-    console.log ("environment DEBUG = " + envDebug )
-}else{
-    console.log ("environment DEBUG is not set" )
+// let envDebug = process.env.DEBUG ;
+// if (envDebug){
+//     console.log ("environment DEBUG = " + envDebug )
+// }else{
+//     console.log ("environment DEBUG is not set" )
     
-}
-let envLocalDebug = process.env.localDebug;
-if(envLocalDebug){
-    console.log ("environment localDebug = " + envLocalDebug )
-}else{
-    console.log ("environment localDebug is not set")
-}
+// }
+// let envLocalDebug = process.env.localDebug;
+// if(envLocalDebug){
+//     console.log ("environment localDebug = " + envLocalDebug )
+// }else{
+//     console.log ("environment localDebug is not set")
+// }
 
 var configHandler = new ConfigHandler(configFileOptions, defaultConfig);
 //let hash = crypto.createHash('md5').update('DEToolsPassword').digest("hex");
@@ -89,45 +96,37 @@ if (objOptions.opensslPath.startsWith('./') === true) {
 
 var openssl = new OpenSSL({ "opensslPath": objOptions.opensslPath });
 
-var uispApiRequestHandler = new UispApiRequestHandler({
-    ucrmUrl: objOptions.ucrmUrl,
-    ucrmAppKey: objOptions.ucrmAppKey,
-    unmsUrl: objOptions.unmsUrl,
-    rejectUnauthorized : objOptions.rejectUnauthorized
-});
-
-var deuiApiRequestHandler = new DeuiApiRequestHandler({
-    mongoDbServerUrl: objOptions.mongoDbServerUrl,
-    mongoDbDatabaseName: objOptions.mongoDbDatabaseName
-});
-
-
-
-
-
-
 var appLogHandler = function (logData) {
-    //add to the top of the
+    //add to the top of the log
     privateData.logs.push(logData);
 
     if (privateData.logs.length > objOptions.maxLogLength) {
         privateData.logs.shift();
     }
-    var debugArgs = [];
-    //debugArgs.push(logData.timestamp);
-    debugArgs.push(logData.logLevel);
-    for (let i = 0; i < logData.args.length; i ++) {
-        debugArgs.push(logData.args[i]);
-    }
-    debug(appLogger.arrayPrint(debugArgs));
+    
 }
 
 var appLogger = new Logger({
-    logLevel: objOptions.logLevel,
+    logLevels: objOptions.logLevels,
+    debugUtilName: "uisptools",
     logName: "UispTools",
     logEventHandler: appLogHandler,
     logFolder: objOptions.logDirectory
 })
+
+var uispApiRequestHandler = new UispApiRequestHandler({
+    ucrmUrl: objOptions.ucrmUrl,
+    ucrmAppKey: objOptions.ucrmAppKey,
+    unmsUrl: objOptions.unmsUrl,
+    rejectUnauthorized : objOptions.rejectUnauthorized,
+    appLogger:appLogger
+});
+
+var deuiApiRequestHandler = new DeuiApiRequestHandler({
+    mongoDbServerUrl: objOptions.mongoDbServerUrl,
+    mongoDbDatabaseName: objOptions.mongoDbDatabaseName,
+    appLogger:appLogger
+});
 
 
 var startupReady = Deferred();
@@ -247,7 +246,7 @@ var addAllFolderFilesToZip = function (folderpath, filename, zip) {
                 }
             }
         } catch (ex) {
-            appLogger.log("error", "addAllFolderFilesToZip", "Error Adding File/Folder to Zip", path.join(folderpath, file));
+            appLogger.log(appName, "app", "error", "addAllFolderFilesToZip", "Error Adding File/Folder to Zip", path.join(folderpath, file));
         }
     });
 };
@@ -304,7 +303,7 @@ function checkUser(username, password, ipAddress, resetLoginFailedIfSuccess) {
     let msg = "success";
     let isAccountLocked = false;
     if (username.toLowerCase() !== objOptions.adminUsername.toLowerCase()) {
-        appLogger.log('warning', 'login', 'Invalid username ', username);
+        appLogger.log(appName, "app", 'warning', 'login', 'Invalid username ', username);
         msg = "Invalid Username/Password";
     }
 
@@ -333,7 +332,7 @@ function checkUser(username, password, ipAddress, resetLoginFailedIfSuccess) {
         } else {
             msg = "Invalid Username/Password";
         }
-        appLogger.log('warning', 'login', msg, "username:" + username + ", ip:" + ipAddress + ", isAccountLocked:" + isAccountLocked);
+        appLogger.log(appName, "app", 'warning', 'login', msg, "username:" + username + ", ip:" + ipAddress + ", isAccountLocked:" + isAccountLocked);
     } else {
         msg = "success";
         if (resetLoginFailedIfSuccess === true) {
@@ -349,7 +348,7 @@ app.use(basicAuth);
 //This function will get called on every request and if useHttpsClientCertAuth is turned on only allow request with a client cert
 app.use(function (req, res, next) {
     var connInfo = getConnectionInfo(req);
-    appLogger.log('info', "browser", "path:" + req.path + ", ip:" + connInfo.ip + ", port:" + connInfo.port + ", ua:" + connInfo.ua);
+    appLogger.log(appName, "browser", 'debug',  "path:" + req.path + ", ip:" + connInfo.ip + ", port:" + connInfo.port + ", ua:" + connInfo.ua);
     next();
     return;
 })
@@ -374,40 +373,51 @@ app.use(fileUpload({
 
 var routes = express.Router();
 
-
-
-var handleError = function (req,res, error) {
-    let msg = "An Error Occured!";
+var getErrorObject = function(error){
+    //this is used to normolize errors that are raised and returned to the client
+    var errorData = {
+        error : {
+            msg: "An Error Occured!", error: "An Error Occured!", stack: ""
+        },
+        statuscode:500
+    }
+    
     if (error.msg) {
-        msg = msg + ' ' + error.msg;
+        errorData.error.msg = errorData.error.msg + ' ' + error.msg;
     }
     if (error.message) {
-        msg = msg + ' ' + error.message;
+        errorData.error.msg = errorData.error.msg + ' ' + error.message;
     }
-    let errMsg = "";    
-    let errStack = "";
+    
     if (error.error) {
         if (typeof (error.error) === "string") {
-            errMsg = error.error;
+            errorData.error.error = error.error;
         } else {
             if (error.error.msg) {
-                errMsg = error.error.msg;
+                errorData.error.error = error.error.msg;
             } else if (error.error.message) {
-                errMsg = error.error.message;
+                errorData.error.error = error.error.message;
             }
             if (error.error.stack) {
-                errStack = error.error.stack;
+                errorData.error.stack = error.error.stack;
             }
         }
-    } 
-    
-    let statuscode = 500;
-    if (error.code) {
-        statuscode = error.code;
-    } else if (error.statuscode) {
-        statuscode = error.statuscode;
+    } else if (typeof (error) === "string") {
+        errorData.error.error = error;
     }
-    res.status(statuscode).json({ "msg": msg, "error": errMsg, "stack": errStack });
+    
+    
+    if (error.code) {
+        errorData.statuscode = error.code;
+    } else if (error.statuscode) {
+        errorData.statuscode = error.statuscode;
+    }
+    return errorData;
+}
+
+var handleError = function (req, res, error) {
+    
+    res.status(errorData.statuscode).json(errorData.error);
 };
 
 var handlePublicFileRequest = function (req, res) {
@@ -489,7 +499,8 @@ routes.post('/login/loginNms', function (req, res) {
             try {
                 res.json(data);
             } catch (ex) {
-                res.status(500).json(getErrorObject({ "msg": "An Error Occured!", "error": ex }));
+                //res.status(500).json(getErrorObject({ "msg": "An Error Occured!", "error": ex }));
+                handleError(req, res, ex);
             }
         },
         function (error) {
@@ -506,11 +517,56 @@ routes.post('/login/loginCms', function (req, res) {
             try {
                 res.json(data);
             } catch (ex) {
-                res.status(500).json(getErrorObject({ "msg": "An Error Occured!", "error": ex }));
+                handleError(req, res, ex);
             }
         },
         function (error) {
             handleError(req, res, error);
+        }
+    );
+});
+
+//Login Unms
+routes.post('/login/loginBoth', function (req, res) {
+    var loginData = {};
+    uispApiRequestHandler.publicLoginCrm(req.body).then(
+        function (data) {
+            try {
+                deuiApiRequestHandler.createRefreshToken({type:"crm", isAdmin:false, loginData:data}).then(
+                    function(data){
+                        res.json(data);
+                    },
+                    function(error){
+                        handleError(req,res,error);    
+                    }
+                )
+                res.json(data);
+            } catch (ex) {
+                handleError(req, res, ex);
+            }
+        },
+        function (error) {
+            //Try to login to NMS see if its an Admin loging in 
+            uispApiRequestHandler.publicLoginNms(req.body).then(
+                function (data) {
+                    try {
+                        deuiApiRequestHandler.createRefreshToken({type:"nms", isAdmin:true, logindata:data}).then(
+                            function(data){
+                                res.json(data);
+                            },
+                            function(error){
+                                handleError(req,res,error);    
+                            }
+                        )
+                        
+                    } catch (ex) {
+                        handleError(req,res,ex);
+                    }
+                },
+                function (error) {
+                    handleError(req,res,error);
+                }
+            );
         }
     );
 });
@@ -523,11 +579,11 @@ routes.get('/login/loginData', function (req, res) {
             try {
                 res.json(data);
             } catch (ex) {
-                res.status(500).json({ "msg": "An Error Occured!", "error": ex });
+                handleError(req,res,ex);
             }
         },
         function (error) {
-            res.status(500).json({ "msg": "An Error Occured!", "error": error });
+            handleError(req,res,error);
         }
     );
 })
@@ -542,7 +598,7 @@ routes.post('/login/login', function (req, res) {
             try {
                 res.json(data);
             } catch (ex) {
-                res.status(500).json(getErrorObject({ "msg": "An Error Occured!", "error": ex }));
+                handleError(req,res,ex);
             }
         },
         function (error) {
@@ -559,11 +615,11 @@ routes.get('/login/loginData', function (req, res) {
             try {
                 res.json(data);
             } catch (ex) {
-                res.status(500).json({ "msg": "An Error Occured!", "error": ex });
+                handleError(req,res,ex);
             }
         },
         function (error) {
-            res.status(500).json({ "msg": "An Error Occured!", "error": error });
+            handleError(req,res,error);
         }
     );
 })
@@ -579,7 +635,7 @@ routes.post('/ucrm/*', function (req, res) {
             res.json(data);
         },
         function (error) {
-            res.status(500).json({ "msg": "An Error Occured!", "error": error });
+            handleError(req,res,error);
         }
     );
 });
@@ -594,7 +650,7 @@ routes.get('/ucrm/*', function (req, res) {
             res.json(data);
         },
         function (error) {
-            res.status(500).json({ "msg": "An Error Occured!", "error": error });
+            handleError(req,res,error);
         }
     );
 });
@@ -607,7 +663,7 @@ deuiApiRequestHandler.bindRoutes(routes);
 //routes.get('/', function (req, res) {
 //    var connInfo = getConnectionInfo(req);
 //    res.end();
-//    appLogger.log('info', "browser", "path:" + req.path + ", ip:" + connInfo.ip + ", port:" + connInfo.port + ", ua:" + connInfo.ua);
+//    appLogger.log(appName, "browser", 'info', "path:" + req.path + ", ip:" + connInfo.ip + ", port:" + connInfo.port + ", ua:" + connInfo.ua);
 //});
 
 
@@ -766,20 +822,20 @@ var loadCertificates = function () {
                     });
                     commonData.serverCertificates = Certs;
 
-                    appLogger.log('info', 'Loaded Server Certs');
+                    appLogger.log(appName, "app", 'info', 'Loaded Server Certs');
                     if (io) {
                         io.emit('serverCertificatesUpdate', Certs);
                     }
                 } catch (ex2) {
-                    appLogger.log('error', 'Error Loading Server Public Cert ', ex2);
+                    appLogger.log(appName, "app", 'error', 'Error Loading Server Public Cert ', ex2);
                 }
             },
             function (ev, msg) {
-                appLogger.log('error', 'Error Loading Server Public Cert ', ev, msg);
+                appLogger.log(appName, "app",'error', 'Error Loading Server Public Cert ', ev, msg);
             }
         );
     } catch (ex) {
-        appLogger.log('error', 'Error Loading Certificates Exception', ex);
+        appLogger.log(appName, "app", 'error', 'Error Loading Certificates Exception', ex);
     }
 
 };
@@ -809,7 +865,7 @@ var getHttpsServerOptions = function () {
         httpsOptions.key = fs.readFileSync(path.join(__dirname, configFolder, objOptions.httpsServerKey));
         httpsOptions.cert = fs.readFileSync(path.join(__dirname, configFolder, objOptions.httpsServerCert));
     } else {
-        appLogger.log("warning", "httpsServer certificate files missing unable to use https");
+        appLogger.log(appName, "app", "warning", "httpsServer certificate files missing unable to use https");
     }
 
     return httpsOptions;
@@ -822,14 +878,14 @@ var startWebServers = function () {
             let httpsOptions = getHttpsServerOptions();
             if (httpsOptions.key && httpsOptions.cert) {
                 https_srv = https.createServer(getHttpsServerOptions(), app).listen(objOptions.httpsport, function () {
-                    appLogger.log('info', 'Express server listening on https port ' + objOptions.httpsport);
+                    appLogger.log(appName, "app", 'info', 'Express server listening on https port ' + objOptions.httpsport);
                 });
                 io.attach(https_srv);
             } else {
-                appLogger.log("error", "httpsServer certificate files missing unable to start https server ");
+                appLogger.log(appName, "app", "error", "httpsServer certificate files missing unable to start https server ");
             }
         } catch (ex) {
-            appLogger.log('error', 'Failed to Start Express server on https port ' + objOptions.httpsport, ex);
+            appLogger.log(appName, "app", 'error', 'Failed to Start Express server on https port ' + objOptions.httpsport, ex);
         }
     }
 
@@ -837,11 +893,11 @@ var startWebServers = function () {
     if (objOptions.useHttp === true) {
         try {
             http_srv = http.createServer(app).listen(objOptions.httpport, function () {
-                appLogger.log('info', 'Express server listening on http port ' + objOptions.httpport);
+                appLogger.log(appName, "app", 'info', 'Express server listening on http port ' + objOptions.httpport);
             });
             io.attach(http_srv);
         } catch (ex) {
-            appLogger.log('error', 'Failed to Start Express server on http port ' + objOptions.httpport, ex);
+            appLogger.log(appName, "app", 'error', 'Failed to Start Express server on http port ' + objOptions.httpport, ex);
         }
     }
 
@@ -862,10 +918,10 @@ var startWebServers = function () {
                 }
             }
         }
-        appLogger.log("info", "interface ipv4 addresses", results)
+        appLogger.log(appName, "app","info", "interface ipv4 addresses", results)
 
     }catch (ex) {
-        appLogger.log('error', 'Failed to Get Ip Infomation', ex);
+        appLogger.log(appName, "app",'error', 'Failed to Get Ip Infomation', ex);
     }
 };
 
@@ -876,13 +932,13 @@ var updateHttpsServer = function () {
             if (https_srv.setSecureContext) {
                 https_srv.setSecureContext(getHttpsServerOptions());
             } else {
-                appLogger.log("error", "https_srv.setSecureContext is null. Wrong version of Node.JS must be 12 or greater. \"node -v\"");
+                appLogger.log(appName, "app", "error", "https_srv.setSecureContext is null. Wrong version of Node.JS must be 12 or greater. \"node -v\"");
             }
         } else {
-            appLogger.log("error", "https_srv is null. Unable to update Context");
+            appLogger.log(appName, "app", "error", "https_srv is null. Unable to update Context");
         }
     } catch (ex) {
-        appLogger.log("error", "Error Updating https server with new security context.", ex);
+        appLogger.log(appName, "app", "error", "Error Updating https server with new security context.", ex);
     }
 };
 
@@ -895,7 +951,7 @@ var updateHttpsServer = function () {
 io.on('connection', function (socket) {
 
 
-    appLogger.log('info', 'browser', socket.id, 'Connection', getSocketInfo(socket));
+    appLogger.log(appName, "browser", 'info',  socket.id, 'Connection', getSocketInfo(socket));
 
     const base64Credentials = socket.conn.request.headers.authorization.split(' ')[1];
     const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
@@ -917,35 +973,35 @@ io.on('connection', function (socket) {
         }
 
         socket.on('ping', function (data) {
-            appLogger.log('trace', 'browser', socket.id, 'ping');
+            appLogger.log(appName, "browser", 'trace',  socket.id, 'ping');
         });
 
        
 
         socket.on("disconnect", function () {
             try {
-                appLogger.log("info", 'browser', socket.id, "disconnect", getSocketInfo(socket));
+                appLogger.log(appName, "browser", "info",  socket.id, "disconnect", getSocketInfo(socket));
                 if (privateData.browserSockets[socket.id]) {
                     delete privateData.browserSockets[socket.id];
                 }
             } catch (ex) {
-                appLogger.log('error', 'Error socket on', ex);
+                appLogger.log(appName, "browser", 'error', 'Error socket on', ex);
             }
         });
 
         socket.on('Logs', function (data) {
             try {
-                appLogger.log("info", 'browser', socket.id, "Logs");
+                appLogger.log(appName, "browser", "info", socket.id, "Logs");
                 socket.emit('Logs', privateData.logs);
             } catch (ex) {
-                appLogger.log('error', 'Error socket on', ex);
+                appLogger.log(appName, "browser", 'error', 'Error socket on', ex);
             }
         });
 
 
         socket.on('createLetsEncrypt', function (data) {
             try {
-                appLogger.log("info", "browser", socket.id, "createLetsEncrypt");
+                appLogger.log(appName, "browser", "info", socket.id, "createLetsEncrypt");
                 //renewServerCertificate();
             } catch (ex) {
                 appLogger.log('error', 'Error socket on', ex);
@@ -954,10 +1010,10 @@ io.on('connection', function (socket) {
 
         socket.on('loadCertificates', function (data) {
             try {
-                appLogger.log("info", "browser", socket.id, "loadCertificates");
+                appLogger.log(appName, "browser", "info",  socket.id, "loadCertificates");
                 loadCertificates();
             } catch (ex) {
-                appLogger.log('error', 'Error socket on', ex);
+                appLogger.log(appName, "browser", 'error', 'Error socket on', ex);
             }
         });
 
@@ -979,12 +1035,12 @@ var startupServer = function () {
     try {
         loadCertificates();
     } catch (ex) {
-        appLogger.log('error', 'Error Loading https certificate', ex);
+        appLogger.log(appName, "app", 'error', 'Error Loading https certificate', ex);
     }
     try {
         startWebServers();
     } catch (ex) {
-        appLogger.log('error', 'Error Starting Web Servers', ex);
+        appLogger.log(appName, "app", 'error', 'Error Starting Web Servers', ex);
     }
 };
 

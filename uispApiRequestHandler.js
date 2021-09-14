@@ -1,11 +1,11 @@
 "use strict";
-const debug = require('debug')('ucrmApiRequestHandler');
+const appName = 'ucrmApiRequestHandler';
 const extend = require('extend');
 const Defer = require('node-promise').defer;
 const http = require('http');
 const https = require('https');
 const Logger = require("./logger.js");
-
+//const crypto = require('crypto');
 
 
 var UcrmApiRequestHandler = function (options) {
@@ -16,37 +16,9 @@ var UcrmApiRequestHandler = function (options) {
     };
     var objOptions = extend({}, defaultOptions, options);
     self.objOptions = objOptions;
-    self.appLogger = null;
-    self.cache = {};
-    var appLogHandler = function (logData) {
-        //add to the top of the
-        privateData.logs.push(logData);
-
-        if (privateData.logs.length > objOptions.maxLogLength) {
-            privateData.logs.shift();
-        }
-        var debugArgs = [];
-        //debugArgs.push(logData.timestamp);
-        debugArgs.push(logData.logLevel);
-        for (let i = 0; i < logData.args.length; i++) {
-            debugArgs.push(logData.args[i]);
-        }
-        debug(appLogger.arrayPrint(debugArgs));
-    }
-    if (objOptions.enableLog) {
-        self.appLogger = new Logger({
-            logLevel: objOptions.logLevel,
-            logName: "UcrmDeTools",
-            logEventHandler: appLogHandler,
-            logFolder: objOptions.logDirectory
-        })
-    }
-
-    var writeToLog = function (loglevel) {
-
-        if (self.appLogger) {
-            self.appLogger(arguments);
-        } else {
+    var debug = null;
+    if (self.objOptions.appLogger){
+        debug = function(loglevel){
             let args = []
             for (let i = 0; i < arguments.length; i++) {
                 if (arguments[i] === undefined) {
@@ -57,11 +29,20 @@ var UcrmApiRequestHandler = function (options) {
                 else {
                     args.push(JSON.parse(JSON.stringify(arguments[i])))
                 }
-
             }
-            debug(args);
+            if (args.length > 1) {
+                args.shift(); //remove the loglevel from the array
+            }
+            self.objOptions.appLogger.log(appName, "app", loglevel, args);
         }
-    };
+    }else{
+        debug = require('debug')(appName);
+    }
+    
+    self.cache = {};
+    
+
+    
 
     var remoteDownloader = function (options) {
         var deferred = Defer();
@@ -74,7 +55,7 @@ var UcrmApiRequestHandler = function (options) {
             }
 
             if (!options.url) {
-                writeToLog("warning", "remoteDownloader", "No url to download");
+                debug("warning", "remoteDownloader", "No url to download");
                 
                 deferred.reject({ "code": 500, "msg": "An Error Occured!", "error": new Error('No url to download') }); 
                 return deferred.promise;
@@ -90,7 +71,7 @@ var UcrmApiRequestHandler = function (options) {
                     opc.key = fs.readFileSync(path.join(__dirname, options.key));
                 } 
             } catch (ex) {
-                writeToLog('error', 'remoteDownloader', ' error reading certificate files ', ex);
+                debug('error', 'remoteDownloader', ' error reading certificate files ', ex);
                 if (opc.key) {
                     delete opc.key;
                 }
@@ -140,12 +121,13 @@ var UcrmApiRequestHandler = function (options) {
                                     data.msg = "An Error Occured!";
                                 }
                             } catch (ex) {
-                                data = { "code": 500, "msg": "An Error Occured!", "error": e }
+                                debug('error', 'remoteDownloader',  {msg:ex.message, stack:ex.stack});
+                                data = { "code": 500, "msg": "An Error Occured!", "error": e };
                             }
                             deferred.reject(data);
                         }
                     } catch (e) {
-                        writeToLog('error', 'remoteDownloader', 'Error reading the downloaded JSON:', 'download.error', {
+                        debug('error', 'remoteDownloader', 'Error reading the downloaded JSON:', 'download.error', {
                             e: e,
                             response: data,
                             url: url
@@ -159,7 +141,7 @@ var UcrmApiRequestHandler = function (options) {
             });
 
             request.on('error', function (e) {
-                debug('error', 'remoteDownloader', 'Error downloading the remote JSON', 'download.error', e);
+                debug('error', 'remoteDownloader', 'Error downloading the remote JSON', 'download.error',e);
                 deferred.reject({ "code": 500, "msg": "An Error Occured!", "error": e }); 
             });
             if (options.headers) {
@@ -177,6 +159,7 @@ var UcrmApiRequestHandler = function (options) {
             }
             request.end(body);
         } catch (ex) {
+            debug('error', 'remoteDownloader',  {msg:ex.message, stack:ex.stack});
             deferred.reject({ "code": 500, "msg": "An Error Occured!", "error": ex }); 
         }
         return deferred.promise;
@@ -234,22 +217,26 @@ var UcrmApiRequestHandler = function (options) {
                     try {
                         if (data.code === 404) {
                             data.msg = "Invalid Username or Password!";
+                            debug('warning', 'publicLoginCrm',  "Invalid UserName or Password", options.username );
                         }
                         deferred.resolve(data);
                     } catch (ex) {
+                        debug('error', 'publicLoginCrm',  {msg:ex.message, stack:ex.stack});
                         deferred.reject({ "code": 500, "msg": "An Error Occured during Login!", "error": ex });
                     }
 
                 },
                 function (error) {
                     if (error.code === 404) {
-                        error.msg = "Invalid Username or Password!"
+                        error.msg = "Invalid Username or Password!";
                     }
+                    debug('error', 'publicLoginCrm', error);
                     deferred.reject(error);
                 }
             );
 
         } catch (ex) {
+            debug('error', 'publicLoginCrm', {msg:ex.message, stack:ex.stack});
             deferred.reject({ "code": 500, "msg": "An Error Occured!", "error": ex });
         }
         return deferred.promise;
@@ -263,10 +250,12 @@ var UcrmApiRequestHandler = function (options) {
                 function (data) {
                     try {
                         if (data.code === 404) {
+                            debug('warning', 'publicLoginMobile',  "Invalid Username or Password!", options.username );
                             data.msg = "Invalid Username or Password!";
                         }
                         deferred.resolve(data);
                     } catch (ex) {
+                        debug('error', 'publicLoginMobile',  "Invalid Username or Password!", ex );
                         deferred.reject({ "code": 500, "msg": "An Error Occured during Login!", "error": ex });
                     }
 
@@ -275,11 +264,13 @@ var UcrmApiRequestHandler = function (options) {
                     if (error.code === 404) {
                         error.msg = "Invalid Username or Password!";
                     }
+                    debug('error', 'publicLoginMobile', error );
                     deferred.reject(error);
                 }
             );
 
         } catch (ex) {
+            debug('error', 'publicLoginMobile', ex );
             deferred.reject({ "code": 500, "msg": "An Error Occured!", "error": ex });
         }
         return deferred.promise;
@@ -292,8 +283,9 @@ var UcrmApiRequestHandler = function (options) {
             handleUnmsRequest({ url: 'user/login', data: normLogin, method: "POST", sendAppKey: false, injectHeaders: true}).then(
                 function (data) {
                     try {
-                        if (data.code === 404) {
+                        if (data.code === 401) {
                             data.msg = "Invalid Username or Password!";
+                            debug('error', 'publicLoginNms',  "Invalid Username or Password!", options.username );
                         } else {
                             if (data.headers["x-auth-token"]) {
                                 data["x-auth-token"] = data.headers["x-auth-token"];
@@ -302,19 +294,22 @@ var UcrmApiRequestHandler = function (options) {
                         }
                         deferred.resolve(data);
                     } catch (ex) {
+                        debug('error', 'publicLoginNms', ex);
                         deferred.reject({ "code": 500, "msg": "An Error Occured during Login!", "error": ex });
                     }
 
                 },
                 function (error) {
-                    if (error.code === 404) {
+                    if (error.statusCode === 401) {
                         error.msg = "Invalid Username or Password!";
                     }
+                    debug('error', 'publicLoginNms', error);
                     deferred.reject(error);
                 }
             );
 
         } catch (ex) {
+            debug('error', 'publicLoginNms', ex);
             deferred.reject({ "code": 500, "msg": "An Error Occured!", "error": ex });
         }
         return deferred.promise;
@@ -360,11 +355,13 @@ var UcrmApiRequestHandler = function (options) {
                                                             //Retrieve collection of States.Available for United States and Canada only.
                                                             deferred.resolve(loginData);
                                                         } catch (ex) {
+                                                            debug('error', 'publicLoginData', "An Error Occured Fetching Country!", ex);
                                                             deferred.reject({ "msg": "An Error Occured Fetching Country!", "error": ex });
                                                         }
 
                                                     },
                                                     function (error) {
+                                                        debug('error', 'publicLoginData', "An Error Occured Fetching Country!", error);
                                                         deferred.reject({ "code": 500, "msg": "An Error Occured Fetching Country!", "error": error });
                                                     }
 
@@ -375,10 +372,12 @@ var UcrmApiRequestHandler = function (options) {
                                             }
 
                                         } catch (ex) {
+                                            debug('error', 'publicLoginData', "An Error Occured Fetching Country!", ex);
                                             deferred.reject({ "code": 500, "msg": "An Error Occured Fetching Country!", "error": ex });
                                         }
                                     },
                                     function (error) {
+                                        debug('error', 'publicLoginData', error);
                                         deferred.reject(error);
                                     }
                                 )
@@ -387,16 +386,19 @@ var UcrmApiRequestHandler = function (options) {
                             }
 
                         } catch (ex) {
+                            debug('error', 'publicLoginData', ex);
                             deferred.reject({ "code": 500, "msg": "An Error Occured!", "error": ex });
                         }
 
                     },
                     function (error) {
+                        debug('error', 'publicLoginData', error);
                         deferred.reject(error);
                     }
                 );
             }
         } catch (ex) {
+            debug('error', 'publicLoginData', ex);
             deferred.reject({ "code": 500, "msg": "An Error Occured!", "error": ex });
         }
         return deferred.promise;
@@ -415,19 +417,23 @@ var UcrmApiRequestHandler = function (options) {
                         try {
                            
                             self.cache.ucrmVersion = data;
+                            debug('debug', 'ucrmVersion', self.cache.ucrmVersion);
                             deferred.resolve(data);
 
                         } catch (ex) {
+                            debug('error', 'ucrmVersion', ex);
                             deferred.reject({ "code": 500, "msg": "An Error Occured!", "error": ex });
                         }
 
                     },
                     function (error) {
+                        debug('error', 'ucrmVersion', error);
                         deferred.reject(error);
                     }
                 );
             }
         } catch (ex) {
+            debug('error', 'ucrmVersion', ex);
             deferred.reject({ "code": 500, "msg": "An Error Occured!", "error": ex });
         }
         return deferred.promise;

@@ -53,10 +53,11 @@ $(function () {
         var isNmsLogin;
         if (qs.loginType && qs.loginType.toLowerCase() === "crm") {
             loginEndpoint = '/login/loginCms';
-            isNmsLogin = false;
-        } else {
+        } else if (qs.loginType && qs.loginType.toLowerCase() === "nms") {
             loginEndpoint = '/login/loginNms';
-            isNmsLogin = true;
+        } else {
+            loginEndpoint = '/login/loginBoth';
+            
         }
 
         $.post({ url: loginEndpoint, data }).then(
@@ -65,7 +66,7 @@ $(function () {
                 if (isNmsLogin) {
                     $.unmsdetools.setNmsAuthToken(data["x-auth-token"], rememberme);
                 } else {
-                    //Gees preaty sad they are sending interger ID not Guids so can't use them as auth going to have to build out a login to auth token method
+                    
 
                 }
             },
