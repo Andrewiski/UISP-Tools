@@ -9,7 +9,7 @@ const favicon = require('serve-favicon');
 const cookieParser = require('cookie-parser');
 
 const fs = require('fs');
-const uuidv4 = require('uuid/v4');
+const { v4: uuidv4 } = require('uuid');
 const Deferred = require('node-promise').defer;
 const moment = require('moment');
 const crypto = require('crypto');
@@ -850,7 +850,7 @@ app.use('/', routes);
 var io = null;
 //Only Wire up Admin Page and ??
 
-io = new ioServer();
+io =  require('socket.io')();
 
 var https_srv = null;
 var http_srv = null;

@@ -3,7 +3,7 @@
 const path = require('path');
 const extend = require('extend');
 const fs = require('fs');
-const uuidv4 = require('uuid/v4');
+//const { v4: uuidv4 } = require('uuid');
 const { now } = require('moment');
 
 var ConfigHandler = function (options, defaultConfig) {

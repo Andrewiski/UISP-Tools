@@ -6,7 +6,7 @@ const http = require('http');
 const https = require('https');
 const Logger = require("./logger.js");
 //const crypto = require('crypto');
-
+const { v4: uuidv4 } = require('uuid');
 
 var UcrmApiRequestHandler = function (options) {
     var self = this;

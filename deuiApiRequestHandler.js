@@ -6,7 +6,7 @@ const Logger = require("./logger.js");
 var MongoClient = require('mongodb').MongoClient;
 var moment = require('moment');
 const assert = require('assert');
-
+const { v4: uuidv4 } = require('uuid');
 
 var DeApiRequestHandler = function (options) {
     var self = this;
@@ -72,14 +72,68 @@ var DeApiRequestHandler = function (options) {
                 try {
                     assert.equal(null, err);
                     const db = client.db(objOptions.mongoDbDatabaseName);
-                    const collection = db.collection('de_RefreshToken');
+                    const collection = db.collection('ut_RefreshToken');
                     if (collection) {
+                        if (data.refreshTokenId === undefined || data.refreshTokenId === null){
+                            data.refreshTokenId = uuidv4();
+                        }
+                        //if (data.expireAt === undefined || data.expireAt === null){
+                        data.expireAt = 259200; // 3 * 24 * 60 * 60;  //expire Token in 3 days ie it will get auto deleted by Mongo
+                        //}
+                        data.expiresIn = data.expireAt; 
+                        data.expiresOn = moment().add( data.expireAt, 'seconds').toISOString();
+                        collection.insertOne(data,                            
+                                function (err, doc) {
+                                    assert.equal(err, null);
+                                    client.close();
+                                    deferred.resolve(data);
+                                });
+                    } else {
+                        debug("error", "createRefreshToken", { "msg": "Not Able to Open MongoDB Connection", "stack": "" });
+                        client.close();
+                        deferred.reject({ "code": 500, "msg": "Not Able to Open MongoDB Connection", "error": "collection is null"});
+                    }
+                } catch (ex) {
+                    debug("error", "createRefreshToken", { "msg": ex.message, "stack": ex.stack });
+                    client.close();
+                    deferred.reject({ "code": 500, "msg": ex.message, "error": ex });
+                }
+            });
+        } catch (ex) {
+            debug('error', 'createRefreshToken',  { "msg": ex.message, "stack": ex.stack });
+            deferred.reject({ "code": 500, "msg": "An Error Occured!", "error": ex });
+        }
+        
+        return deferred.promise;     
+    }
+
+
+    var createAuthToken = function (refreshTokenId){
+        var deferred = Defer();
+        
+        try {
+            const client = new MongoClient(objOptions.mongoDbServerUrl,objOptions.mongoClientOptions);
+            // Use connect method to connect to the Server
+            client.connect(function (err, client) {
+                try {
+                    assert.equal(null, err);
+                    const db = client.db(objOptions.mongoDbDatabaseName);
+                    const collection = db.collection('ut_AuthToken');
+                    if (collection) {
+                        var data = {};
+                        data.authTokenId = uuidv4();
+                        //if (data.expireAt === undefined || data.expireAt === null){
+                        data.expireAt = 3600; //  60 * 60;  //expire Token in 1 hour ie it will get auto deleted by Mongo
+                        //}
+                        data.authTokenExpiresIn = data.expireAt; 
+                        data.refreshTokenId = refreshTokenId;
+                        //data.authTokenExpiresOn = moment().add( data.expireAt, 'seconds').toISOString();
                         collection.insertOne(data,                            
                                 function (err, doc) {
                                     assert.equal(err, null);
                                     
                                     client.close();
-                                    deferred.resolve(doc);
+                                    deferred.resolve(data);
                                 });
                     } else {
                         debug("error", "createRefreshToken", { "msg": "Not Able to Open MongoDB Connection", "stack": "" });
@@ -108,7 +162,7 @@ var DeApiRequestHandler = function (options) {
                 try {
                     assert.equal(null, err);
                     const db = client.db(objOptions.mongoDbDatabaseName);
-                    const collection = db.collection('de_PageContent');
+                    const collection = db.collection('ut_PageContent');
                     var findQuery = { linkMenuDisplay: true, deleted: false };
                     var projections = { linkText: 1, linkUrl: 1, linkTarget: 1, pageContentGuid: 1, roleId: 1 };
                     var sort = [['displayOrder', 1]];
@@ -147,7 +201,7 @@ var DeApiRequestHandler = function (options) {
                 try {
                     assert.equal(null, err);
                     const db = client.db(objOptions.mongoDbDatabaseName);
-                    const collection = db.collection('de_PageContent');
+                    const collection = db.collection('ut_PageContent');
                     var findQuery = extend({}, options.find, findDefaults);
                     var projections = { linkText: 1, linkUrl: 1, linkTarget: 1, pageContentGuid: 1, pageDescription: 1, pageKeywords: 1, updatedDate: 1, pageTitle: 1, content: 1 };
                     if (collection) {
@@ -187,6 +241,7 @@ var DeApiRequestHandler = function (options) {
         getPage(req, res, options);
     }
 
+    self.createRefreshToken = createRefreshToken;
     self.bindRoutes = BindRoutes;
 };
 module.exports = DeApiRequestHandler;
