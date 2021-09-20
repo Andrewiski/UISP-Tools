@@ -19,7 +19,8 @@
     <script src="/javascript/moment/moment.min.js"></script>
     <script src="/javascript/bootstrap-notify/bootstrap-notify.min.js"></script>
     <script src="/scripts/app/de/jquery.extensions.js?v=1"></script>
-    <script src="/scripts/app/unmsDeTools.js?v=1"></script>
+    <script src="/scripts/app/uispTools.js?v=1"></script>
+    
     <script src="login.js"></script>
 </head>
 <body>
@@ -38,36 +39,45 @@
                     </header>
                     <div>
                         <div class="col-sm-6">
-                            <div class="form" >
-                                <div class="form-group">
-                                    <label for="_username">Username</label>
-                                    <input type="text" class="form-control" name="_username" id="_username" tabindex="1" autofocus="" required="" placeholder="Username" value="">
-                                    <small id="emailHelp" class="form-text text-muted">Username may be your email address.</small>
-                                    
-                                </div>
-                                <div class="form-group">
-                                    <label for="_password">Password</label>
-                                    <input type="password" name="_password" class="form-control" id="_password" tabindex="2" placeholder="Password">
-                                </div>
-                                <!--<div class="form-check">
-                                    <input type="checkbox" class="form-check-input" id="_rememberme">
-                                    <label class="form-check-label" for="rememberMe">Remember Me</label>
-                                </div>-->
-                                <div class="row form-group">
-                                    <div class="col-xs-12 col-sm-6 alignRight pull-right">
+                            <div>
+                                <form name="login" onsubmit="return false">
+                                    <div class="form-group">
+                                        <label for="_username">Username</label>
+                                        <input type="text" class="form-control" name="_username" id="_username" tabindex="1" autofocus="" required="" placeholder="Username" value="" autocomplete="username">
+                                        <small id="emailHelp" class="form-text text-muted">Username may be your email address.</small>
+                                        
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="_password">Password</label>
+                                        <input type="password" name="_password" class="form-control" id="_password" tabindex="2" placeholder="Password" autocomplete="current-password">
+                                    </div>
+                                    <!--<div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="_rememberme">
+                                        <label class="form-check-label" for="rememberMe">Remember Me</label>
+                                    </div>-->
+                                </form>
+                            </div>
+                            <div>
+                                <div class="row mt-2" >
+                                    <div class="col-xs-12 col-sm-6 alignRight pull-right ">
                                         <button class="btn btn-primary btnLogin" tabindex="3">Sign in</button>
                                     </div>
-                                    <div class="col-xs-12 col-sm-6 pull-left">
+                                    <div class="col-xs-12 col-sm-6 pull-left " >
                                         <a class="link link--dark" href="/crm/reset-password">Forgot your password?</a>
-                                    </div>
+                                    </div> 
                                 </div>
-                                <div class="alert alert-danger loginError" style="display:none">
-                                      An Error has Occured!
+                                <div class="row mt-2">
+                                    <div class="col-12">
+                                        <div class="alert alert-danger loginError" style="display:none">
+                                            An Error has Occured!
+                                        </div>
+                                    </div>                                   
                                 </div>
+                                
                             </div>
                         </div>
                         <footer>
-                            <div class="row">
+                            <div class="row mt-2 ">
                                 <div class="col-xs-12 alignCenter">
                                     <div>
                                         <p>

@@ -1,0 +1,57 @@
+﻿<div class="login-form">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <img id="uisptools_login_logo" alt="DE Logo" src="/images/logo.png" style="display:block; margin: 20px auto;">
+            </div>
+            <div class="dialogLoading" style="display:none">
+                <h2 class="centered">
+                    <span class="fa fa-refresh spin"></span>
+                    Loading...
+                </h2>
+            </div>
+            <div class="dialogContent">
+                <div class="col-md-6">
+                    <form>
+                        <div class="form-horizontal">
+                            <div id="uisptools_login_error" class="alert alert-danger" role="alert" style="margin:10px 0;display:none;">
+                                <div id="uisptools_login_errormsg" style="text-align: center; font-size: 1.5em;"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="uisptools_login_username" class="control-label">
+                                    User Name
+                                </label>
+                                <div>
+                                    <input type="text" id="uisptools_login_username" class="form-control" placeholder="User Name" autocomplete="username" />
+                                </div>
+                            </div>
+                            <div class="clearfix"></div>
+                            <div class="form-group">
+                                <label for="uisptools_login_password" class="control-label">
+                                    Password
+                                </label>
+                                <div class="">
+                                    <input type="password" id="uisptools_login_password" class="form-control" placeholder="Password" autocomplete="current-password" />
+                                </div>
+                            </div>
+                            <!--
+                            <div class="form-group">
+                                <div class="">
+                                    <div class="checkbox">
+                                        <label>
+                                            <input type="checkbox" id="deui_login_rememberMe" /> Remember me
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                                -->              
+                            <div class="clearfix"></div>
+                            <!--<hr />-->
+                            <!--<a href="#">Forgot Password</a>-->
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,5 +1,5 @@
 "use strict";
-const appName = "deApiRequestHandler";
+const appName = "uispToolsApiRequestHandler";
 const extend = require('extend');
 const Defer = require('node-promise').defer;
 const Logger = require("./logger.js");
@@ -8,7 +8,7 @@ var moment = require('moment');
 const assert = require('assert');
 const { v4: uuidv4 } = require('uuid');
 
-var DeApiRequestHandler = function (options) {
+var UispToolsApiRequestHandler = function (options) {
     var self = this;
     var defaultOptions = {
         mongoDbServerUrl: "",
@@ -51,9 +51,9 @@ var DeApiRequestHandler = function (options) {
         
         try {
 
-            routes.get('/detools/api/PageContent/MenuItems', getMenuItems);
-            routes.get('/detools/api/PageContent/PageContentGuid/:guid', getPageByPageContentGuid);
-            routes.get('/detools/api/PageContent/LinkUrl/*', getPageByLinkUrl);
+            routes.get('/uisptools/api/PageContent/MenuItems', getMenuItems);
+            routes.get('/uisptools/api/PageContent/PageContentGuid/:guid', getPageByPageContentGuid);
+            routes.get('/uisptools/api/PageContent/LinkUrl/*', getPageByLinkUrl);
                 
 
         } catch (ex) {
@@ -74,8 +74,8 @@ var DeApiRequestHandler = function (options) {
                     const db = client.db(objOptions.mongoDbDatabaseName);
                     const collection = db.collection('ut_RefreshToken');
                     if (collection) {
-                        if (data.refreshTokenId === undefined || data.refreshTokenId === null){
-                            data.refreshTokenId = uuidv4();
+                        if (data.refreshToken === undefined || data.refreshToken === null){
+                            data.refreshToken = uuidv4();
                         }
                         //if (data.expireAt === undefined || data.expireAt === null){
                         data.expireAt = 259200; // 3 * 24 * 60 * 60;  //expire Token in 3 days ie it will get auto deleted by Mongo
@@ -121,12 +121,12 @@ var DeApiRequestHandler = function (options) {
                     const collection = db.collection('ut_AuthToken');
                     if (collection) {
                         var data = {};
-                        data.authTokenId = uuidv4();
+                        data.authToken = uuidv4();
                         //if (data.expireAt === undefined || data.expireAt === null){
                         data.expireAt = 3600; //  60 * 60;  //expire Token in 1 hour ie it will get auto deleted by Mongo
                         //}
                         data.authTokenExpiresIn = data.expireAt; 
-                        data.refreshTokenId = refreshTokenId;
+                        data.refreshToken = refreshToken;
                         //data.authTokenExpiresOn = moment().add( data.expireAt, 'seconds').toISOString();
                         collection.insertOne(data,                            
                                 function (err, doc) {
@@ -229,7 +229,7 @@ var DeApiRequestHandler = function (options) {
 
 
     var getPageByLinkUrl = function (req, res) {
-        let linkPath = req.path.replace("/detools/api/PageContent/LinkUrl/", "");
+        let linkPath = req.path.replace("/uisptools/api/PageContent/LinkUrl/", "");
         let options = { find: { linkUrl: linkPath }};
         getPage(req, res, options);
     }
@@ -244,4 +244,4 @@ var DeApiRequestHandler = function (options) {
     self.createRefreshToken = createRefreshToken;
     self.bindRoutes = BindRoutes;
 };
-module.exports = DeApiRequestHandler;
+module.exports = UispToolsApiRequestHandler;

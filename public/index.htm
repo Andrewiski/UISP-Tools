@@ -1,6 +1,6 @@
 ﻿<!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html class="h-100">
 <head>
     <meta charset="utf-8" />
     <title>UISP Tools</title>
@@ -15,19 +15,20 @@
     <!--Served up by the socket.io service directly as part of the IO service process-->
     <script src="/socket.io/socket.io.js"></script>
     <script src="/javascript/jquery/jquery.min.js"></script>
-    <script src="/scripts/app/de/jquery.extensions.js"></script>
+    <script src="/scripts/app/jquery.extensions.js"></script>
     <script src="/javascript/bootstrap/js/bootstrap.min.js"></script>
     <script src="/javascript/moment/moment.min.js"></script>
     <script src="/javascript/bootstrap-notify/bootstrap-notify.min.js"></script>
 
     <link href="/javascript/jsoneditor/jsoneditor.min.css" rel="stylesheet" type="text/css">
     <script src="/javascript/jsoneditor/jsoneditor.min.js"></script>
+    <script src="/javascript/js-cookie/js.cookie.min.js"></script>
 
-    <script src="/scripts/app/de/deui.js?v=1"></script>
+    <script src="/scripts/app/uispTools.js?v=1"></script>
 
     <script>
         $(function () {
-            $.deui.appInit().then(
+            $.uisptools.appInit().then(
                 function () {
 
                 },
@@ -39,67 +40,69 @@
         })
     </script>
 </head>
-<body>
-
-
-        
-        <div class="navbar navbar-default navbar-fixed-top header" >
+<body class="d-flex flex-column h-100">
+    <header>     
+        <div class="navbar navbar-expand-lg navbar-light bg-light" >
             <div class="container">
                 <div>
-                    <div class="navbar-header">
-                        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
-                            <span class="icon-bar"></span>
-                            <span class="icon-bar"></span>
-                            <span class="icon-bar"></span>
+                    <div class="pull-left">
+                        <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbarTopMenu" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                            <span class="navbar-toggler-icon"></span>
                         </button>
-                        <a class="navbar-brand delogo" href="/"><img class="de_logo" src="/images/WilcoLogo_Header.png" alt="Logo"></a>
+                        <a class="navbar-brand uisptoolslogo" href="/"><img class="uisp_logo" src="/images/logo.png" alt="Logo"></a>
                     </div>
-                    <div class="navbar-collapse collapse">
-                        <ul class="nav navbar-nav navbar-right menuItems">  
-                        </ul>
+                    <div class="pull-right">
+                        <div class="collapse navbar-collapse" id="navbarTopMenu">
+                            <ul class="navbar-nav navbar-right me-auto mb-2 mb-lg-0 menuItems">  
+                            </ul>
+                        </div>
                     </div>
                 </div>
 
             </div>
         </div>
-        
+    </header>    
 
-    
-    <div class="container mainContent" style="">
-        <div class="row">
-            <div class="pageContent">
-
-            </div>    
+    <main class="flex-shrink-0" >
+        <div class="container mainContent">
+            <div class="row">
+                <div class="pageContent">
+                </div>    
+            </div>
         </div>
-    </div>
+    </main>
     
-
-    <footer class="navbar navbar-fixed-bottom navbar-default footer">
-        <p>© 2020 - Wilco Wireless Inc - 1402 Main St. Neodesha, KS 66757 - (620) 325-4342</p>                
+    <footer class="footer mt-auto py-3 bg-light">
+        <div class="container">
+            <p class="text-center">
+                <span class="text-muted">© 2020 - Wilco Wireless Inc - 1402 Main St. Neodesha, KS 66757 - (620) 325-4342</span>
+            </p>
+        </div>
     </footer>
+    
 
     <div class="templates" style="display:none">
         <div class="menuItemTemplate">
             <ul>
-                <li class="menuItem">
-                    <a href="#">linkText</a>
+                <li class="nav-item menuItem">
+                    <a class="nav-link" href="#">linkText</a>
                 </li>
             </ul>
         </div>
         <div class="menuItemLoginTemplate">
             <ul>
-                <li class="menuItem">
-                    <a class="menuItemLogin" href="/login/login.htm?loginType=nms"><span class="glyphicon glyphicon-user"></span>Login</a>
+                <li class="nav-item menuItem">
+                    <a class="nav-link menuItemLogin" href="javascript:$.uisptools.showLoginDialog()"><span class="glyphicon glyphicon-user"></span>Login</a>
                 </li>
             </ul>
         </div>
         <div class="menuItemLogoutTemplate">
             <ul>
-                <li class="menuItem">
-                    <a class="menuItemLogin" href="/login/login.htm?logout=true">Logout</a>
+                <li class="nav-item menuItem">
+                    <a class="nav-link menuItemLogin" href="javascript:$.uisptools.logout()">Logout</a>
                 </li>
             </ul>
-        </div>-->
+        </div>
 
     </div>
 

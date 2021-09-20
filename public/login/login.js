@@ -63,17 +63,22 @@ $(function () {
         $.post({ url: loginEndpoint, data }).then(
             function (data) {
                 console.log(data);
-                if (isNmsLogin) {
-                    $.unmsdetools.setNmsAuthToken(data["x-auth-token"], rememberme);
-                } else {
-                    
-
-                }
+                
             },
             function (jqXHR, textStatus, errorThrown) {
-                var error = errorThrown;
+                
+                var error = 'An Error has Occured!';
                 if (jqXHR.responseJSON && jqXHR.responseJSON.msg) {
                     error = jqXHR.responseJSON.msg;                    
+                }else if(errorThrown){
+                    error = errorThrown;   
+                }else{
+                    if(jqXHR.status === 0){
+                        error = "Server is Not Responding. Check your connection to the Internet.";
+                    }else{
+                        error = textStatus;
+                    }
+                    
                 }
                 $(".loginError").text(error).show();
             }

@@ -216,10 +216,20 @@ var UcrmApiRequestHandler = function (options) {
                 function (data) {
                     try {
                         if (data.code === 404) {
-                            data.msg = "Invalid Username or Password!";
+                            //data.msg = "Invalid Username or Password!";
                             debug('warning', 'publicLoginCrm',  "Invalid UserName or Password", options.username );
+                            deferred.reject({ "code": 500, "msg": "Invalid Username or Password!", "error": "Invalid Username or Password!" });
+                        }else{
+                            let retval = {
+                                firstName : data.firstName,
+                                lastName : data.lastName,
+                                username : data.username,
+                                userType : "crm",
+                                userId : data.id
+                                ,loginData : data //we can limit what comes back here so not to reveal to much information 
+                            }; 
+                            deferred.resolve(retval);
                         }
-                        deferred.resolve(data);
                     } catch (ex) {
                         debug('error', 'publicLoginCrm',  {msg:ex.message, stack:ex.stack});
                         deferred.reject({ "code": 500, "msg": "An Error Occured during Login!", "error": ex });
@@ -245,15 +255,17 @@ var UcrmApiRequestHandler = function (options) {
     var publicLoginMobile = function (options) {
         var deferred = Defer();
         try {
-            var normLogin = { user: options.username, password: options.password, expiration: 604800, sliding: 1, deviceName:"DETools" };
+            var normLogin = { user: options.username, password: options.password, expiration: 604800, sliding: 1, deviceName:"UISPTools" };
             handleUcrmRequest({ url: 'mobile/login', data: normLogin, method: "POST", sendAppKey: false }).then(
                 function (data) {
                     try {
                         if (data.code === 404) {
                             debug('warning', 'publicLoginMobile',  "Invalid Username or Password!", options.username );
-                            data.msg = "Invalid Username or Password!";
+                            //data.msg = "Invalid Username or Password!";
+                            deferred.reject({ "code": 500, "msg": "Invalid Username or Password!", "error": "Invalid Username or Password!" });
+                        }else{
+                            deferred.resolve(data);
                         }
-                        deferred.resolve(data);
                     } catch (ex) {
                         debug('error', 'publicLoginMobile',  "Invalid Username or Password!", ex );
                         deferred.reject({ "code": 500, "msg": "An Error Occured during Login!", "error": ex });
@@ -284,15 +296,27 @@ var UcrmApiRequestHandler = function (options) {
                 function (data) {
                     try {
                         if (data.code === 401) {
-                            data.msg = "Invalid Username or Password!";
+                            //data.msg = "Invalid Username or Password!";
                             debug('error', 'publicLoginNms',  "Invalid Username or Password!", options.username );
+                            //deferred.resolve(data);
+                            deferred.reject({ "code": 500, "msg": "Invalid Username or Password!", "error": "Invalid Username or Password!" });
                         } else {
                             if (data.headers["x-auth-token"]) {
                                 data["x-auth-token"] = data.headers["x-auth-token"];
                                 delete data.headers;
                             }
+                            let retval = {
+                                firstName : data.firstName,
+                                lastName : data.lastName,
+                                username : data.username,
+                                userType : "nms",
+                                userId : data.id,
+                                nmsAuthToken : data["x-auth-token"]
+                                ,loginData : data //we can limit what comes back here so not to reveal to much information 
+                            };
+                            deferred.resolve(retval);
                         }
-                        deferred.resolve(data);
+                        
                     } catch (ex) {
                         debug('error', 'publicLoginNms', ex);
                         deferred.reject({ "code": 500, "msg": "An Error Occured during Login!", "error": ex });

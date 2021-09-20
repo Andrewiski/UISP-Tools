@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@fidm/x509": "^1.2.1",
+    "@popperjs/core": "^2.10.1",
     "@root/acme": "^3.1.0",
     "@root/csr": "^0.8.1",
     "@root/keypairs": "^0.10.3",
@@ -35,7 +36,7 @@
     "extend": "^3.0.2",
     "font-awesome": "^4.7.0",
     "jquery": "^3.6.0",
-    "jquery-ui": "^1.12.1",
+    "js-cookie": "^3.0.1",
     "jsoneditor": "^9.5.5",
     "moment": "^2.29.1",
     "mongodb": "^4.1.2",

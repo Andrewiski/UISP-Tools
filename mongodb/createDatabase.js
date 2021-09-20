@@ -16,7 +16,7 @@ db.createCollection( "ut_RefreshToken",
 
 db.ut_RefreshToken.createIndex( { "expireAt": 1 }, { expireAfterSeconds: 0 } )
 
-db.ut_RefreshToken.createIndex( { "refreshTokenId": 1 } )
+db.ut_RefreshToken.createIndex( { "refreshToken": 1 } )
 
 db.createCollection( "ut_AuthToken",
    {     
@@ -26,7 +26,7 @@ db.createCollection( "ut_AuthToken",
 
 db.ut_AuthToken.createIndex( { "expireAt": 1 }, { expireAfterSeconds: 0 } )
 
-db.ut_AuthToken.createIndex( { "authTokenId": 1 } )
+db.ut_AuthToken.createIndex( { "authToken": 1 } )
 
 
 db.createCollection( "ut_PageContent",

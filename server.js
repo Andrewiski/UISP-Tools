@@ -26,7 +26,7 @@ const ConfigHandler = require("./configHandler.js");
 const Logger = require("./logger.js");
 const ioServer = require('socket.io');
 const UispApiRequestHandler = require("./uispApiRequestHandler.js");
-const DeuiApiRequestHandler = require("./deuiApiRequestHandler.js");
+const UispToolsApiRequestHandler = require("./uispToolsApiRequestHandler.js");
 const { networkInterfaces } = require('os');
 
 var configFileOptions = {
@@ -49,7 +49,7 @@ var defaultConfig = {
     "httpport": 49080,
     "httpsport": 49443,
     "adminUsername": "admin",
-    "adminPasswordHash": "25d5241c69a02505c7440e2b4fa7804c",  //  DEToolsPassword
+    "adminPasswordHash": "25d5241c69a02505c7440e2b4fa7804c",  //  UISPToolsPassword
     "httpsServerKey": "server.key",
     "httpsServerCert": "server.cert",
     "unmsUrl": "https://uisp.example.com/nms/api/v2.1/",
@@ -122,7 +122,7 @@ var uispApiRequestHandler = new UispApiRequestHandler({
     appLogger:appLogger
 });
 
-var deuiApiRequestHandler = new DeuiApiRequestHandler({
+var uispToolsApiRequestHandler = new UispToolsApiRequestHandler({
     mongoDbServerUrl: objOptions.mongoDbServerUrl,
     mongoDbDatabaseName: objOptions.mongoDbDatabaseName,
     appLogger:appLogger
@@ -361,6 +361,7 @@ app.use('/javascript/moment', express.static(path.join(__dirname, 'node_modules'
 app.use('/javascript/bootstrap-notify', express.static(path.join(__dirname, 'node_modules', 'bootstrap-notify')));
 app.use('/javascript/animate-css', express.static(path.join(__dirname, 'node_modules', 'animate.css')));
 app.use('/javascript/jsoneditor', express.static(path.join(__dirname, 'node_modules', 'jsoneditor', 'dist')));
+app.use('/javascript/js-cookie', express.static(path.join(__dirname, 'node_modules', 'js-cookie', 'dist')));
 if(fs.existsSync(path.join(__dirname,configFolder, '/public/images', 'favicon.ico' ))){
     app.use(favicon(path.join(__dirname,configFolder, '/public/images', 'favicon.ico' )));
 }
@@ -416,7 +417,7 @@ var getErrorObject = function(error){
 }
 
 var handleError = function (req, res, error) {
-    
+    let errorData = getErrorObject(error)
     res.status(errorData.statuscode).json(errorData.error);
 };
 
@@ -497,9 +498,17 @@ routes.post('/login/loginNms', function (req, res) {
     uispApiRequestHandler.publicLoginNms(req.body).then(
         function (data) {
             try {
-                res.json(data);
+                uispToolsApiRequestHandler.createRefreshToken(data).then(
+                    function(data){
+                        delete data.loginData
+                        delete data.nmsAuthToken
+                        res.json(data);
+                    },
+                    function(error){
+                        handleError(req,res,error);    
+                    }
+                )
             } catch (ex) {
-                //res.status(500).json(getErrorObject({ "msg": "An Error Occured!", "error": ex }));
                 handleError(req, res, ex);
             }
         },
@@ -515,7 +524,15 @@ routes.post('/login/loginCms', function (req, res) {
     uispApiRequestHandler.publicLoginCrm(req.body).then(
         function (data) {
             try {
-                res.json(data);
+                uispToolsApiRequestHandler.createRefreshToken(data).then(
+                    function(data){
+                        delete data.loginData
+                        res.json(data);
+                    },
+                    function(error){
+                        handleError(req,res,error);    
+                    }
+                )
             } catch (ex) {
                 handleError(req, res, ex);
             }
@@ -532,15 +549,15 @@ routes.post('/login/loginBoth', function (req, res) {
     uispApiRequestHandler.publicLoginCrm(req.body).then(
         function (data) {
             try {
-                deuiApiRequestHandler.createRefreshToken({type:"crm", isAdmin:false, loginData:data}).then(
+                uispToolsApiRequestHandler.createRefreshToken(data).then(
                     function(data){
+                        delete data.loginData
                         res.json(data);
                     },
                     function(error){
                         handleError(req,res,error);    
                     }
                 )
-                res.json(data);
             } catch (ex) {
                 handleError(req, res, ex);
             }
@@ -550,15 +567,16 @@ routes.post('/login/loginBoth', function (req, res) {
             uispApiRequestHandler.publicLoginNms(req.body).then(
                 function (data) {
                     try {
-                        deuiApiRequestHandler.createRefreshToken({type:"nms", isAdmin:true, logindata:data}).then(
+                        uispToolsApiRequestHandler.createRefreshToken(data).then(
                             function(data){
+                                delete data.loginData
+                                delete data.nmsAuthToken
                                 res.json(data);
                             },
                             function(error){
                                 handleError(req,res,error);    
                             }
-                        )
-                        
+                        )  
                     } catch (ex) {
                         handleError(req,res,ex);
                     }
@@ -571,7 +589,7 @@ routes.post('/login/loginBoth', function (req, res) {
     );
 });
 
-//Login Unms Data
+//Login Page Public Data
 routes.get('/login/loginData', function (req, res) {
     var loginData = {};
     uispApiRequestHandler.publicLoginData().then(
@@ -590,39 +608,7 @@ routes.get('/login/loginData', function (req, res) {
 
 
 
-//Login Unms
-routes.post('/login/login', function (req, res) {
-    var loginData = {};
-    uispApiRequestHandler.publicLoginUnms(req.body).then(
-        function (data) {
-            try {
-                res.json(data);
-            } catch (ex) {
-                handleError(req,res,ex);
-            }
-        },
-        function (error) {
-            handleError(req, res, error);
-        }
-    );
-});
 
-//Login Unms Data
-routes.get('/login/loginData', function (req, res) {
-    var loginData = {};
-    uispApiRequestHandler.publicLoginData().then(
-        function (data) {
-            try {
-                res.json(data);
-            } catch (ex) {
-                handleError(req,res,ex);
-            }
-        },
-        function (error) {
-            handleError(req,res,error);
-        }
-    );
-})
 
 
 //need to add is Authed logic and Permissions check 
@@ -655,7 +641,7 @@ routes.get('/ucrm/*', function (req, res) {
     );
 });
 
-deuiApiRequestHandler.bindRoutes(routes);
+uispToolsApiRequestHandler.bindRoutes(routes);
 
 
 
