@@ -215,10 +215,10 @@ var UcrmApiRequestHandler = function (options) {
             handleUcrmRequest(myOptions).then(
                 function (data) {
                     try {
-                        if (data.code === 404) {
+                        if (data.code === 401) {
                             //data.msg = "Invalid Username or Password!";
                             debug('warning', 'publicLoginCrm',  "Invalid UserName or Password", options.username );
-                            deferred.reject({ "code": 500, "msg": "Invalid Username or Password!", "error": "Invalid Username or Password!" });
+                            deferred.reject({ "code": 401, "msg": "Invalid Username or Password!", "error": "Invalid Username or Password!" });
                         }else{
                             let retval = {
                                 firstName : data.firstName,
@@ -237,7 +237,7 @@ var UcrmApiRequestHandler = function (options) {
 
                 },
                 function (error) {
-                    if (error.code === 404) {
+                    if (error.code === 401) {
                         error.msg = "Invalid Username or Password!";
                     }
                     debug('error', 'publicLoginCrm', error);
@@ -262,7 +262,7 @@ var UcrmApiRequestHandler = function (options) {
                         if (data.code === 404) {
                             debug('warning', 'publicLoginMobile',  "Invalid Username or Password!", options.username );
                             //data.msg = "Invalid Username or Password!";
-                            deferred.reject({ "code": 500, "msg": "Invalid Username or Password!", "error": "Invalid Username or Password!" });
+                            deferred.reject({ "code": 401, "msg": "Invalid Username or Password!", "error": "Invalid Username or Password!" });
                         }else{
                             deferred.resolve(data);
                         }
@@ -299,7 +299,7 @@ var UcrmApiRequestHandler = function (options) {
                             //data.msg = "Invalid Username or Password!";
                             debug('error', 'publicLoginNms',  "Invalid Username or Password!", options.username );
                             //deferred.resolve(data);
-                            deferred.reject({ "code": 500, "msg": "Invalid Username or Password!", "error": "Invalid Username or Password!" });
+                            deferred.reject({ "code": 401, "msg": "Invalid Username or Password!", "error": "Invalid Username or Password!" });
                         } else {
                             if (data.headers["x-auth-token"]) {
                                 data["x-auth-token"] = data.headers["x-auth-token"];

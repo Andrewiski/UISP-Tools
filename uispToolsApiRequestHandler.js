@@ -74,12 +74,13 @@ var UispToolsApiRequestHandler = function (options) {
                     const db = client.db(objOptions.mongoDbDatabaseName);
                     const collection = db.collection('ut_RefreshToken');
                     if (collection) {
-                        if (data.refreshToken === undefined || data.refreshToken === null){
-                            data.refreshToken = uuidv4();
+                        if (data.refresh_token === undefined || data.refresh_token === null){
+                            data.refresh_token = uuidv4();
                         }
                         //if (data.expireAt === undefined || data.expireAt === null){
                         data.expireAt = 259200; // 3 * 24 * 60 * 60;  //expire Token in 3 days ie it will get auto deleted by Mongo
                         //}
+                        data.token_type = "bearer"
                         data.expiresIn = data.expireAt; 
                         data.expiresOn = moment().add( data.expireAt, 'seconds').toISOString();
                         collection.insertOne(data,                            

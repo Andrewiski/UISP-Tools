@@ -11,45 +11,30 @@
                 </h2>
             </div>
             <div class="dialogContent">
-                <div class="col-md-6">
-                    <form>
+                <div class="col-md-12">
+                    <form name="login" onsubmit="return false">
                         <div class="form-horizontal">
-                            <div id="uisptools_login_error" class="alert alert-danger" role="alert" style="margin:10px 0;display:none;">
-                                <div id="uisptools_login_errormsg" style="text-align: center; font-size: 1.5em;"></div>
+                            
+                            <div class="form-group">
+                                <label for="uisptools_login_username" class="form-label">User Name</label>
+                                <input type="text" id="uisptools_login_username" class="form-control" tabindex="1" autofocus="" required="" placeholder="User Name" autocomplete="username" />
+                                <small id="emailHelp" class="form-text text-muted">Username may be your email address.</small>
                             </div>
                             <div class="form-group">
-                                <label for="uisptools_login_username" class="control-label">
-                                    User Name
-                                </label>
-                                <div>
-                                    <input type="text" id="uisptools_login_username" class="form-control" placeholder="User Name" autocomplete="username" />
-                                </div>
+                                <label for="uisptools_login_password" class="form-label">Password</label>
+                                <input type="password" id="uisptools_login_password" class="form-control" tabindex="2" placeholder="Password" autocomplete="current-password" />
                             </div>
-                            <div class="clearfix"></div>
-                            <div class="form-group">
-                                <label for="uisptools_login_password" class="control-label">
-                                    Password
-                                </label>
-                                <div class="">
-                                    <input type="password" id="uisptools_login_password" class="form-control" placeholder="Password" autocomplete="current-password" />
-                                </div>
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" id="uisptools_login_rememberMe" />
+                                <label class="form-check-label" for="uisptools_login_rememberMe">Remember Me</label>
                             </div>
-                            <!--
-                            <div class="form-group">
-                                <div class="">
-                                    <div class="checkbox">
-                                        <label>
-                                            <input type="checkbox" id="deui_login_rememberMe" /> Remember me
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                                -->              
-                            <div class="clearfix"></div>
-                            <!--<hr />-->
+                            
                             <!--<a href="#">Forgot Password</a>-->
                         </div>
                     </form>
+                    <div id="uisptools_login_error" class="alert alert-danger" role="alert" style="margin:10px 0;display:none;">
+                        <div id="uisptools_login_errormsg" style="text-align: center; font-size: 1.5em;"></div>
+                    </div>
                 </div>
             </div>
         </div>

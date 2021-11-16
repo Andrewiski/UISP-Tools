@@ -62,8 +62,7 @@ var defaultConfig = {
             "app":"info"
         },
         "ucrmApiRequestHandler":{"app":"info"},
-        "deApiRequestHandler":{"app":"info"},
-
+        "deApiRequestHandler":{"app":"info"}
     }
 };
 
@@ -502,6 +501,10 @@ routes.post('/login/loginNms', function (req, res) {
                     function(data){
                         delete data.loginData
                         delete data.nmsAuthToken
+                        if(data.access_token){
+                            res.setHeader("Cache-Control", "no-store");
+                            res.setHeader("Pragma", "no-cache");
+                        }
                         res.json(data);
                     },
                     function(error){
@@ -526,7 +529,11 @@ routes.post('/login/loginCms', function (req, res) {
             try {
                 uispToolsApiRequestHandler.createRefreshToken(data).then(
                     function(data){
-                        delete data.loginData
+                        delete data.loginData;
+                        if(data.access_token){
+                            res.setHeader("Cache-Control", "no-store");
+                            res.setHeader("Pragma", "no-cache");
+                        }
                         res.json(data);
                     },
                     function(error){
@@ -551,7 +558,11 @@ routes.post('/login/loginBoth', function (req, res) {
             try {
                 uispToolsApiRequestHandler.createRefreshToken(data).then(
                     function(data){
-                        delete data.loginData
+                        delete data.loginData;
+                        if(data.access_token){
+                            res.setHeader("Cache-Control", "no-store");
+                            res.setHeader("Pragma", "no-cache");
+                        }
                         res.json(data);
                     },
                     function(error){
@@ -571,6 +582,10 @@ routes.post('/login/loginBoth', function (req, res) {
                             function(data){
                                 delete data.loginData
                                 delete data.nmsAuthToken
+                                if(data.access_token){
+                                    res.setHeader("Cache-Control", "no-store");
+                                    res.setHeader("Pragma", "no-cache");
+                                }
                                 res.json(data);
                             },
                             function(error){
@@ -834,9 +849,7 @@ app.use('/', routes);
 
 
 var io = null;
-//Only Wire up Admin Page and ??
-
-io =  require('socket.io')();
+io =  ioServer();
 
 var https_srv = null;
 var http_srv = null;

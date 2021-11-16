@@ -1217,24 +1217,9 @@
 
         setAccessToken: function (accessToken) {
             $.uisptools.common.login.accessToken = accessToken;
-            //$.uisptools._setStorageAccessToken(accessToken);
         },
 
-        //_setStorageAccessToken: function (accessToken) {
-        //    if (typeof (window.sessionStorage) !== "undefined") {
-        //        window.sessionStorage.setItem("uisptoolsAccessToken", accessToken);    
-        //    } else {
-        //        Cookies.set("uisptoolsAccessToken", accessToken);
-        //    }
-        //},
-        //_clearStorageAccessToken: function () {
-        //    if (typeof (window.sessionStorage) !== "undefined") {
-        //        //window.localStorage.removeItem("uisptoolsAccessToken")
-        //        window.sessionStorage.removeItem("uisptoolsAccessToken")
-        //    }
-        //    Cookies.remove("uisptoolsAccessToken");
-        //},
-
+        
         _clearLoginAccessTokenRefreshTokenAiToken: function () {
             $.uisptools._clearStorageRefreshToken();
             //$.uisptools._clearStorageAccessToken();
@@ -1267,10 +1252,9 @@
                     token: null, //if using a externalBearer token set it here
                     refresh_token: null,
                     rememberme: false
+                    
                 }
                 var myOptions = $.extend(defaultOptions, options);
-
-
                 //Check for username and password
                 if (myOptions.grant_type == "password") {
                     if (myOptions.username == null || !$.trim(myOptions.username)) {
@@ -1291,7 +1275,7 @@
                     contentType: "application/x-www-form-urlencoded; charset=UTF-8",
                     //data: JSON.stringify(postdata),
                     data: myOptions,
-                    url: '/Token',
+                    url: '/login/loginBoth',
                     success: function (result) {
                         //If no data is returned, show message
                         if (!result) {
