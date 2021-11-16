@@ -35,6 +35,8 @@ export UISPTOOLS_DOCKER_IMAGE="ghcr.io/andrewiski/uisp-tools/uisptools"
 export UISPTOOLS_VERSION="0.0.3"
 export UISPTOOLS_APP_DIR="${HOME_DIR}/app/uisptools"
 export UISPTOOLS_DATA_DIR="${HOME_DIR}/data/uisptools"
+export UISPTOOLS_DOCKER_COMPOSE_PATH="${UISPTOOLS_APP_DIR}/docker-compose.yml"
+
 #export NODE_ENV="production"
 
 
@@ -189,7 +191,7 @@ change_owner() {
 
 start_docker_containers() {
   echo "Starting uisptools docker containers."
-  docker-compose -p uisptools -f "${DOCKER_COMPOSE_PATH}" up -d uisptools || fail "Failed to start docker containers"
+  docker-compose -p uisptools -f "${UISPTOOLS_DOCKER_COMPOSE_PATH}" up -d uisptools || fail "Failed to start docker containers"
 }
 
 
