@@ -39,7 +39,7 @@ var Logger = function (options) {
             break;
     }
 
-    const logFile = null;
+    var logFile = null;
     
     if(objOptions.logToFile){
         logFile = winston.createLogger({
