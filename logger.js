@@ -14,7 +14,8 @@ var Logger = function (options) {
         logEventHandler: null,
         logFolder: "log",
         debugUtilEnabled: true,
-        debugUtilName:"app"
+        debugUtilName:"app",
+        logToFile: true
     }
     var objOptions = extend({}, defaultOptions, options);
     self.objOptions = objOptions;
@@ -38,20 +39,24 @@ var Logger = function (options) {
             break;
     }
 
-    const logFile = winston.createLogger({
-        level: winstonstreamerLogLevel,
-        exitOnError: false,
-        transports: [
-            //new winston.transports.Console(),
-            new (winston.transports.DailyRotateFile)({
-                filename: path.join(objOptions.logFolder, '%DATE%-' + objOptions.logName + '.log'),
-                datePattern: 'YYYY-MM-DD-HH',
-                zippedArchive: true,
-                maxSize: '20m',
-                maxFiles: '14d'
-            })
-        ]
-    });
+    const logFile = null;
+    
+    if(objOptions.logToFile){
+        logFile = winston.createLogger({
+            level: winstonstreamerLogLevel,
+            exitOnError: false,
+            transports: [
+                //new winston.transports.Console(),
+                new (winston.transports.DailyRotateFile)({
+                    filename: path.join(objOptions.logFolder, '%DATE%-' + objOptions.logName + '.log'),
+                    datePattern: 'YYYY-MM-DD-HH',
+                    zippedArchive: true,
+                    maxSize: '20m',
+                    maxFiles: '14d'
+                })
+            ]
+        });
+    }
 
     var isObject = function (a) {
         return (!!a) && (a.constructor === Object);
@@ -181,8 +186,9 @@ var Logger = function (options) {
                         winstonLogLevel = "silly";
                         break;
                 }
-                logFile.log({ timestamp: new Date(), level: winstonLogLevel, appName: appName, appSubname:appSubname, message: args });
-
+                if(objOptions.logToFile){
+                    logFile.log({ timestamp: new Date(), level: winstonLogLevel, appName: appName, appSubname:appSubname, message: args });
+                }
                 
                 
 
