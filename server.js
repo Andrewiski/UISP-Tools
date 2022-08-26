@@ -1,5 +1,5 @@
 'use strict';
-const appName = "server"
+const appLogName = "uisptools"
 const http = require('http');
 const https = require('https');
 const path = require('path');
@@ -19,11 +19,10 @@ const version = packagejson.version;
 const os = require('os');
 const AdmZip = require('adm-zip');
 const util = require('util');
-const ACMECert = require('./acmeCertificateManager');
-const ACMEHttp01 = require('./acme-http-01-memory.js');
-const OpenSSL = require('./openssl.js');
-const ConfigHandler = require("./configHandler.js");
-const Logger = require("./logger.js");
+const ConfigHandler = require("@andrewiski/confighandler");
+const LogUtilHelper = require("@andrewiski/logutilhelper");
+const LetsEncrypt =  require('@andrewiski/letsencrypt');
+const OpenSSL = require("@andrewiski/openssl");
 const ioServer = require('socket.io');
 const UispApiRequestHandler = require("./uispApiRequestHandler.js");
 const UispToolsApiRequestHandler = require("./uispToolsApiRequestHandler.js");
@@ -33,14 +32,19 @@ var configFileOptions = {
     "configDirectory": "config",
     "configFileName": "config.json"
 }
+
+
+var localDebug = false;
 if (process.env.localDebug === 'true') {
     console.log("localDebug is enabled")
-    configFileOptions.configDirectory = "config/localDebug"
+    configFileOptions.configDirectory = "config/localDebug";
+    localDebug = true;
 }
+
 var defaultConfig = {
     "configDirectory": configFileOptions.configDirectory,
-    "mongoDbServerUrl": "mongodb://Username:Password@ServerHostName:27017?connectTimeoutMS=300000&authSource=DatabaseName",
-    "mongoDbDatabaseName": "DatabaseName",
+    "mongoDbServerUrl": "mongodb://uisptools:U!spT00ls!@uisptools_mongodb:27017/?connectTimeoutMS=300000&authSource=admin",
+    "mongoDbDatabaseName": "uisptools",
     "logDirectory": "logs",
     "adminRoute": "/admin",
     "logLevel": "info",
@@ -49,13 +53,14 @@ var defaultConfig = {
     "httpport": 49080,
     "httpsport": 49443,
     "adminUsername": "admin",
-    "adminPasswordHash": "25d5241c69a02505c7440e2b4fa7804c",  //  UISPToolsPassword
+    "adminPasswordHash": "01b7783d35cfcbbc957461516f337075",  //  UISPToolsPassword
     "httpsServerKey": "server.key",
     "httpsServerCert": "server.cert",
     "unmsUrl": "https://uisp.example.com/nms/api/v2.1/",
     "ucrmUrl": "https://uisp.example.com/crm/api/v1.0/",
     "ucrmAppKey": "CreateAppKeyFromUISPWebSite",
     "opensslPath": "",
+    "maxLogLength": 500,
     "rejectUnauthorized": false,
     "appLogLevels":{
         "server": {
@@ -84,16 +89,22 @@ var configHandler = new ConfigHandler(configFileOptions, defaultConfig);
 //let hash = crypto.createHash('md5').update('DEToolsPassword').digest("hex");
 //console.log('hash ' + hash);
 
-var objOptions = configHandler.getConfig();
+var objOptions = configHandler.config;
 var configFolder = objOptions.configDirectory;
 var certificatesFolder = path.join(objOptions.configDirectory, 'certificates');
-var opensslConfigFolder = path.join(certificatesFolder, 'opensslConfig');
+var caFolder = path.join(certificatesFolder, 'ca');
 
 if (objOptions.opensslPath.startsWith('./') === true) {
     objOptions.opensslPath = path.join(__dirname, objOptions.opensslPath.substring(1));
 }
 
-var openssl = new OpenSSL({ "opensslPath": objOptions.opensslPath });
+var openssl = new OpenSSL({ "opensslPath": objOptions.opensslPath,
+    certificatesFolder:  certificatesFolder,
+    caFolder: caFolder,
+    keySize: 4096, //2048
+    caDomainName: "localhost",
+    caPassword: null //"mycapassword"
+ });
 
 var appLogHandler = function (logData) {
     //add to the top of the log
@@ -105,26 +116,45 @@ var appLogHandler = function (logData) {
     
 }
 
-var appLogger = new Logger({
-    logLevels: objOptions.logLevels,
-    debugUtilName: "uisptools",
-    logName: "UispTools",
-    logEventHandler: appLogHandler,
-    logFolder: objOptions.logDirectory
+let logUtilHelper = new LogUtilHelper({
+    appLogLevels: objOptions.appLogLevels,
+    logEventHandler: null,
+    logUnfilteredEventHandler: null,
+    logFolder: objOptions.logDirectory,
+    logName: appLogName,
+    debugUtilEnabled: (process.env.DEBUG ? true : undefined) || false,
+    debugUtilName:appLogName,
+    debugUtilUseAppName:true,
+    logToFile: !localDebug,
+    logToFileLogLevel: objOptions.logLevel,
+    logToMemoryObject: true,
+    logToMemoryObjectMaxLogLength: objOptions.maxLogLength,
+    logSocketConnectionName: "socketIo",
+    logRequestsName: "access"
+
 })
+
+
+// var appLogger = new Logger({
+//     logLevels: objOptions.logLevels,
+//     debugUtilName: "uisptools",
+//     logName: "UispTools",
+//     logEventHandler: appLogHandler,
+//     logFolder: objOptions.logDirectory
+// })
 
 var uispApiRequestHandler = new UispApiRequestHandler({
     ucrmUrl: objOptions.ucrmUrl,
     ucrmAppKey: objOptions.ucrmAppKey,
     unmsUrl: objOptions.unmsUrl,
     rejectUnauthorized : objOptions.rejectUnauthorized,
-    appLogger:appLogger
+    logUtilHelper:logUtilHelper
 });
 
 var uispToolsApiRequestHandler = new UispToolsApiRequestHandler({
     mongoDbServerUrl: objOptions.mongoDbServerUrl,
     mongoDbDatabaseName: objOptions.mongoDbDatabaseName,
-    appLogger:appLogger
+    logUtilHelper:logUtilHelper
 });
 
 
@@ -151,38 +181,38 @@ var privateData = {
 
 
 
-var acmeNotify = function (ev, msg) {
-    let data = null;
-    let message = '';
-    if (isObject(msg)) {
-        data = msg;
-        message = ev;
-    } else {
-        message = msg;
-    }
-    if (ev === 'error' || ev === 'warning') {
-        writeToLog(ev, 'Acme', msg || '');
-        if (io) {
-            io.emit('createLetsEncrypt', { status: 'progress', success: false, error: ev, msg: message || '', data: data });
-        }
-    } else {
-        writeToLog('info', 'Acme', ev || '', msg || '');
-        if (io) {
-            io.emit('createLetsEncrypt', { status: 'progress', success: false, error: null, msg: message || '', data: data });
-        }
-    }
+// var acmeNotify = function (ev, msg) {
+//     let data = null;
+//     let message = '';
+//     if (isObject(msg)) {
+//         data = msg;
+//         message = ev;
+//     } else {
+//         message = msg;
+//     }
+//     if (ev === 'error' || ev === 'warning') {
+//         writeToLog(ev, 'Acme', msg || '');
+//         if (io) {
+//             io.emit('createLetsEncrypt', { status: 'progress', success: false, error: ev, msg: message || '', data: data });
+//         }
+//     } else {
+//         writeToLog('info', 'Acme', ev || '', msg || '');
+//         if (io) {
+//             io.emit('createLetsEncrypt', { status: 'progress', success: false, error: null, msg: message || '', data: data });
+//         }
+//     }
 
-};
-var acmehttp01 = ACMEHttp01.create();
-var acmeCertificateManagerOptions = extend({}, objOptions.acmeCertificateManagerOptions);
-acmeCertificateManagerOptions.http01 = acmehttp01;
-acmeCertificateManagerOptions.notify = acmeNotify;
-acmeCertificateManagerOptions.retryInterval = 15000;
-acmeCertificateManagerOptions.deauthWait = 30000;
-acmeCertificateManagerOptions.retryPoll = 10;
-acmeCertificateManagerOptions.retryPending = 10;
-acmeCertificateManagerOptions.debug = true;
-var acmeCert = ACMECert.create(acmeCertificateManagerOptions);
+// };
+// var acmehttp01 = ACMEHttp01.create();
+// var acmeCertificateManagerOptions = extend({}, objOptions.acmeCertificateManagerOptions);
+// acmeCertificateManagerOptions.http01 = acmehttp01;
+// acmeCertificateManagerOptions.notify = acmeNotify;
+// acmeCertificateManagerOptions.retryInterval = 15000;
+// acmeCertificateManagerOptions.deauthWait = 30000;
+// acmeCertificateManagerOptions.retryPoll = 10;
+// acmeCertificateManagerOptions.retryPending = 10;
+// acmeCertificateManagerOptions.debug = true;
+// var acmeCert = ACMECert.create(acmeCertificateManagerOptions);
 
 
 var getConnectionInfo = function (req) {
@@ -236,7 +266,7 @@ var addAllFolderFilesToZip = function (folderpath, filename, zip) {
                 if (excludedFileNames.includes(file) === false) {
                     zip.addLocalFile(path.join(folderpath, file));
                 }
-                //appLogger.log("added file to zip " + path.join(folderpath, file) );
+                //logUtilHelper.log(appLogName, "app", "debug", "added file to zip " + path.join(folderpath, file) );
             } else {
                 if (fs.lstatSync(path.join(folderpath, file)).isDirectory()) {
                     if (excludedFolders.includes(file) === false) {
@@ -245,7 +275,7 @@ var addAllFolderFilesToZip = function (folderpath, filename, zip) {
                 }
             }
         } catch (ex) {
-            appLogger.log(appName, "app", "error", "addAllFolderFilesToZip", "Error Adding File/Folder to Zip", path.join(folderpath, file));
+            logUtilHelper.log(appLogName, "app", "error", "addAllFolderFilesToZip", "Error Adding File/Folder to Zip", path.join(folderpath, file));
         }
     });
 };
@@ -302,7 +332,7 @@ function checkUser(username, password, ipAddress, resetLoginFailedIfSuccess) {
     let msg = "success";
     let isAccountLocked = false;
     if (username.toLowerCase() !== objOptions.adminUsername.toLowerCase()) {
-        appLogger.log(appName, "app", 'warning', 'login', 'Invalid username ', username);
+        logUtilHelper.log(appLogName, "app", 'warning', 'login', 'Invalid username ', username);
         msg = "Invalid Username/Password";
     }
 
@@ -331,7 +361,7 @@ function checkUser(username, password, ipAddress, resetLoginFailedIfSuccess) {
         } else {
             msg = "Invalid Username/Password";
         }
-        appLogger.log(appName, "app", 'warning', 'login', msg, "username:" + username + ", ip:" + ipAddress + ", isAccountLocked:" + isAccountLocked);
+        logUtilHelper.log(appLogName, "app", 'warning', 'login', msg, "username:" + username + ", ip:" + ipAddress + ", isAccountLocked:" + isAccountLocked);
     } else {
         msg = "success";
         if (resetLoginFailedIfSuccess === true) {
@@ -347,7 +377,7 @@ app.use(basicAuth);
 //This function will get called on every request and if useHttpsClientCertAuth is turned on only allow request with a client cert
 app.use(function (req, res, next) {
     var connInfo = getConnectionInfo(req);
-    appLogger.log(appName, "browser", 'debug',  "path:" + req.path + ", ip:" + connInfo.ip + ", port:" + connInfo.port + ", ua:" + connInfo.ua);
+    logUtilHelper.log(appLogName, "browser", 'debug',  "path:" + req.path + ", ip:" + connInfo.ip + ", port:" + connInfo.port + ", ua:" + connInfo.ua);
     next();
     return;
 })
@@ -664,7 +694,7 @@ uispToolsApiRequestHandler.bindRoutes(routes);
 //routes.get('/', function (req, res) {
 //    var connInfo = getConnectionInfo(req);
 //    res.end();
-//    appLogger.log(appName, "browser", 'info', "path:" + req.path + ", ip:" + connInfo.ip + ", port:" + connInfo.port + ", ua:" + connInfo.ua);
+//    logUtilHelper.log(appLogName, "browser", 'info', "path:" + req.path + ", ip:" + connInfo.ip + ", port:" + connInfo.port + ", ua:" + connInfo.ua);
 //});
 
 
@@ -823,20 +853,20 @@ var loadCertificates = function () {
                     });
                     commonData.serverCertificates = Certs;
 
-                    appLogger.log(appName, "app", 'info', 'Loaded Server Certs');
+                    logUtilHelper.log(appLogName, "app", 'info', 'Loaded Server Certs');
                     if (io) {
                         io.emit('serverCertificatesUpdate', Certs);
                     }
                 } catch (ex2) {
-                    appLogger.log(appName, "app", 'error', 'Error Loading Server Public Cert ', ex2);
+                    logUtilHelper.log(appLogName, "app", 'error', 'Error Loading Server Public Cert ', ex2);
                 }
             },
             function (ev, msg) {
-                appLogger.log(appName, "app",'error', 'Error Loading Server Public Cert ', ev, msg);
+                logUtilHelper.log(appLogName, "app",'error', 'Error Loading Server Public Cert ', ev, msg);
             }
         );
     } catch (ex) {
-        appLogger.log(appName, "app", 'error', 'Error Loading Certificates Exception', ex);
+        logUtilHelper.log(appLogName, "app", 'error', 'Error Loading Certificates Exception', ex);
     }
 
 };
@@ -864,7 +894,7 @@ var getHttpsServerOptions = function () {
         httpsOptions.key = fs.readFileSync(path.join(__dirname, configFolder, objOptions.httpsServerKey));
         httpsOptions.cert = fs.readFileSync(path.join(__dirname, configFolder, objOptions.httpsServerCert));
     } else {
-        appLogger.log(appName, "app", "warning", "httpsServer certificate files missing unable to use https");
+        logUtilHelper.log(appLogName, "app", "warning", "httpsServer certificate files missing unable to use https");
     }
 
     return httpsOptions;
@@ -877,14 +907,14 @@ var startWebServers = function () {
             let httpsOptions = getHttpsServerOptions();
             if (httpsOptions.key && httpsOptions.cert) {
                 https_srv = https.createServer(getHttpsServerOptions(), app).listen(objOptions.httpsport, function () {
-                    appLogger.log(appName, "app", 'info', 'Express server listening on https port ' + objOptions.httpsport);
+                    logUtilHelper.log(appLogName, "app", 'info', 'Express server listening on https port ' + objOptions.httpsport);
                 });
                 io.attach(https_srv);
             } else {
-                appLogger.log(appName, "app", "error", "httpsServer certificate files missing unable to start https server ");
+                logUtilHelper.log(appLogName, "app", "error", "httpsServer certificate files missing unable to start https server ");
             }
         } catch (ex) {
-            appLogger.log(appName, "app", 'error', 'Failed to Start Express server on https port ' + objOptions.httpsport, ex);
+            logUtilHelper.log(appLogName, "app", 'error', 'Failed to Start Express server on https port ' + objOptions.httpsport, ex);
         }
     }
 
@@ -892,11 +922,11 @@ var startWebServers = function () {
     if (objOptions.useHttp === true) {
         try {
             http_srv = http.createServer(app).listen(objOptions.httpport, function () {
-                appLogger.log(appName, "app", 'info', 'Express server listening on http port ' + objOptions.httpport);
+                logUtilHelper.log(appLogName, "app", 'info', 'Express server listening on http port ' + objOptions.httpport);
             });
             io.attach(http_srv);
         } catch (ex) {
-            appLogger.log(appName, "app", 'error', 'Failed to Start Express server on http port ' + objOptions.httpport, ex);
+            logUtilHelper.log(appLogName, "app", 'error', 'Failed to Start Express server on http port ' + objOptions.httpport, ex);
         }
     }
 
@@ -917,10 +947,10 @@ var startWebServers = function () {
                 }
             }
         }
-        appLogger.log(appName, "app","info", "interface ipv4 addresses", results)
+        logUtilHelper.log(appLogName, "app","info", "interface ipv4 addresses", results)
 
     }catch (ex) {
-        appLogger.log(appName, "app",'error', 'Failed to Get Ip Infomation', ex);
+        logUtilHelper.log(appLogName, "app",'error', 'Failed to Get Ip Infomation', ex);
     }
 };
 
@@ -931,13 +961,13 @@ var updateHttpsServer = function () {
             if (https_srv.setSecureContext) {
                 https_srv.setSecureContext(getHttpsServerOptions());
             } else {
-                appLogger.log(appName, "app", "error", "https_srv.setSecureContext is null. Wrong version of Node.JS must be 12 or greater. \"node -v\"");
+                logUtilHelper.log(appLogName, "app", "error", "https_srv.setSecureContext is null. Wrong version of Node.JS must be 12 or greater. \"node -v\"");
             }
         } else {
-            appLogger.log(appName, "app", "error", "https_srv is null. Unable to update Context");
+            logUtilHelper.log(appLogName, "app", "error", "https_srv is null. Unable to update Context");
         }
     } catch (ex) {
-        appLogger.log(appName, "app", "error", "Error Updating https server with new security context.", ex);
+        logUtilHelper.log(appLogName, "app", "error", "Error Updating https server with new security context.", ex);
     }
 };
 
@@ -950,7 +980,7 @@ var updateHttpsServer = function () {
 io.on('connection', function (socket) {
 
 
-    appLogger.log(appName, "browser", 'info',  socket.id, 'Connection', getSocketInfo(socket));
+    logUtilHelper.log(appLogName, "browser", 'info',  socket.id, 'Connection', getSocketInfo(socket));
 
     const base64Credentials = socket.conn.request.headers.authorization.split(' ')[1];
     const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
@@ -972,47 +1002,47 @@ io.on('connection', function (socket) {
         }
 
         socket.on('ping', function (data) {
-            appLogger.log(appName, "browser", 'trace',  socket.id, 'ping');
+            logUtilHelper.log(appLogName, "browser", 'trace',  socket.id, 'ping');
         });
 
        
 
         socket.on("disconnect", function () {
             try {
-                appLogger.log(appName, "browser", "info",  socket.id, "disconnect", getSocketInfo(socket));
+                logUtilHelper.log(appLogName, "browser", "info",  socket.id, "disconnect", getSocketInfo(socket));
                 if (privateData.browserSockets[socket.id]) {
                     delete privateData.browserSockets[socket.id];
                 }
             } catch (ex) {
-                appLogger.log(appName, "browser", 'error', 'Error socket on', ex);
+                logUtilHelper.log(appLogName, "browser", 'error', 'Error socket on', ex);
             }
         });
 
         socket.on('Logs', function (data) {
             try {
-                appLogger.log(appName, "browser", "info", socket.id, "Logs");
+                logUtilHelper.log(appLogName, "browser", "info", socket.id, "Logs");
                 socket.emit('Logs', privateData.logs);
             } catch (ex) {
-                appLogger.log(appName, "browser", 'error', 'Error socket on', ex);
+                logUtilHelper.log(appLogName, "browser", 'error', 'Error socket on', ex);
             }
         });
 
 
         socket.on('createLetsEncrypt', function (data) {
             try {
-                appLogger.log(appName, "browser", "info", socket.id, "createLetsEncrypt");
+                logUtilHelper.log(appLogName, "browser", "info", socket.id, "createLetsEncrypt");
                 //renewServerCertificate();
             } catch (ex) {
-                appLogger.log('error', 'Error socket on', ex);
+                logUtilHelper.log('error', 'Error socket on', ex);
             }
         });
 
         socket.on('loadCertificates', function (data) {
             try {
-                appLogger.log(appName, "browser", "info",  socket.id, "loadCertificates");
+                logUtilHelper.log(appLogName, "browser", "info",  socket.id, "loadCertificates");
                 loadCertificates();
             } catch (ex) {
-                appLogger.log(appName, "browser", 'error', 'Error socket on', ex);
+                logUtilHelper.log(appLogName, "browser", 'error', 'Error socket on', ex);
             }
         });
 
@@ -1034,12 +1064,12 @@ var startupServer = function () {
     try {
         loadCertificates();
     } catch (ex) {
-        appLogger.log(appName, "app", 'error', 'Error Loading https certificate', ex);
+        logUtilHelper.log(appLogName, "app", 'error', 'Error Loading https certificate', ex);
     }
     try {
         startWebServers();
     } catch (ex) {
-        appLogger.log(appName, "app", 'error', 'Error Starting Web Servers', ex);
+        logUtilHelper.log(appLogName, "app", 'error', 'Error Starting Web Servers', ex);
     }
 };
 

@@ -36,9 +36,12 @@ services:
       MONGO_INITDB_DATABASE: "uisptools"
     volumes:
       - /usr/src/uisptools/data/mongodb:/data/db
-      - ./mongodb/createDatabase.js:/docker-entrypoint-initdb.d/createDatabase.js:ro
+      - ../mongodb/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d:ro
+    # this for Production as only need to Expose to internal services inside of Docker
+    expose:
+      - "27017"
     ports:
-      - "27017:27017"  # remove this for Production as only need to Expose to internal services inside of Docker
+      - "27017:27017"  
     restart: always
     networks:
     - express-mongo

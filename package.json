@@ -1,6 +1,6 @@
 {
   "name": "uisp-tools",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Tools for UISP",
   "main": "server.js",
   "license": "GPL-3.0-or-later",
@@ -18,11 +18,11 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "@fidm/x509": "^1.2.1",
-    "@popperjs/core": "^2.10.1",
-    "@root/acme": "^3.1.0",
-    "@root/csr": "^0.8.1",
-    "@root/keypairs": "^0.10.3",
+    "@andrewiski/confighandler": "^1.0.1",
+    "@andrewiski/letsencrypt": "^1.0.1",
+    "@andrewiski/logutilhelper": "^1.0.21",
+    "@andrewiski/openssl": "^1.0.2",
+    "@popperjs/core": "^2.10.1",    
     "adm-zip": "^0.5.6",
     "animate.css": "^4.1.1",
     "auto-updater": "^1.0.2",
@@ -46,8 +46,6 @@
     "punycode": "^2.1.1",
     "serve-favicon": "^2.5.0",
     "socket.io": "^4.2.0",
-    "uuid": "^8.3.2",
-    "winston": "^3.3.3",
-    "winston-daily-rotate-file": "^4.5.5"
+    "uuid": "^8.3.2"
   }
 }

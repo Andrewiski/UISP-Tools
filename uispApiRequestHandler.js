@@ -4,7 +4,7 @@ const extend = require('extend');
 const Defer = require('node-promise').defer;
 const http = require('http');
 const https = require('https');
-const Logger = require("./logger.js");
+
 //const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 
@@ -12,12 +12,13 @@ var UcrmApiRequestHandler = function (options) {
     var self = this;
     var defaultOptions = {
         ucrmAppKey: null,
-        ucrmUrl:null
+        ucrmUrl:null,
+        logUtilHelper:null
     };
     var objOptions = extend({}, defaultOptions, options);
     self.objOptions = objOptions;
     var debug = null;
-    if (self.objOptions.appLogger){
+    if (self.objOptions.logUtilHelper){
         debug = function(loglevel){
             let args = []
             for (let i = 0; i < arguments.length; i++) {
@@ -33,7 +34,7 @@ var UcrmApiRequestHandler = function (options) {
             if (args.length > 1) {
                 args.shift(); //remove the loglevel from the array
             }
-            self.objOptions.appLogger.log(appName, "app", loglevel, args);
+            self.objOptions.logUtilHelper.log(appName, "app", loglevel, args);
         }
     }else{
         debug = require('debug')(appName);

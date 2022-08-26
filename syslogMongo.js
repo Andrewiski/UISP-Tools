@@ -16,13 +16,14 @@ var SyslogMongo = function (options) {
         mongoDbDatabaseName:"",
         mongoClientOptions: {useUnifiedTopology: true},
         mongoSyslogCollectionName: "syslog",
-        mongoDeviceCollectionName: "devices"
+        mongoDeviceCollectionName: "devices",
+        logUtilHelper:null
     };
     var objOptions = extend({}, defaultOptions, options);
     self.objOptions = objOptions;
 
     var debug = null;
-    if (self.objOptions.appLogger){
+    if (self.objOptions.logUtilHelper){
         debug = function(loglevel){
             let args = []
             for (let i = 0; i < arguments.length; i++) {
@@ -38,7 +39,7 @@ var SyslogMongo = function (options) {
             if (args.length > 1) {
                 args.shift(); //remove the loglevel from the array
             }
-            self.objOptions.appLogger.log(appName, "app", loglevel, args);
+            self.objOptions.logUtilHelper.log(appName, "app", loglevel, args);
         }
     }else{
         debug = require('debug')(appName);

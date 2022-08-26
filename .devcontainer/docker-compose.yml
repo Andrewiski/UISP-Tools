@@ -18,7 +18,7 @@ services:
     environment:
       ME_CONFIG_MONGODB_ADMINUSERNAME: "uisptools"
       ME_CONFIG_MONGODB_ADMINPASSWORD: "U!spT00ls!"
-      ME_CONFIG_MONGODB_URL: "mongodb://uisptools:U!spT00ls!@mongo:27017/"
+      ME_CONFIG_MONGODB_URL: "mongodb://uisptools:U!spT00ls!@uisptools_mongodb:27017/"
     # Overrides default command so things don't shut down after the process ends.
     command: sleep infinity
 
@@ -32,6 +32,7 @@ services:
     # (Adding the "ports" property to this file will not forward from a Codespace.)
     depends_on:
       - mongo
+   
     ports:
       - "49443:49443"
       - "49080:49080"
@@ -44,12 +45,11 @@ services:
     restart: unless-stopped
     volumes:
       - mongodb-data:/data/db
-      - ./mongodb/createDatabase.js:/docker-entrypoint-initdb.d/createDatabase.js:ro
+      - ../mongodb/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d:ro
     environment:
       MONGO_INITDB_ROOT_USERNAME: "uisptools"
       MONGO_INITDB_ROOT_PASSWORD: "U!spT00ls!"
       MONGO_INITDB_DATABASE: "uisptools"
-
     # Add "forwardPorts": ["27017"] to **devcontainer.json** to forward MongoDB locally.
     # (Adding the "ports" property to this file will not forward from a Codespace.)
     ports:

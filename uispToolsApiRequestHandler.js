@@ -2,7 +2,7 @@
 const appName = "uispToolsApiRequestHandler";
 const extend = require('extend');
 const Defer = require('node-promise').defer;
-const Logger = require("./logger.js");
+
 var MongoClient = require('mongodb').MongoClient;
 var moment = require('moment');
 const assert = require('assert');
@@ -13,13 +13,14 @@ var UispToolsApiRequestHandler = function (options) {
     var defaultOptions = {
         mongoDbServerUrl: "",
         mongoDbDatabaseName:"",
-        mongoClientOptions: {useUnifiedTopology: true}
+        mongoClientOptions: {useUnifiedTopology: true},
+        logUtilHelper:null
     };
     var objOptions = extend({}, defaultOptions, options);
     self.objOptions = objOptions;
 
     var debug = null;
-    if (self.objOptions.appLogger){
+    if (self.objOptions.logUtilHelper){
         debug = function(loglevel){
             let args = []
             for (let i = 0; i < arguments.length; i++) {
@@ -35,7 +36,7 @@ var UispToolsApiRequestHandler = function (options) {
             if (args.length > 1) {
                 args.shift(); //remove the loglevel from the array
             }
-            self.objOptions.appLogger.log(appName, "app", loglevel, args);
+            self.objOptions.logUtilHelper.log(appName, "app", loglevel, args);
         }
     }else{
         debug = require('debug')(appName);
