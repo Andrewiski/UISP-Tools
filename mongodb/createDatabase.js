@@ -1,4 +1,4 @@
-use uisptools
+
 db.createUser(
 {
    user:"uisptools",
