@@ -547,9 +547,6 @@
 
                     trigger = "login"
                     $('#uisptools_login_error').hide();
-
-                    
-                    
                     loginData.userName = $('#uisptools_login_username').val();
                     loginData.password = $('#uisptools_login_password').val();
                     loginData.rememberMe = $('#uisptools_login_rememberMe').is(':checked');

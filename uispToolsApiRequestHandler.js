@@ -379,6 +379,7 @@ var UispToolsApiRequestHandler = function (options) {
 
     self.createRefreshToken = createRefreshToken;
     self.createAccessToken = createAccessToken;
+    self.getRefreshToken = getRefreshToken;
     self.bindRoutes = BindRoutes;
 };
 module.exports = UispToolsApiRequestHandler;

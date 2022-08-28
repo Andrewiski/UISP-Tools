@@ -599,74 +599,107 @@ routes.post('/login/loginCms', function (req, res) {
 //Login Unms
 routes.post('/login/loginBoth', function (req, res) {
     var loginData = {};
-    uispApiRequestHandler.publicLoginCrm(req.body).then(
-        function (loginData) {
-            try {
-                uispToolsApiRequestHandler.createRefreshToken({loginData:loginData}).then(
-                    function(refreshToken){                       
-                        uispToolsApiRequestHandler.createAccessToken({refreshToken: refreshToken,loginData:loginData}).then(
-                            function(accessToken){
-                                delete loginData.crmLoginData
-                                delete accessToken._id
-                                delete refreshToken._id
-                                loginData.accessToken = accessToken;
-                                loginData.refreshToken = refreshToken
-                                res.setHeader("Cache-Control", "no-store");
-                                res.setHeader("Pragma", "no-cache");
-                                res.json(loginData);
-                            },
-                            function(err){
-                                handleError(req,res,err);                        
-                            }
-                        )
-                        
-                    },
-                    function(err){
-                        handleError(req,res,err);    
-                    }
-                )
-            } catch (ex) {
-                handleError(req, res, ex);
-            }
-        },
-        function (error) {
-            //Try to login to NMS see if its an Admin loging in 
-            uispApiRequestHandler.publicLoginNms(req.body).then(
-                function (loginData) {
-                    try {
-                        uispToolsApiRequestHandler.createRefreshToken({loginData:loginData}).then(
-                            function(refreshToken){
-                                uispToolsApiRequestHandler.createAccessToken({refreshToken: refreshToken, loginData:loginData}).then(
-                                    function(accessToken){
-                                        delete loginData.nmsLoginData
-                                        delete loginData.nmsAuthToken
-                                        delete accessToken._id
-                                        delete refreshToken._id
-                                        loginData.refreshToken = refreshToken
-                                        loginData.accessToken = accessToken;
-                                        res.setHeader("Cache-Control", "no-store");
-                                        res.setHeader("Pragma", "no-cache");
-                                        res.json(loginData);
-                                    },
-                                    function(err){
-                                        handleError(req,res,err);                        
-                                    }
-                                )
-                            },
-                            function(error){
-                                handleError(req,res,error);    
-                            }
-                        )  
-                    } catch (ex) {
-                        handleError(req,res,ex);
-                    }
+    if(req.body && req.body.grant_type === "refresh_token"){
+        try {
+            uispToolsApiRequestHandler.getRefreshToken({refresh_token: req.body.refresh_token}).then(
+                function(refreshToken){   
+                    var loginData = refreshToken.loginData 
+                    delete refreshToken.loginData                 
+                    uispToolsApiRequestHandler.createAccessToken({refreshToken: refreshToken,loginData:loginData}).then(
+                        function(accessToken){
+                            delete loginData.crmLoginData
+                            delete accessToken._id
+                            delete refreshToken._id
+                            delete refreshToken.loginData
+                            loginData.accessToken = accessToken;
+                            loginData.refreshToken = refreshToken
+                            res.setHeader("Cache-Control", "no-store");
+                            res.setHeader("Pragma", "no-cache");
+                            res.json(loginData);
+                        },
+                        function(err){
+                            handleError(req,res,err);                        
+                        }
+                    )
+                    
                 },
-                function (error) {
-                    handleError(req,res,error);
+                function(err){
+                    handleError(req,res,err);    
                 }
             );
+        }catch (ex) {
+            handleError(req, res, ex);
         }
-    );
+    }else{
+        uispApiRequestHandler.publicLoginCrm(req.body).then(
+            function (loginData) {
+                try {
+                    uispToolsApiRequestHandler.createRefreshToken({loginData:loginData}).then(
+                        function(refreshToken){                       
+                            uispToolsApiRequestHandler.createAccessToken({refreshToken: refreshToken,loginData:loginData}).then(
+                                function(accessToken){
+                                    delete loginData.crmLoginData
+                                    delete accessToken._id
+                                    delete refreshToken._id
+                                    loginData.accessToken = accessToken;
+                                    loginData.refreshToken = refreshToken
+                                    res.setHeader("Cache-Control", "no-store");
+                                    res.setHeader("Pragma", "no-cache");
+                                    res.json(loginData);
+                                },
+                                function(err){
+                                    handleError(req,res,err);                        
+                                }
+                            )
+                            
+                        },
+                        function(err){
+                            handleError(req,res,err);    
+                        }
+                    )
+                } catch (ex) {
+                    handleError(req, res, ex);
+                }
+            },
+            function (error) {
+                //Try to login to NMS see if its an Admin loging in 
+                uispApiRequestHandler.publicLoginNms(req.body).then(
+                    function (loginData) {
+                        try {
+                            uispToolsApiRequestHandler.createRefreshToken({loginData:loginData}).then(
+                                function(refreshToken){
+                                    uispToolsApiRequestHandler.createAccessToken({refreshToken: refreshToken, loginData:loginData}).then(
+                                        function(accessToken){
+                                            delete loginData.nmsLoginData
+                                            delete loginData.nmsAuthToken
+                                            delete accessToken._id
+                                            delete refreshToken._id
+                                            loginData.refreshToken = refreshToken
+                                            loginData.accessToken = accessToken;
+                                            res.setHeader("Cache-Control", "no-store");
+                                            res.setHeader("Pragma", "no-cache");
+                                            res.json(loginData);
+                                        },
+                                        function(err){
+                                            handleError(req,res,err);                        
+                                        }
+                                    )
+                                },
+                                function(error){
+                                    handleError(req,res,error);    
+                                }
+                            )  
+                        } catch (ex) {
+                            handleError(req,res,ex);
+                        }
+                    },
+                    function (error) {
+                        handleError(req,res,error);
+                    }
+                );
+            }
+        );
+    }
 });
 
 //Login Page Public Data
