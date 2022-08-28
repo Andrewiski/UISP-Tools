@@ -227,7 +227,7 @@ var UcrmApiRequestHandler = function (options) {
                                 username : data.username,
                                 userType : "crm",
                                 userId : data.id
-                                ,loginData : data //we can limit what comes back here so not to reveal to much information 
+                                ,crmLoginData : data //we can limit what comes back here so not to reveal to much information 
                             }; 
                             deferred.resolve(retval);
                         }
@@ -312,8 +312,8 @@ var UcrmApiRequestHandler = function (options) {
                                 username : data.username,
                                 userType : "nms",
                                 userId : data.id,
-                                nmsAuthToken : data["x-auth-token"]
-                                ,loginData : data //we can limit what comes back here so not to reveal to much information 
+                                //nmsAuthToken : data["x-auth-token"]
+                                nmsLoginData : data //we can limit what comes back here so not to reveal to much information 
                             };
                             deferred.resolve(retval);
                         }

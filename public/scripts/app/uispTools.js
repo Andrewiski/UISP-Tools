@@ -518,13 +518,13 @@
                     loginData: {
                         userName: '',
                         password: '',
-                        rememberMe: false
+                        rememberMe: $.uisptools.getRememberMeSetting()
                     }
                 }
                 var myOptions = $.extend(defaultOptions, options);
                 var loginData = myOptions.loginData;
                 var $dialogElement;
-                var $dialogContent;
+                var $loginModal;
 
                 var beforeClose = function (event, ui) {
                     console.log("BEFORE CLOSE - ", trigger);
@@ -548,12 +548,13 @@
                     trigger = "login"
                     $('#uisptools_login_error').hide();
 
-                    showLoading();
-                    //$dialogElement.dialog('close');
+                    
+                    
                     loginData.userName = $('#uisptools_login_username').val();
                     loginData.password = $('#uisptools_login_password').val();
-                    loginData.rememberMe = true; //$('#uisptools_login_rememberMe').is(':checked');
+                    loginData.rememberMe = $('#uisptools_login_rememberMe').is(':checked');
 
+                    showLoading();
                     if (!loginData.userName) {
                         validationErrors += '<p>User Name can not be blank.</p>';
                     }
@@ -570,23 +571,28 @@
                     $.uisptools.login({ grant_type: "password", username: loginData.userName, password: loginData.password, rememberMe: loginData.rememberMe }).then(
                         function (aiTokens, userInfo) {
                             //All of the $.uisptools.common.login properties should be set at this point so just close down the dialog and resolve the promise
+                            
                             hideLoading();
-                            $dialogElement.dialog('destroy');
+                            //$loginModal.hide();
+                            
                             myDefer.resolve(userInfo);
                             while ($.uisptools.authGlobal.loginDialog.queuedLoginDialogRequests.length > 0) {
                                 var myQueueDefered = $.uisptools.authGlobal.loginDialog.queuedLoginDialogRequests.pop();
                                 myQueueDefered.resolve(userInfo);
                             }
                             $.uisptools.authGlobal.loginDialog.isLoginDialogOpen = false;
+                            $loginModal.dispose();
+                            $dialogElement.remove();
+                            
                         },
                         function (reason) {
                             console.log('Error: uisptools.showLoginDialog() SERVER RETURNED', reason);
                             hideLoading();
-                            $('#uisptools_login_errormsg').html(reason);
+                            $('#uisptools_login_errormsg').text(reason.message);
                             $('#uisptools_login_error').show();
                             trigger = "cancel";
                             $.uisptools.authGlobal.loginDialog.isLoginDialogOpen = false;
-                            //$dialogElement.dialog('open');
+                            
                         }
                     )
                 }
@@ -594,7 +600,8 @@
                     trigger = "cancelclick";
                     $.logToConsole("Login Dialog Cancel Button Clicked");
 
-                    $dialogElement.dialog('destroy');
+                    //$loginModal.hide();
+                    
                     var rejectReason = "User Canceled Login Dialog";
                     myDefer.reject(rejectReason);
                     while ($.uisptools.authGlobal.loginDialog.queuedLoginDialogRequests.length > 0) {
@@ -602,14 +609,16 @@
                         myQueueDefered.reject(rejectReason);
                     }
                     $.uisptools.authGlobal.loginDialog.isLoginDialogOpen = false;
-
+                    $loginModal.dispose();
+                    $dialogElement.remove();
+                    
                 }
                 var setDialogValues = function () {
                     //trigger = "cancel"
                     if (loginData) {
-                        $('#uisptools_login_username').val(loginData.userName || '');
-                        $('#uisptools_login_password').val(loginData.password || '');
-                        $('#uisptools_login_rememberMe').prop('checked', (loginData.rememberMe || false));
+                        $dialogElement.find('#uisptools_login_username').val(loginData.userName || '');
+                        $dialogElement.find('#uisptools_login_password').val(loginData.password || '');
+                        $dialogElement.find('#uisptools_login_rememberMe').prop('checked', (loginData.rememberMe || false));
                     }
 
                 }
@@ -633,11 +642,11 @@
                             .text("Login")
                             .on('click', attemptLogin)
                             .end();
-                        $dialogElement.find('.btn-secondary')
+                            $dialogElement.find('.btn-secondary')
                             .text("Cancel")
                             .on('click', cancelLogin)
                             .end();
-                        $dialogElement.find('input')
+                            $dialogElement.find('input')
                             .on('keypress', function (event) {
                                 if (event.which === 13) {
                                     attemptLogin();
@@ -645,11 +654,11 @@
                             })
                             .end();
                         
-                        let myLoginModal = new bootstrap.Modal($dialogElement, myOptions.dialogOptions);
-                        myLoginModal.show();
-                        //$dialogElement.dialog(myOptions.dialogOptions);
+                        $loginModal = new bootstrap.Modal($dialogElement, myOptions.dialogOptions);
+                        $loginModal.show();
+                        
                         setDialogValues();
-                        GLOBALS = $('#uisptools_login_dialog');
+                        
                         $dialogContent = $('#uisptools_login_dialog');
                     },
                     function () {
@@ -881,27 +890,78 @@
             }
         },
 
+        getRememberMeSetting: function () {
+            
+            var rememberMe;
+
+            if ($.uisptools.isClientSideDebugging()) {
+                $.logToConsole("Debug: $.uisptools.getRememberMeSetting Called");
+            }
+            
+
+            if (typeof (window.sessionStorage) !== "undefined") {
+                if ($.uisptools.isClientSideDebugging()) {
+                    $.logToConsole("Debug: $.uisptools.getRememberMeSetting Browser Supports javascript Storage");
+                }
+
+                rememberMe = window.localStorage.uisptoolsRememberMe;
+
+                if (rememberMe) {
+                    if ($.uisptools.isClientSideDebugging()) {
+                        $.logToConsole("Debug: $.uisptools.getRememberMeSetting Found Remember Me in localStorage");
+                    }
+
+                    return $.uisptools.stringToBoolean(rememberMe);
+                }
+
+                rememberMe = window.sessionStorage.uisptoolsRememberMe;
+
+                if (rememberMe) {
+                    if ($.uisptools.isClientSideDebugging()) {
+                        $.logToConsole("Debug: $.uisptools.getRememberMeSetting Found Remember Me Temp sessionStorage");
+                    }
+
+                    return $.uisptools.stringToBoolean(rememberMe);
+                }
+            }
+            if (Cookies.get("uisptoolsRememberMe")) {
+                if ($.uisptools.isClientSideDebugging()) {
+                    $.logToConsole("Debug: $.uisptools.getRememberMeSetting Found Remember Me in Cookies");
+                }   
+                rememberMe = Cookies.get("uisptoolsRememberMe")
+                return $.uisptools.stringToBoolean(rememberMe);
+            }
+
+            if ($.uisptools.isClientSideDebugging()) {
+                $.logToConsole("Debug: $.uisptools.getRememberMeSetting no Remember Me found in js storage or cookies");
+            }
+            return false;
+        },
+
+
         getAccessToken: function () {
             
-            var accessToken;
+            var access_token;
 
             if ($.uisptools.common.login.accessToken) {
-                accessToken = $.uisptools.common.login.accessToken
+                if($.uisptools.common.login.accessToken.expiresOnLocal >= new Date()){
+                    access_token = $.uisptools.common.login.accessToken.access_token
+                }
             }
-            if (accessToken) {
+            if (access_token) {
                 if ($.uisptools.isClientSideDebugging()) {
                     $.logToConsole("Debug: $.uisptools.getAccessToken Found access Token in $.uisptools.common.login.accessToken");
                 }
 
-                return accessToken;
+                return access_token;
             }
 
             
 
             
-            $.logToConsole("Debug: $.uisptools.getAccessToken no acess token found in js storage or cookies");
+            $.logToConsole("Debug: $.uisptools.getAccessToken no acess token found");
             
-            return;
+            return null;
         },
 
         getNewAccessToken: function (options) {
@@ -1127,12 +1187,8 @@
                         if (clonedDefaults.showLoginOn401Error) {
                             // This is a unauthorized the StatusText tells us if this is an "Access Is 
                             // Denied" or "Not Logged In". If "Not Logged In" we need to try to refresh 
-                            // the accessToken if we have a refreshToken or throw the Login Prompt In the 
-                            // Server Side web APi 2 call you should be using 
-                            // CTMSoftware.Common.RequestContext.EnsureLoggedInElseThrowUnauthorized to 
-                            // ensure the user is logged in. To specificaly throw Access is Denied as 
+                            // the accessToken if we have a refreshToken or throw the Login Prompt  To specificaly throw Access is Denied as 
                             // in user is logged in but does not have permission 
-                            // 	" throw new  System.Web.Http.HttpResponseException(CTMRequestContext.GetAccessDeniedHttpResponseMessage()) "
                             // All API methods should be wrapped in Try Catch 
 
                             switch (jqXHR.statusText) {
@@ -1199,23 +1255,35 @@
             if (typeof (window.sessionStorage) !== "undefined") {
                 if (rememberMe == true) {
                     // Code for localStorage/sessionStorage.
-                    window.localStorage.setItem("uisptoolsRefreshToken", refreshToken)
+                    window.localStorage.setItem("uisptoolsRefreshToken", refreshToken.refresh_token);
+                    window.localStorage.setItem("uisptoolsRefreshTokenExpiresOn", refreshToken.expiresOn);
+                    window.localStorage.setItem("uisptoolsRememberMe", "true")
                 } else {
-                    window.sessionStorage.setItem("uisptoolsRefreshToken", refreshToken)
+                    window.sessionStorage.setItem("uisptoolsRefreshToken", refreshToken.refresh_token)
+                    window.sessionStorage.setItem("uisptoolsRefreshTokenExpiresOn", refreshToken.expiresOn)
+                    window.localStorage.setItem("uisptoolsRememberMe", "false")
                 }
             } else {
-                Cookies.set("uisptoolsRefreshToken", refreshToken);
+                Cookies.set("uisptoolsRefreshToken", refreshToken.refresh_token);
+                Cookies.set("uisptoolsRefreshTokenExpiresOn", refreshToken.expiresOn);
+                Cookies.set("uisptoolsRememberMe", rememberMe)
             }
         },
         _clearStorageRefreshToken: function () {
             if (typeof (window.sessionStorage) !== "undefined") {
                 window.localStorage.removeItem("uisptoolsRefreshToken")
                 window.sessionStorage.removeItem("uisptoolsRefreshToken")
+                window.localStorage.removeItem("uisptoolsRefreshTokenExpiresOn")
+                window.sessionStorage.removeItem("uisptoolsRefreshTokenExpiresOn")
             }
             Cookies.remove("uisptoolsRefreshToken");
+            Cookies.remove("uisptoolsRefreshTokenExpiresOn");
+            
         },
 
         setAccessToken: function (accessToken) {
+            //This code is here to set the expires in if we have a clock drift
+            accessToken.expiresOnLocal = new Date(new Date().getTime() + (accessToken.expiresIn * 1000));
             $.uisptools.common.login.accessToken = accessToken;
         },
 
@@ -1228,12 +1296,31 @@
             $.uisptools.common.login.isUserLoggedIn = false;
         },
 
-        /*
-        This function is used to fetch an authentication token for a user returns a promise object
-        //on reject single parmeter of reason is return
-        //on resolve done(aiTokens, user) as returned
-        //added loginType Parmeter to Allow CTMOne and eContract logins until we merge them into CTmGlobal Andy 05/28/2015
+       /*
+        This function is used to get the current Logged In User UserInfo using the current AccessToken
         */
+        getUserInfo: function (options) {
+            var myDeferred = $.Deferred();
+            var defaults = {
+                method: 'GET',
+                url: "/uisptools/api/UserInfo"
+            }
+            var objOptions = $.extend({}, defaults, options);
+            if ($.uisptools.isClientSideDebugging()) {
+                $.logToConsole("Debug: $.uisptools.getUserInfo Called");
+            }
+            $.uisptools.ajax(objOptions).then(function (result) {
+                myDeferred.resolve(result);
+            },
+            function (result) {
+                myDeferred.reject(result);
+            })
+            return myDeferred.promise();
+        },
+        /*
+        This function is used to fetch an refreshToken, accessToken, a userInfo for a user returns a promise object
+        */
+
 
         login: function (options) {
 
@@ -1251,7 +1338,7 @@
                     password: null,
                     token: null, //if using a externalBearer token set it here
                     refresh_token: null,
-                    rememberme: false
+                    rememberMe: $.uisptools.getRememberMeSetting()
                     
                 }
                 var myOptions = $.extend(defaultOptions, options);
@@ -1296,7 +1383,7 @@
                             myDeferred.reject(result);
 
                         }
-                        else if (result.access_token) {
+                        else if (result.accessToken) {
                             $.logToConsole("Debug: $.uisptools.login Success");
                             $.uisptools._processLoginInfo(result, myOptions.rememberMe).then(
                                 function (userInfo) {
@@ -1307,6 +1394,11 @@
                                 }
                             );
 
+                        }else{
+                            $.logToConsole("Error login unknown error: " + result);
+                            $.uisptools.common.login.isUserLoggedIn = false;
+                            $.uisptools._clearLoginAccessTokenRefreshTokenAiToken();
+                            myDeferred.reject({message:"Unknown Login Error missing refreshToken", error:"Unknown Login Error"});
                         }
 
                     },  //End onSuccess
@@ -1338,21 +1430,12 @@
         _processLoginInfo: function (result, rememberMe, fetchUserInfo) {
             var myDeferred = $.Deferred();
             try {
-                $.uisptools.setAccessToken(result.access_token, rememberMe);
-                if (result.expires) {
-                    $.uisptools.common.login.accessTokenExpires = result.expires;
-                } else {
-                    $.uisptools.common.login.accessTokenExpires = result[".expires"];
+                if (result.accessToken) {
+                    $.uisptools.setAccessToken(result.accessToken, rememberMe);
                 }
-                if (result.issued) {
-                    $.uisptools.common.login.accessTokenIssued = result.issued;
-                } else {
-                    $.uisptools.common.login.accessTokenIssued = result[".issued"];
-                }
-
                 //Store the refreshToken for subsequent calls
-                if (result.refresh_token) {
-                    $.uisptools._setStorageRefreshToken(result.refresh_token, rememberMe);
+                if (result.refreshToken) {
+                    $.uisptools._setStorageRefreshToken(result.refreshToken, rememberMe);
                 } else {
                     // Don't clear the refreshToken as it won't be returned with refresh_token calls
                     //$.uisptools._clearStorageRefreshToken();
@@ -1360,14 +1443,14 @@
 
                 //Login is only Successfull if we can also use the new token to get the userInfo /disable loginprompt and show error
                 if (fetchUserInfo == undefined || fetchUserInfo == true) {
-                    $.when($.uisptools.getUserInfo({ showErrorDialog: false, showLoginOn401Error: false }), $.uisptools.getUserSettings({ showErrorDialog: false, showLoginOn401Error: false }))
-                        .then(function (userInfoResults, userSettingResults) {
+                    $.when($.uisptools.getUserInfo({ showErrorDialog: false, showLoginOn401Error: false })) //, $.uisptools.getUserSettings({ showErrorDialog: false, showLoginOn401Error: false })
+                        .then(function (userInfoResults){ //, userSettingResults) {
                             $.uisptools.common.login.userInfo = userInfoResults;
                             $.uisptools.common.login.isUserLoggedIn = true;
-                            $.uisptools.common.settings.user = userSettingResults;
+                            //$.uisptools.common.settings.user = userSettingResults;
 
                             myDeferred.resolve(userInfoResults);
-                        }, function (userInfoResultsError, userSettingResultsError) {
+                        }, function (userInfoResultsError) { //, userSettingResultsError) {
                             $.uisptools.common.login.isUserLoggedIn = false;
                             $.uisptools._clearLoginAccessTokenRefreshTokenAiToken();
                             var objError = userInfoResultsError || userSettingResultsError; //$.uisptools.createErrorFromAjaxError(userInfoResultsError, "Error retriving UserInfo during ProcessLoginInfo.");

@@ -94,6 +94,14 @@ var configFolder = objOptions.configDirectory;
 var certificatesFolder = path.join(objOptions.configDirectory, 'certificates');
 var caFolder = path.join(certificatesFolder, 'ca');
 
+var letsEncryptCertificateFolder = path.join(certificatesFolder, 'letsEncrypt');
+if(fs.existsSync(letsEncryptCertificateFolder) === false){
+    fs.mkdirSync(letsEncryptCertificateFolder,{recursive:true});
+    fs.mkdirSync(path.join(letsEncryptCertificateFolder, 'accounts') ,{recursive:true});
+    fs.mkdirSync(path.join(letsEncryptCertificateFolder, 'backups') ,{recursive:true});
+}
+
+
 if (objOptions.opensslPath.startsWith('./') === true) {
     objOptions.opensslPath = path.join(__dirname, objOptions.opensslPath.substring(1));
 }
@@ -105,6 +113,14 @@ var openssl = new OpenSSL({ "opensslPath": objOptions.opensslPath,
     caDomainName: "localhost",
     caPassword: null //"mycapassword"
  });
+
+ var letsEncrypt = new LetsEncrypt( {
+        certificatesFolder: letsEncryptCertificateFolder,
+        accountFolder: path.join(letsEncryptCertificateFolder, 'accounts'),
+        backupFolder: path.join(letsEncryptCertificateFolder, 'backups'),
+        eventHandler: null,
+        canRenewInDays: 30
+    });
 
 var appLogHandler = function (logData) {
     //add to the top of the log
@@ -584,19 +600,29 @@ routes.post('/login/loginCms', function (req, res) {
 routes.post('/login/loginBoth', function (req, res) {
     var loginData = {};
     uispApiRequestHandler.publicLoginCrm(req.body).then(
-        function (data) {
+        function (loginData) {
             try {
-                uispToolsApiRequestHandler.createRefreshToken(data).then(
-                    function(data){
-                        delete data.loginData;
-                        if(data.access_token){
-                            res.setHeader("Cache-Control", "no-store");
-                            res.setHeader("Pragma", "no-cache");
-                        }
-                        res.json(data);
+                uispToolsApiRequestHandler.createRefreshToken({loginData:loginData}).then(
+                    function(refreshToken){                       
+                        uispToolsApiRequestHandler.createAccessToken({refreshToken: refreshToken,loginData:loginData}).then(
+                            function(accessToken){
+                                delete loginData.crmLoginData
+                                delete accessToken._id
+                                delete refreshToken._id
+                                loginData.accessToken = accessToken;
+                                loginData.refreshToken = refreshToken
+                                res.setHeader("Cache-Control", "no-store");
+                                res.setHeader("Pragma", "no-cache");
+                                res.json(loginData);
+                            },
+                            function(err){
+                                handleError(req,res,err);                        
+                            }
+                        )
+                        
                     },
-                    function(error){
-                        handleError(req,res,error);    
+                    function(err){
+                        handleError(req,res,err);    
                     }
                 )
             } catch (ex) {
@@ -606,17 +632,26 @@ routes.post('/login/loginBoth', function (req, res) {
         function (error) {
             //Try to login to NMS see if its an Admin loging in 
             uispApiRequestHandler.publicLoginNms(req.body).then(
-                function (data) {
+                function (loginData) {
                     try {
-                        uispToolsApiRequestHandler.createRefreshToken(data).then(
-                            function(data){
-                                delete data.loginData
-                                delete data.nmsAuthToken
-                                if(data.access_token){
-                                    res.setHeader("Cache-Control", "no-store");
-                                    res.setHeader("Pragma", "no-cache");
-                                }
-                                res.json(data);
+                        uispToolsApiRequestHandler.createRefreshToken({loginData:loginData}).then(
+                            function(refreshToken){
+                                uispToolsApiRequestHandler.createAccessToken({refreshToken: refreshToken, loginData:loginData}).then(
+                                    function(accessToken){
+                                        delete loginData.nmsLoginData
+                                        delete loginData.nmsAuthToken
+                                        delete accessToken._id
+                                        delete refreshToken._id
+                                        loginData.refreshToken = refreshToken
+                                        loginData.accessToken = accessToken;
+                                        res.setHeader("Cache-Control", "no-store");
+                                        res.setHeader("Pragma", "no-cache");
+                                        res.json(loginData);
+                                    },
+                                    function(err){
+                                        handleError(req,res,err);                        
+                                    }
+                                )
                             },
                             function(error){
                                 handleError(req,res,error);    
@@ -651,6 +686,37 @@ routes.get('/login/loginData', function (req, res) {
     );
 })
 
+routes.get('/login/userInfo', function (req, res) {
+    var loginData = {};
+    uispApiRequestHandler.loginUserInfo().then(
+        function (data) {
+            try {
+                res.json(data);
+            } catch (ex) {
+                handleError(req,res,ex);
+            }
+        },
+        function (error) {
+            handleError(req,res,error);
+        }
+    );
+})
+
+
+//need to add is Authed logic and Permissions check 
+routes.post('/uisptools/*', function (req, res) {
+    //Get ucrmData
+    
+    let uispToolsUrl = req.path.substring("/uisptools/".length);
+    uispApiRequestHandler.handleRequest({ url: uispToolsUrl }).then(
+        function (data) {
+            res.json(data);
+        },
+        function (error) {
+            handleError(req,res,error);
+        }
+    );
+});
 
 
 
@@ -715,7 +781,7 @@ routes.post('/certificateUpload', function (req, res) {
             let publicCertFile = req.files.PublicCertFile;
             //publicCertFile.mv(path.join(__dirname, options.httpsServerCert));
 
-            acme.loadX509PublicCert({ publicCertFile: publicCertFile.data, privateKeyFile: privateKeyFile.data }).then(
+            letsEncrypt.loadX509Cert({ certFile: publicCertFile.data, keyFile: privateKeyFile.data }).then(
                 function (certs) {
                     try {
                         if (certs) {
@@ -840,7 +906,7 @@ routes.get('/*', function (req, res) {
 
 var loadCertificates = function () {
     try {
-        acmeCert.loadX509PublicCert({ publicCertFile: path.join(__dirname, configFolder, objOptions.httpsServerCert), privateKeyFile: path.join(__dirname, configFolder, objOptions.httpsServerKey) }).then(
+        letsEncrypt.loadX509CertSync({ certFile: path.join(__dirname, configFolder, objOptions.httpsServerCert), keyFile: path.join(__dirname, configFolder, objOptions.httpsServerKey) }).then(
             function (Certs) {
                 try {
                     //clean up the binary data we don't need 
