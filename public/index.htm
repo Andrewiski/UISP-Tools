@@ -9,7 +9,7 @@
     <link href="stylesheets/bootstrap-theme.min.css" rel="stylesheet" />-->
     <link href="/javascript/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/javascript/bootstrap/css/bootstrap-theme.min.css" rel="stylesheet" />
-    <link href="/javascript/fontawesome/css/font-awesome.min.css" rel="stylesheet" />
+    <link href="/javascript/fontawesome/css/all.min.css" rel="stylesheet" />
     <link href="/javascript/animate-css/animate.min.css" rel="stylesheet" />
     <link href="/stylesheets/style.css" rel="stylesheet" />
     <!--Served up by the socket.io service directly as part of the IO service process-->
@@ -17,6 +17,7 @@
     <script src="/javascript/jquery/jquery.min.js"></script>
     <script src="/scripts/app/jquery.extensions.js"></script>
     <script src="/javascript/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/javascript/fontawesome/js/all.min.js"></script>
     <script src="/javascript/moment/moment.min.js"></script>
     <script src="/javascript/bootstrap-notify/bootstrap-notify.min.js"></script>
 
@@ -25,7 +26,9 @@
     <script src="/javascript/js-cookie/js.cookie.min.js"></script>
 
     <script src="/scripts/app/uispTools.js?v=1"></script>
-
+    
+    <!-- <script src="/scripts/app/widgets/uisptools/testing/testapicalls.js?v=1"></script> -->
+    
     <script>
         $(function () {
             $.uisptools.appInit().then(
@@ -105,7 +108,9 @@
         </div>
 
     </div>
-
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        
+    </div>
 
 
 </body>

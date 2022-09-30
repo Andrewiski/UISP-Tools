@@ -170,7 +170,8 @@ var uispApiRequestHandler = new UispApiRequestHandler({
 var uispToolsApiRequestHandler = new UispToolsApiRequestHandler({
     mongoDbServerUrl: objOptions.mongoDbServerUrl,
     mongoDbDatabaseName: objOptions.mongoDbDatabaseName,
-    logUtilHelper:logUtilHelper
+    logUtilHelper:logUtilHelper,
+    uispApiRequestHandler:uispApiRequestHandler
 });
 
 
@@ -399,7 +400,7 @@ app.use(function (req, res, next) {
 })
 
 // not needed already served up by io app.use('/javascript/socket.io', express.static(path.join(__dirname, 'node_modules', 'socket.io', 'node_modules', 'socket.io-client', 'dist')));
-app.use('/javascript/fontawesome', express.static(path.join(__dirname, 'node_modules', 'font-awesome')));
+app.use('/javascript/fontawesome', express.static(path.join(__dirname, 'node_modules', '@fortawesome', 'fontawesome-free')));
 app.use('/javascript/bootstrap', express.static(path.join(__dirname, 'node_modules', 'bootstrap', 'dist')));
 app.use('/javascript/jquery', express.static(path.join(__dirname, 'node_modules', 'jquery', 'dist')));
 app.use('/javascript/moment', express.static(path.join(__dirname, 'node_modules', 'moment', 'min')));
@@ -419,52 +420,42 @@ app.use(fileUpload({
 
 var routes = express.Router();
 
-var getErrorObject = function(error){
-    //this is used to normolize errors that are raised and returned to the client
-    var errorData = {
-        error : {
-            msg: "An Error Occured!", error: "An Error Occured!", stack: ""
-        },
-        statuscode:500
-    }
-    
-    if (error.msg) {
-        errorData.error.msg = errorData.error.msg + ' ' + error.msg;
-    }
-    if (error.message) {
-        errorData.error.msg = errorData.error.msg + ' ' + error.message;
-    }
-    
-    if (error.error) {
-        if (typeof (error.error) === "string") {
-            errorData.error.error = error.error;
-        } else {
-            if (error.error.msg) {
-                errorData.error.error = error.error.msg;
-            } else if (error.error.message) {
-                errorData.error.error = error.error.message;
-            }
-            if (error.error.stack) {
-                errorData.error.stack = error.error.stack;
-            }
-        }
-    } else if (typeof (error) === "string") {
-        errorData.error.error = error;
-    }
-    
-    
-    if (error.code) {
-        errorData.statuscode = error.code;
-    } else if (error.statuscode) {
-        errorData.statuscode = error.statuscode;
-    }
-    return errorData;
-}
 
-var handleError = function (req, res, error) {
-    let errorData = getErrorObject(error)
-    res.status(errorData.statuscode).json(errorData.error);
-};
+var handlePluginPublicFileRequest = function (req, res) {
+    let filePath = req.path;
+
+    if (filePath.indexOf("..") >= 0 ){
+        throw new Error("Plugin Requests are not allowed to contain .. in the path")
+    }
+    if(filePath.indexOf("/serverside") >= 0 ){
+    
+        throw new Error("Plugin Requests via HTTP to serverside folder or serverside.js are denied")
+    }
+
+    // let contanerNameEndPosition = filePath.lastIndexOf("/");
+    // let contanerNameStartPosition = filePath.lastIndexOf("/",contanerNameEndPosition - 1);
+    // let containerFolder = filePath.substring(contanerNameStartPosition,contanerNameStartPosition - contanerNameEndPosition) 
+    // if(containerFolder !== "widgets"){
+    //     throw new Error("Plugin Requests are not allowed to contain .. in the path");
+    // }
+    
+    
+    
+    console.log('handlePluginPublicFileRequest ' + filePath + ' ...');
+
+    
+
+    if (fs.existsSync(path.join(__dirname, configFolder, filePath)) === true) {
+        res.sendFile(filePath, { root: path.join(__dirname, configFolder)});  
+    } else if (fs.existsSync(path.join(__dirname, filePath)) === true) {
+        res.sendFile(filePath, { root: __dirname });          
+    }else{
+        res.sendStatus(404);
+    }
+    
+} ; 
+
+
 
 var handlePublicFileRequest = function (req, res) {
     var filePath = req.path;
@@ -515,275 +506,9 @@ var handlePublicFileRequest = function (req, res) {
         //res.sendStatus(404);
     }
     
-    
+} ;  
 
-    //fs.readFile(filePath, function (error, content) {
-    //    if (error) {
-    //        console.log('Error ', error);
-    //        if (error.code == 'ENOENT') {
-    //            response.writeHead(404, { 'Content-Type': 'text/plain' });
-    //            response.end('Sorry, check with the site admin for error: ' + error.code + ' ..\n');
-    //        }
-    //        else {
-    //            response.writeHead(500, { 'Content-Type': 'text/plain' });
-    //            response.end('Sorry, check with the site admin for error: ' + error.code + ' ..\n');
-    //        }
-    //    }
-    //    else {
-    //        response.writeHead(200, { 'Content-Type': contentType });
-    //        response.end(content, 'utf-8');
-    //    }
-    //});
-};
-
-
-//Login Unms
-routes.post('/login/loginNms', function (req, res) {
-    var loginData = {};
-    uispApiRequestHandler.publicLoginNms(req.body).then(
-        function (data) {
-            try {
-                uispToolsApiRequestHandler.createRefreshToken(data).then(
-                    function(data){
-                        delete data.loginData
-                        delete data.nmsAuthToken
-                        if(data.access_token){
-                            res.setHeader("Cache-Control", "no-store");
-                            res.setHeader("Pragma", "no-cache");
-                        }
-                        res.json(data);
-                    },
-                    function(error){
-                        handleError(req,res,error);    
-                    }
-                )
-            } catch (ex) {
-                handleError(req, res, ex);
-            }
-        },
-        function (error) {
-            handleError(req,res,error);
-        }
-    );
-});
-
-//Login Unms
-routes.post('/login/loginCms', function (req, res) {
-    var loginData = {};
-    uispApiRequestHandler.publicLoginCrm(req.body).then(
-        function (data) {
-            try {
-                uispToolsApiRequestHandler.createRefreshToken(data).then(
-                    function(data){
-                        delete data.loginData;
-                        if(data.access_token){
-                            res.setHeader("Cache-Control", "no-store");
-                            res.setHeader("Pragma", "no-cache");
-                        }
-                        res.json(data);
-                    },
-                    function(error){
-                        handleError(req,res,error);    
-                    }
-                )
-            } catch (ex) {
-                handleError(req, res, ex);
-            }
-        },
-        function (error) {
-            handleError(req, res, error);
-        }
-    );
-});
-
-//Login Unms
-routes.post('/login/loginBoth', function (req, res) {
-    var loginData = {};
-    if(req.body && req.body.grant_type === "refresh_token"){
-        try {
-            uispToolsApiRequestHandler.getRefreshToken({refresh_token: req.body.refresh_token}).then(
-                function(refreshToken){   
-                    var loginData = refreshToken.loginData 
-                    delete refreshToken.loginData                 
-                    uispToolsApiRequestHandler.createAccessToken({refreshToken: refreshToken,loginData:loginData}).then(
-                        function(accessToken){
-                            delete loginData.crmLoginData
-                            delete accessToken._id
-                            delete refreshToken._id
-                            delete refreshToken.loginData
-                            loginData.accessToken = accessToken;
-                            loginData.refreshToken = refreshToken
-                            res.setHeader("Cache-Control", "no-store");
-                            res.setHeader("Pragma", "no-cache");
-                            res.json(loginData);
-                        },
-                        function(err){
-                            handleError(req,res,err);                        
-                        }
-                    )
-                    
-                },
-                function(err){
-                    handleError(req,res,err);    
-                }
-            );
-        }catch (ex) {
-            handleError(req, res, ex);
-        }
-    }else{
-        uispApiRequestHandler.publicLoginCrm(req.body).then(
-            function (loginData) {
-                try {
-                    uispToolsApiRequestHandler.createRefreshToken({loginData:loginData}).then(
-                        function(refreshToken){                       
-                            uispToolsApiRequestHandler.createAccessToken({refreshToken: refreshToken,loginData:loginData}).then(
-                                function(accessToken){
-                                    delete loginData.crmLoginData
-                                    delete accessToken._id
-                                    delete refreshToken._id
-                                    loginData.accessToken = accessToken;
-                                    loginData.refreshToken = refreshToken
-                                    res.setHeader("Cache-Control", "no-store");
-                                    res.setHeader("Pragma", "no-cache");
-                                    res.json(loginData);
-                                },
-                                function(err){
-                                    handleError(req,res,err);                        
-                                }
-                            )
-                            
-                        },
-                        function(err){
-                            handleError(req,res,err);    
-                        }
-                    )
-                } catch (ex) {
-                    handleError(req, res, ex);
-                }
-            },
-            function (error) {
-                //Try to login to NMS see if its an Admin loging in 
-                uispApiRequestHandler.publicLoginNms(req.body).then(
-                    function (loginData) {
-                        try {
-                            uispToolsApiRequestHandler.createRefreshToken({loginData:loginData}).then(
-                                function(refreshToken){
-                                    uispToolsApiRequestHandler.createAccessToken({refreshToken: refreshToken, loginData:loginData}).then(
-                                        function(accessToken){
-                                            delete loginData.nmsLoginData
-                                            delete loginData.nmsAuthToken
-                                            delete accessToken._id
-                                            delete refreshToken._id
-                                            loginData.refreshToken = refreshToken
-                                            loginData.accessToken = accessToken;
-                                            res.setHeader("Cache-Control", "no-store");
-                                            res.setHeader("Pragma", "no-cache");
-                                            res.json(loginData);
-                                        },
-                                        function(err){
-                                            handleError(req,res,err);                        
-                                        }
-                                    )
-                                },
-                                function(error){
-                                    handleError(req,res,error);    
-                                }
-                            )  
-                        } catch (ex) {
-                            handleError(req,res,ex);
-                        }
-                    },
-                    function (error) {
-                        handleError(req,res,error);
-                    }
-                );
-            }
-        );
-    }
-});
-
-//Login Page Public Data
-routes.get('/login/loginData', function (req, res) {
-    var loginData = {};
-    uispApiRequestHandler.publicLoginData().then(
-        function (data) {
-            try {
-                res.json(data);
-            } catch (ex) {
-                handleError(req,res,ex);
-            }
-        },
-        function (error) {
-            handleError(req,res,error);
-        }
-    );
-})
-
-routes.get('/login/userInfo', function (req, res) {
-    var loginData = {};
-    uispApiRequestHandler.loginUserInfo().then(
-        function (data) {
-            try {
-                res.json(data);
-            } catch (ex) {
-                handleError(req,res,ex);
-            }
-        },
-        function (error) {
-            handleError(req,res,error);
-        }
-    );
-})
-
-
-//need to add is Authed logic and Permissions check 
-routes.post('/uisptools/*', function (req, res) {
-    //Get ucrmData
-    
-    let uispToolsUrl = req.path.substring("/uisptools/".length);
-    uispApiRequestHandler.handleRequest({ url: uispToolsUrl }).then(
-        function (data) {
-            res.json(data);
-        },
-        function (error) {
-            handleError(req,res,error);
-        }
-    );
-});
-
-
-
-
-
-//need to add is Authed logic and Permissions check 
-routes.post('/ucrm/*', function (req, res) {
-    //Get ucrmData
-    
-    let ucrmUrl = req.path.substring("/ucrm/".length);
-    uispApiRequestHandler.handleRequest({ url: ucrmUrl }).then(
-        function (data) {
-            res.json(data);
-        },
-        function (error) {
-            handleError(req,res,error);
-        }
-    );
-});
-
-//need to add is Authed logic and Permissions check 
-routes.get('/ucrm/*', function (req, res) {
-    //Get ucrmData
-    
-    let ucrmUrl = req.path.substring("/ucrm/".length);
-    uispApiRequestHandler.handleRequest({ url: ucrmUrl }).then(
-        function (data) {
-            res.json(data);
-        },
-        function (error) {
-            handleError(req,res,error);
-        }
-    );
-});
+ 
 
 uispToolsApiRequestHandler.bindRoutes(routes);
 
@@ -928,7 +653,9 @@ routes.get("/admintool.js", function (req, res) {
     res.sendFile(path.join(__dirname, 'admin/admintool.js'));
 });
 
-
+routes.get('/plugins/*', function (req, res) {
+    handlePluginPublicFileRequest(req, res);
+});
 
 
 
@@ -1033,20 +760,21 @@ var startWebServers = function () {
         
 
         const nets = networkInterfaces();
-        const results = Object.create(null); // Or just '{}', an empty object
+        //const results = Object.create(null); // Or just '{}', an empty object
         
         for (const name of Object.keys(nets)) {
             for (const net of nets[name]) {
                 // Skip over non-IPv4 and internal (i.e. 127.0.0.1) addresses
                 if (net.family === 'IPv4' && !net.internal) {
-                    if (!results[name]) {
-                        results[name] = [];
-                    }
-                    results[name].push(net.address);
+                    // if (!results[name]) {
+                    //     results[name] = [];
+                    // }
+                    //results[name].push(net.address);
+                    logUtilHelper.log(appLogName, "app","info", "interface", name, net.address)
                 }
             }
         }
-        logUtilHelper.log(appLogName, "app","info", "interface ipv4 addresses", results)
+        //logUtilHelper.log(appLogName, "app","info", "interface ipv4 addresses", results)
 
     }catch (ex) {
         logUtilHelper.log(appLogName, "app",'error', 'Failed to Get Ip Infomation', ex);

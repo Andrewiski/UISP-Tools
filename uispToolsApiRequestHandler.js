@@ -7,6 +7,7 @@ var MongoClient = require('mongodb').MongoClient;
 var moment = require('moment');
 const assert = require('assert');
 const { v4: uuidv4 } = require('uuid');
+const { nextTick } = require('process');
 
 var UispToolsApiRequestHandler = function (options) {
     var self = this;
@@ -14,7 +15,8 @@ var UispToolsApiRequestHandler = function (options) {
         mongoDbServerUrl: "",
         mongoDbDatabaseName:"",
         mongoClientOptions: {useUnifiedTopology: true},
-        logUtilHelper:null
+        logUtilHelper:null,
+        uispApiRequestHandler: null
     };
     var objOptions = extend({}, defaultOptions, options);
     self.objOptions = objOptions;
@@ -51,17 +53,196 @@ var UispToolsApiRequestHandler = function (options) {
     var BindRoutes = function (routes) {
         
         try {
-
+            
             routes.get('/uisptools/api/PageContent/MenuItems', getMenuItems);
             routes.get('/uisptools/api/PageContent/PageContentGuid/:guid', getPageByPageContentGuid);
             routes.get('/uisptools/api/PageContent/LinkUrl/*', getPageByLinkUrl);
+            routes.post('/uisptools/login/loginBoth', loginBoth);
+            routes.get('/uisptools/login/loginData', getLoginData);
+            //routes.get('/uisptools/login/userInfo', getUserInfo);
+            routes.get('/uisptools/errorHandlerTest', errorHandlerTest);
+            routes.get('/uisptools/errorHandlerTestRawError', errorHandlerTestRawError);
+            
+            //Any Routes above this line are not Checked for Auth and are Public
+            routes.get('/uisptools/api/*', checkApiAccess);
+            routes.post('/uisptools/api/*', checkApiAccess);
+            routes.delete('/uisptools/api/*', checkApiAccess);
             routes.get('/uisptools/api/UserInfo', getUserInfo);    
-
+            routes.get('/uisptools/api/crm/*', getCRM);
+            routes.get('/uisptools/api/nms/*', getNMS);
+            routes.post('/uisptools/api/crm/*', getCRM);
+            routes.post('/uisptools/api/nms/*', getNMS);
+            
         } catch (ex) {
            debug("error", ex.msg, ex.stack);
         }
         
     }
+
+    var errorHandlerTestRawError = function(req, res){
+        
+            throw new Error("errorHandlerTest");
+        
+    }
+
+    var errorHandlerTest = function(req, res){
+        try {
+            errorHandlerTestRawError(req,res);
+        } catch (ex) {
+            debug("error", "errorHandlerTest", { "msg": ex.message, "stack": ex.stack });
+            res.status(500).json({ "msg": "An Error Occured!", "error": ex });
+        }
+    }
+    var checkApiAccess = function (req, res, next) {
+        try {
+            let access_token = req.headers.authorization;
+            if(access_token && access_token.startsWith("Bearer ")){
+                access_token = access_token.substring(7);
+                getAccessToken({access_token:access_token}).then(
+                    function(accessToken){
+                        if(accessToken != null){
+                            //double check not Expired etc but not sure why Mongo would not delete it
+                            res.locals.accessToken = accessToken;
+                            next("route")
+                        }else{
+                            debug("debug", "checkApiAccess access_token not found", req.headers.authorization);
+                            res.status(401).json({ "msg": "Invalid AccessToken!", "error": "Invalid AccessToken"});    
+                        }
+                    },
+                    function(err){
+                        debug("error", "checkApiAccess Error", { "msg": err.message, "stack": err });
+                        res.status(500).json({ "msg": "An Error Occured!", "error": err});
+                    }
+                )
+            }else{
+                debug("debug", "checkApiAccess access_token is invalid", req.headers.authorization);
+                res.status(401).json({ "msg": "Invalid AccessToken!", "error": "Invalid AccessToken"}); 
+            }
+            
+        } catch (ex) {
+            debug("error", "checkApiAccess", { "msg": ex.message, "stack": ex.stack });
+            res.status(500).json({ "msg": "An Error Occured!", "error": ex });
+        }
+    }
+
+    var getCRMUrl = function(req){
+        //We have to strip the _ querystring value sent with Ajax calls else NMS will complain
+
+        var url = req.path;
+        url = url.replace("/uisptools/api/crm/", "");
+        if(req.query){
+            let queryString = "";
+            for (const [key, value] of Object.entries(req.query)) {
+                if(key === "_"){
+
+                }else{
+                    if(queryString ===""){
+                        queryString = queryString + "?";
+                    }else{
+                        queryString = queryString + "&";
+                    }
+                    queryString = queryString  + key + "=" + encodeURIComponent(value);
+                }
+            }
+            url = url + queryString;
+        }
+        
+
+        return url;
+    }
+
+    var getCRM = function (req, res) {
+        try {
+            //Validate that the AccessToken is valid and get the CRM Auth Token from 
+            let accessToken = res.locals.accessToken;
+
+            let crmUrl = getCRMUrl(req);
+            let ucrmOptions = {
+                url:crmUrl,  //figure this out from request 
+                rejectUnauthorized: true, 
+                sendAppKey:true,  
+                method : req.method
+                //ucrmAppKey:accessToken.loginData.nmsLoginData.x-auth-token
+            }
+            self.objOptions.uispApiRequestHandler.handleUcrmRequest(ucrmOptions).then(
+                function(data){
+                    res.json(data);
+                },
+                function(err){
+                    debug("error", "getCRM", { "msg": err.message, "stack": err.stack });
+                    res.status(500).json({ "msg": "An Error Occured!", "error": err });
+                }
+
+
+            )
+           
+            
+        } catch (ex) {
+            debug("error", "getCRM", { "msg": ex.message, "stack": ex.stack });
+            res.status(500).json({ "msg": "An Error Occured!", "error": ex });
+        }
+
+    };
+
+    var getNMSUrl = function(req){
+        //We have to strip the _ querystring value sent with Ajax calls else NMS will complain
+
+        var url = req.path;
+        url = url.replace("/uisptools/api/nms/", "");
+        if(req.query){
+            let queryString = "";
+            for (const [key, value] of Object.entries(req.query)) {
+                if(key === "_"){
+
+                }else{
+                    if(queryString ===""){
+                        queryString = queryString + "?";
+                    }else{
+                        queryString = queryString + "&";
+                    }
+                    queryString = queryString  + key + "=" + encodeURIComponent(value);
+                }
+            }
+            url = url + queryString;
+        }
+        
+        
+        return url;
+    }
+
+
+    var getNMS = function (req, res) {
+        try {
+            //Need to add Code to Validate that the AccessToken is valid, requester is a Valid NMS Login and then get the NMS Auth Token from nmsLoginData
+
+            let accessToken = res.locals.accessToken;
+
+            let nmsUrl = getNMSUrl(req);
+            let unmsOptions = {
+                url:nmsUrl,  //figure this out from request 
+                rejectUnauthorized: true, 
+                nmsAuthToken:accessToken.loginData.nmsLoginData["x-auth-token"],
+                method : req.method
+            }
+            self.objOptions.uispApiRequestHandler.handleUnmsRequest(unmsOptions).then(
+                function(data){
+                    res.json(data);
+                },
+                function(err){
+                    debug("error", "getNMS", { "msg": err.message, "stack": err.stack });
+                    res.status(500).json({ "msg": "An Error Occured!", "error": err });
+                }
+
+
+            )
+           
+            
+        } catch (ex) {
+            debug("error", "getCRM", { "msg": ex.message, "stack": ex.stack });
+            res.status(500).json({ "msg": "An Error Occured!", "error": ex });
+        }
+
+    };
 
     var createRefreshToken = function (options){
         var deferred = Defer();
@@ -256,30 +437,32 @@ var UispToolsApiRequestHandler = function (options) {
     }
 
 
+    
+
+    var cleanLoginData = function(loginData){
+        let userInfoData = loginData
+        userInfoData.roles = [];
+            if(userInfoData.nmsLoginData){
+                if(userInfoData.nmsLoginData.role === "superadmin"){
+                    userInfoData.roles.push({roleName:"admin"});
+                }
+                delete userInfoData.nmsLoginData;
+            }
+            if(userInfoData.crmLoginData){
+                delete userInfoData.crmLoginData;
+            }
+            return userInfoData;
+    }
 
     var getUserInfo = function (req, res) {
         try {
-            let access_token = req.headers.authorization;
-            if(access_token && access_token.startsWith("Bearer ")){
-                access_token = access_token.substring(7);
-                getAccessToken({access_token:access_token}).then(
-                    function(accessToken){
-                        if(accessToken != null){
-                            res.json(accessToken.loginData);
-                        }else{
-                            debug("debug", "getUserInfo access_token not found", req.headers.authorization);
-                            res.status(401).json({ "msg": "Invalid AccessToken!", "error": "Invalid AccessToken"});    
-                        }
-                    },
-                    function(err){
-                        debug("error", "getUserInfo Error", { "msg": err.message, "stack": err });
-                        res.status(500).json({ "msg": "An Error Occured!", "error": err});
-                    }
-                )
-            }else{
-                debug("debug", "getUserInfo access_token is invalid", req.headers.authorization);
-                res.status(401).json({ "msg": "Invalid AccessToken!", "error": "Invalid AccessToken"}); 
-            }
+            
+            //We strip and message the loginData to fit the application here
+
+            var userInfo = cleanLoginData(res.locals.accessToken.loginData)
+            
+            res.json(userInfo);
+            
             
         } catch (ex) {
             debug("error", "getUserInfo", { "msg": ex.message, "stack": ex.stack });
@@ -287,7 +470,262 @@ var UispToolsApiRequestHandler = function (options) {
         }
     };
 
+    //Login Unms
+// routes.post('/login/loginNms', function (req, res) {
+//     var loginData = {};
+//     self.objOptions.uispApiRequestHandler.publicLoginNms(req.body).then(
+//         function (data) {
+//             try {
+//                 uispToolsApiRequestHandler.createRefreshToken(data).then(
+//                     function(data){
+//                         delete data.loginData
+//                         delete data.nmsAuthToken
+//                         if(data.access_token){
+//                             res.setHeader("Cache-Control", "no-store");
+//                             res.setHeader("Pragma", "no-cache");
+//                         }
+//                         res.json(data);
+//                     },
+//                     function(error){
+//                         handleHttpRequestError(req,res,error);    
+//                     }
+//                 )
+//             } catch (ex) {
+//                 handleHttpRequestError(req, res, ex);
+//             }
+//         },
+//         function (error) {
+//             handleHttpRequestError(req,res,error);
+//         }
+//     );
+// });
+
+// //Login Unms
+// routes.post('/login/loginCms', function (req, res) {
+//     var loginData = {};
+//     self.objOptions.uispApiRequestHandler.publicLoginCrm(req.body).then(
+//         function (data) {
+//             try {
+//                 uispToolsApiRequestHandler.createRefreshToken(data).then(
+//                     function(data){
+//                         delete data.loginData;
+//                         if(data.access_token){
+//                             res.setHeader("Cache-Control", "no-store");
+//                             res.setHeader("Pragma", "no-cache");
+//                         }
+//                         res.json(data);
+//                     },
+//                     function(error){
+//                         handleHttpRequestError(req,res,error);    
+//                     }
+//                 )
+//             } catch (ex) {
+//                 handleHttpRequestError(req, res, ex);
+//             }
+//         },
+//         function (error) {
+//             handleHttpRequestError(req, res, error);
+//         }
+//     );
+// });
+
+//Login CRM if not Successfull try login as unms
+var loginBoth =  function (req, res) {
+    var loginData = {};
+    if(req.body && req.body.grant_type === "refresh_token"){
+        try {
+            getRefreshToken({refresh_token: req.body.refresh_token}).then(
+                function(refreshToken){   
+                    if(refreshToken === null){
+                        debug("debug", "loginBoth refresh_token not found", req.body.refresh_token);
+                        res.status(401).json({ "msg": "Invalid RefreshToken!", "error": "Invalid RefreshToken"});
+                    }else{
+                        var loginData = refreshToken.loginData 
+                        delete refreshToken.loginData                 
+                        createAccessToken({refreshToken: refreshToken,loginData:loginData}).then(
+                            function(accessToken){
+                                delete loginData.crmLoginData
+                                delete accessToken._id
+                                delete refreshToken._id
+                                delete refreshToken.loginData
+                                loginData.accessToken = accessToken;
+                                loginData.refreshToken = refreshToken
+                                res.setHeader("Cache-Control", "no-store");
+                                res.setHeader("Pragma", "no-cache");
+                                loginData = cleanLoginData(loginData);
+                                res.json(loginData);
+                            },
+                            function(err){
+                                handleHttpRequestError(req,res,err);                        
+                            }
+                        )
+                    }
+                    
+                },
+                function(err){
+                    handleHttpRequestError(req,res,err);    
+                }
+            );
+        }catch (ex) {
+            handleHttpRequestError(req, res, ex);
+        }
+    }else{
+        self.objOptions.uispApiRequestHandler.publicLoginCrm(req.body).then(
+            function (loginData) {
+                try {
+                    createRefreshToken({loginData:loginData}).then(
+                        function(refreshToken){                       
+                            createAccessToken({refreshToken: refreshToken,loginData:loginData}).then(
+                                function(accessToken){
+                                    delete loginData.crmLoginData
+                                    delete accessToken._id
+                                    delete refreshToken._id
+                                    loginData.accessToken = accessToken;
+                                    loginData.refreshToken = refreshToken
+                                    res.setHeader("Cache-Control", "no-store");
+                                    res.setHeader("Pragma", "no-cache");
+                                    loginData = cleanLoginData(loginData);
+                                    res.json(loginData);
+                                },
+                                function(err){
+                                    handleHttpRequestError(req,res,err);                        
+                                }
+                            )
+                            
+                        },
+                        function(err){
+                            handleHttpRequestError(req,res,err);    
+                        }
+                    )
+                } catch (ex) {
+                    handleHttpRequestError(req, res, ex);
+                }
+            },
+            function (error) {
+                //Try to login to NMS see if its an Admin loging in 
+                self.objOptions.uispApiRequestHandler.publicLoginNms(req.body).then(
+                    function (loginData) {
+                        try {
+                            createRefreshToken({loginData:loginData}).then(
+                                function(refreshToken){
+                                    createAccessToken({refreshToken: refreshToken, loginData:loginData}).then(
+                                        function(accessToken){
+                                            delete loginData.nmsLoginData
+                                            delete loginData.nmsAuthToken
+                                            delete accessToken._id
+                                            delete refreshToken._id
+                                            loginData.refreshToken = refreshToken
+                                            loginData.accessToken = accessToken;
+                                            res.setHeader("Cache-Control", "no-store");
+                                            res.setHeader("Pragma", "no-cache");
+                                            loginData = cleanLoginData(loginData);
+                                            res.json(loginData);
+                                        },
+                                        function(err){
+                                            handleHttpRequestError(req,res,err);                        
+                                        }
+                                    )
+                                },
+                                function(error){
+                                    handleHttpRequestError(req,res,error);    
+                                }
+                            )  
+                        } catch (ex) {
+                            handleHttpRequestError(req,res,ex);
+                        }
+                    },
+                    function (error) {
+                        //Login Failed
+                        handleHttpRequestError(req,res,error);
+                    }
+                );
+            }
+        );
+    }
+};
+
+//Login Page Public Data
+var getLoginData = function (req, res) {
+    var loginData = {};
+    self.objOptions.uispApiRequestHandler.publicLoginData().then(
+        function (data) {
+            try {
+                res.json(data);
+            } catch (ex) {
+                handleHttpRequestError(req,res,ex);
+            }
+        },
+        function (error) {
+            handleHttpRequestError(req,res,error);
+        }
+    );
+};
+
+// var getUserInfo = function (req, res) {
+//     var loginData = {};
+//     self.objOptions.uispApiRequestHandler.loginUserInfo().then(
+//         function (data) {
+//             try {
+//                 res.json(data);
+//             } catch (ex) {
+//                 handleHttpRequestError(req,res,ex);
+//             }
+//         },
+//         function (error) {
+//             handleHttpRequestError(req,res,error);
+//         }
+//     );
+// }
+
+
+var getErrorObject = function(error){
+    //this is used to normolize errors that are raised and returned to the client
+    var errorData = {
+        error : {
+            msg: "An Error Occured!", error: "An Error Occured!", stack: ""
+        },
+        statuscode:500
+    }
     
+    if (error.msg) {
+        errorData.error.msg = errorData.error.msg + ' ' + error.msg;
+    }
+    if (error.message) {
+        errorData.error.msg = errorData.error.msg + ' ' + error.message;
+    }
+    
+    if (error.error) {
+        if (typeof (error.error) === "string") {
+            errorData.error.error = error.error;
+        } else {
+            if (error.error.msg) {
+                errorData.error.error = error.error.msg;
+            } else if (error.error.message) {
+                errorData.error.error = error.error.message;
+            }
+            if (error.error.stack) {
+                errorData.error.stack = error.error.stack;
+            }
+        }
+    } else if (typeof (error) === "string") {
+        errorData.error.error = error;
+    }
+    
+    
+    if (error.code) {
+        errorData.statuscode = error.code;
+    }else if (error.statusCode) {
+        errorData.statuscode = error.statusCode;
+    } else if (error.statuscode) {
+        errorData.statuscode = error.statuscode;
+    }
+    return errorData;
+}
+
+var handleHttpRequestError = function (req, res, error) {
+    let errorData = getErrorObject(error)
+    res.status(errorData.statuscode).json(errorData.error);
+};
 
 
     var getMenuItems = function (req, res) {
@@ -300,7 +738,7 @@ var UispToolsApiRequestHandler = function (options) {
                     const db = client.db(objOptions.mongoDbDatabaseName);
                     const collection = db.collection('ut_PageContent');
                     var findQuery = { linkMenuDisplay: true, deleted: false };
-                    var projections = { linkText: 1, linkUrl: 1, linkTarget: 1, pageContentGuid: 1, roleId: 1 };
+                    var projections = { linkText: 1, linkUrl: 1, linkTarget: 1, pageContentGuid: 1, roleId: 1, contentType: 1 };
                     var sort = [['displayOrder', 1]];
                     if (collection) {
                         collection.find(findQuery)
@@ -339,7 +777,7 @@ var UispToolsApiRequestHandler = function (options) {
                     const db = client.db(objOptions.mongoDbDatabaseName);
                     const collection = db.collection('ut_PageContent');
                     var findQuery = extend({}, options.find, findDefaults);
-                    var projections = { linkText: 1, linkUrl: 1, linkTarget: 1, pageContentGuid: 1, pageDescription: 1, pageKeywords: 1, updatedDate: 1, pageTitle: 1, content: 1 };
+                    var projections = { linkText: 1, linkUrl: 1, linkTarget: 1, pageContentGuid: 1, pageDescription: 1, pageKeywords: 1, updatedDate: 1, pageTitle: 1, contentType: 1, extendedData:1, content: 1 };
                     if (collection) {
                         collection.findOne(findQuery, { projection: projections },
                                 function (err, docs) {
@@ -381,5 +819,8 @@ var UispToolsApiRequestHandler = function (options) {
     self.createAccessToken = createAccessToken;
     self.getRefreshToken = getRefreshToken;
     self.bindRoutes = BindRoutes;
+    self.cleanLoginData = cleanLoginData;
+    self.handleHttpRequestError = handleHttpRequestError
+    self.getErrorObject = getErrorObject;
 };
 module.exports = UispToolsApiRequestHandler;

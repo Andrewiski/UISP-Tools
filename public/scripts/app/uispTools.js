@@ -1,14 +1,15 @@
+//"use strict"
 (function ($) {
 
     /*
     * uisptools  1.0
-    * Copyright (c) 2021 Digital Example
-    * Date: 2021-09-15
+    * Copyright (c) 2022 Digital Example
+    * Date: 2022-09-15
     */
 
-    /** The root class for the UISPTools UI framework
+    /** The root class for the UISPTools framework
     @name uisptools
-    @class This is the root class for the UISPTools jQuery UI framework
+    @class This is the root class for the UISPTools framework
     */
     $.uisptools = $.uisptools || {};
 
@@ -45,8 +46,161 @@
             }
         },
         
+        //dynamicaly added widgetFactorys imports of javascript
+        
+        widgetFactoryInfoList:{
+
+        },
+
         
 
+
+        widgetFactoryHelper: {
+            
+            
+            getWidgetFactoryInfo: function(options){
+                let widgetFactoryNamespace = "";
+                if(options.widgetNamespace.indexOf(".widgets.") === -1){
+                    throw new Error("namespace must include .widgets. IE namespace.widgets.widgetname");
+                };
+                let namespaceKeys = options.widgetNamespace.split(".");
+                if (namespaceKeys.length < 2){
+                    throw new Error("widget must include a namespace prefix followed by a period");
+                }
+                let widgetFactoryInfo = $.uisptools.widgetFactoryInfoList;
+                //let widgetFactory = $.uisptools.widgetFactories;
+               
+                for(var i = 0; i < namespaceKeys.length; i++){
+                    let key = namespaceKeys[i];
+                    
+                    if(widgetFactoryInfo[key] == undefined){
+                        widgetFactoryInfo[key] = {};
+                        if (key === "widgets" ){
+                            let widgetFactoryJSPath = widgetFactoryNamespace;
+                            //remove any attempts to double dot move up folders
+                            widgetFactoryJSPath = widgetFactoryJSPath.replace(/\.\./g, "")
+                            widgetFactoryJSPath = widgetFactoryJSPath.replace(/\./g, "/")
+                            widgetFactoryJSPath = "/plugins/" + widgetFactoryJSPath +  "/widgetFactory.js";
+                            //add a script tag to the dom so the script goes into memory
+                            widgetFactoryInfo[key].created = new Date();
+                            widgetFactoryInfo[key].widgetFactoryJSPath = widgetFactoryJSPath;
+                            widgetFactoryInfo[key].onJSLoadCompleteDeferred = $.Deferred();
+                            widgetFactoryInfo[key].caller = options.caller;
+                            widgetFactoryInfo[key].widgetFactory = null;
+                        }    
+                    }
+                    if (key === "widgets"){
+                        widgetFactoryInfo = widgetFactoryInfo[key];
+                        break;
+                    }else{
+                        widgetFactoryInfo = widgetFactoryInfo[key];
+                        if(i === 0){
+                            widgetFactoryNamespace = key;
+                        }else{
+                            widgetFactoryNamespace = widgetFactoryNamespace + "." + key;
+                        }
+                    }                    
+                }
+
+                return  widgetFactoryInfo; //{widgetFactoryInfo: widgetFactoryInfo, widgetNamespace:widgetNamespace, widgetFactory:widgetFactory, }
+            },
+            
+            loadWidget: function (element, options){
+                var deferred = $.Deferred();
+                try{
+                    
+                    let widgetFactoryInfo = $.uisptools.widgetFactoryHelper.getWidgetFactoryInfo({widgetNamespace: options.widgetNamespace, caller:"loadWidget"});
+                    
+                    if(widgetFactoryInfo.widgetFactory == null){
+                        import(widgetFactoryInfo.widgetFactoryJSPath).then(
+                            
+                            function(Module) {
+                                if(Module["widgetFactory"]){
+                                    //widgetFactoryInfo.widgetFactory = Module["widgetFactory"];
+                                    widgetFactoryInfo.widgetFactory = new Module["widgetFactory"](widgetFactoryInfo.widgetNamespace,widgetFactoryInfo.widgetFactoryJSPath)
+                                    if(widgetFactoryInfo.widgetFactory.init){
+                                        widgetFactoryInfo.widgetFactory.init().then(
+                                            function(){
+                                                widgetFactoryInfo.onJSLoadCompleteDeferred.resolve({widgetNamespace:options.widgetNamespace, caller:"loadWidget.import.Module"});
+                                            },function(err){
+                                                widgetFactoryInfo.onJSLoadCompleteDeferred.reject(err);
+                                                //deferred.reject(err);
+                                            }
+                                        );
+                                    }else{
+                                        widgetFactoryInfo.onJSLoadCompleteDeferred.resolve({widgetNamespace:options.widgetNamespace, caller:"loadWidget.import.Module"})
+                                    }
+                                    
+                                }else if(Module["default"]){
+                                    //widgetFactoryInfo.widgetFactory = Module["default"];
+                                    widgetFactoryInfo.widgetFactory = new Module["widgetFactory"](widgetFactoryInfo.widgetNamespace, widgetFactoryInfo.widgetFactoryJSPath)
+                                    if(widgetFactoryInfo.widgetFactory.init){
+                                        widgetFactoryInfo.widgetFactory.init().then(
+                                            function(){
+                                                widgetFactoryInfo.onJSLoadCompleteDeferred.resolve({widgetNamespace:options.widgetNamespace, caller:"loadWidget.import.Module"})
+                                            },function(err){
+                                                widgetFactoryInfo.onJSLoadCompleteDeferred.reject(err);
+                                                //deferred.reject(err);
+                                            }
+                                        );
+                                    }else{
+                                        widgetFactoryInfo.onJSLoadCompleteDeferred.resolve({widgetNamespace:options.widgetNamespace, caller:"loadWidget.import.Module"})
+                                    }
+                                    
+                                }else{
+                                    let errMsg = "Error: uisptools.loadWidget.inport.module failed " + err;
+                                    $.logToConsole(errMsg);
+                                    widgetFactoryInfo.onJSLoadCompleteDeferred.reject(errMsg);
+                                    //deferred.reject(errMsg);
+                                }
+                            }, 
+                            function(err){
+                                $.logToConsole("Error: uisptools.loadWidget.onLoad failed " + err);
+                                widgetFactoryInfo.onJSLoadCompleteDeferred.reject(err);
+                                //deferred.reject(err); 
+                            }   
+                        );
+                    }
+
+                    widgetFactoryInfo.onJSLoadCompleteDeferred.then(
+                        function(){
+                            let widgetname = options.widgetNamespace.substring(options.widgetNamespace.lastIndexOf(".widgets.") + 9);
+                            widgetFactoryInfo.widgetFactory.createWidget(widgetname,element, options).then(
+                                function(widget){
+                                    widget.init().then(
+                                        function(){
+                                            deferred.resolve(widget);
+                                        },
+                                        function(err){
+                                            $.logToConsole("Error: uisptools.loadWidget.onLoad.widget.init failed " + err);
+                                            deferred.reject(err); 
+                                        }
+                                    );
+                                },
+                                
+                                function(err){
+                                    $.logToConsole("Error: uisptools.loadWidget.onLoad.createwidget failed " + err);
+                                    deferred.reject(err); 
+                                }
+                                
+                            )
+                            
+                        },
+                        function (err) {
+                            $.logToConsole("Error: uisptools.loadWidget.onLoad failed " + err);
+                            deferred.reject(err);
+                        }
+                    )
+                    
+                }catch(ex){
+                    $.logToConsole("ERROR uisptools.loadWidget: " + ex.toString());
+                    var objError = $.uisptools.createErrorFromScriptException(ex, "Server error during uisptools.loadWidget.");
+                    deferred.reject(ex.toString());
+                }
+                return deferred.promise();
+            }
+            
+        },
 
         appInit: function () {
             var deferred = $.Deferred();
@@ -177,12 +331,49 @@
         showPageContent: function (page) {
             document.title = page.pageTitle;
             $('meta[name="description"]').attr("content", page.pageDescription);
-            $(".pageContent").html(page.content);
+            if(page.contentType === "template"){
+                $.uisptools.getTemplateContent({templatePath: page.content}).then(
+                    function(templateContent){
+                        $(".pageContent").html(templateContent);
+                    },
+                    function(err){
+                        $.uisptools.displayError({error:err});
+                    }
+                )
+                
+            }else if(page.contentType === "plugin.widget"){
+                
+                var $element = $("<div></div>")
+                $(".pageContent").empty().append($element);
+                $.uisptools.widgetFactoryHelper.loadWidget( $element[0], {widgetNamespace: page.content}).then(
+                    function(templateContent){
+                        
+                    },
+                    function(err){
+                        $.logToConsole("ERROR: showPageContent contentType=widget " + err)
+                        $.uisptools.displayError({error:err});
+                    }
+                )
+                // import("/modules/my-module.js")
+                //     .then((module) => {
+                //         module.loadPageInto(main);
+                //     })
+                //     .catch((err) => {
+                //         main.textContent = err.message;
+                //     });
+                // });
+            }
+            
+            else{
+                $(".pageContent").html(page.content);
+            }
+            
         },
 
         menuItemClick: function (e) {
             let $menuItem = $(e.currentTarget);            
             let pageContentGuid = $menuItem.attr("data-id");
+            
             $.uisptools.getPageContent({ pageContentGuid: pageContentGuid }).then(
                 function (page) {
                     history.pushState({ page: page }, page.pageTitle, page.linkUrl);
@@ -190,8 +381,71 @@
 
                 }
             );
+            
         },
 
+        notify: function(options){
+            //requires Bootstrap 
+            var deferred = $.Deferred();
+            var defaultOptions = {
+                autoshow:true,
+                html: null,
+                title: "Notification",
+                subtitle: "Notification",
+                body: "You have been Notified",
+                autohide:true,
+                animation:true,
+                delay:5000,
+                type: "success"
+                
+            } 
+            _options = $.extend({}, defaultOptions, options); 
+
+            let fetchTemplate;
+            
+            if (_options.html === null){
+                fetchTemplate = $.uisptools.getTemplateCache("toast.default.htm")
+            }else{
+                fetchTemplate = $.Deferred();
+                fetchTemplate.resolve(thtml);
+            }
+
+            fetchTemplate.then(
+                function(templateHtml){
+                    
+                    const $toast = $(templateHtml);
+                    $toast.appendTo($(".toast-container"));
+                    $toast.find(".toast-title").html(_options.title);
+                    if(_options.subTitle){
+                        $toast.find(".toast-title").html(_options.subtitle);
+                    }
+                    $toast.find(".toast-body").html(_options.body);
+                    
+                    switch(_options.type){
+                        case "success":
+                            $toast.addClass("bg-success");
+                            break;
+                        case "danger":
+                            $toast.addClass("bg-success");
+                            break;
+                        case "info":
+                            $toast.addClass("bg-info");
+                            break
+                        case "warning":
+                            $toast.addClass("bg-warning");
+                            break
+                        
+                    }
+                    const toast = new bootstrap.Toast($toast[0], {autohide:_options.autohide, animation:_options.animation, delay:_options.delay});
+                    if(_options.autoshow){
+                        toast.show();
+                    }
+                    deferred.resolve(toast);
+                }
+            )
+            return deferred.promise();
+        
+        },
 
         getPageContent: function (options) {
             var deferred = $.Deferred();
@@ -219,6 +473,35 @@
             return deferred.promise();
         },
 
+        
+
+        
+
+        getTemplateContent: function (options) {
+            var deferred = $.Deferred();
+            let templatePath = options.templatePath;
+            if (templatePath && templatePath[0] === "/"){
+                templatePath = templatePath.substring(1);
+            }
+            //remove any attempts to double dot move up folders
+            templatePath = templatePath.replace(/../g, "")
+            var url = '/scripts/app/templates/' + templatePath;
+            $.uisptools.ajax({
+                method: 'GET',
+                url:  url,
+                dataType: 'html'
+            }).then(
+                function (templateContent) {
+                    deferred.resolve(templateContent);
+                },
+                function (reason) {
+                    $.logToConsole("Error: uisptools.getTemplateContent failed " + reason);
+                    deferred.reject();
+                }
+            );
+            return deferred.promise();
+        },
+
         getMenuItems: function () {
             var deferred = $.Deferred();
             $.uisptools.ajax({
@@ -233,14 +516,11 @@
                     $.each(menuItems, function (index, item) {
                         if (item.roleId === undefined || item.roleId === null || item.roleId === '' || $.uisptools.isUserInRoleName(item.roleId)){
                             let $menuItem = $menuItemTemplate.clone();
-                            //$menuItem.find("a").attr("href", item.linkUrl + "?lt=" + item.linkText).attr("target", item.linkTarget).text(item.linkText);
-                            if (item.linkUrl.startsWith("https://") || item.linkUrl.startsWith("https://")) {
-                                $menuItem.find("a").attr("href", item.linkUrl).attr("data-id", item.pageContentGuid).text(item.linkText);    
+                            if (item.contentType === "link") {
+                                $menuItem.find("a").attr("href", item.linkUrl).attr("data-id", item.pageContentGuid).text(item.linkText);
                                 if (item.linkTarget) {
                                     $menuItem.find("a").attr("target", item.linkTarget);
                                 }
-                            }else if (item.linkTarget === "site") {
-                                $menuItem.find("a").attr("href", item.linkUrl).attr("data-id", item.pageContentGuid).text(item.linkText);
                             } else {
                                 $menuItem.find("a").attr("href", "javascript:void(0)").attr("data-id", item.pageContentGuid).text(item.linkText).on("click", $.uisptools.menuItemClick);
                             }
@@ -270,12 +550,19 @@
         getTemplateCache: function (templateName, forceLoadFromServer) {
             var deferred = $.Deferred()
             var myTemplate = $.uisptools.common.templateCache[templateName];
-            if (myTemplate.isLoaded == true && forceLoadFromServer == false) {
+            if (myTemplate && myTemplate.isLoaded === true && forceLoadFromServer !== true) {
                 deferred.resolve(myTemplate.data);
             } else {
-
+                let url = "";
+                if(myTemplate && myTemplate.url){
+                    url = myTemplate.url;
+                }else{
+                    url = "/scripts/app/templates/" + templateName;
+                    myTemplate = {url:url};
+                    $.uisptools.common.templateCache[templateName] = myTemplate;
+                }
                 $.ajax({
-                    url: myTemplate.url,
+                    url: url,
                     data: {},
                     success: function (data, textStatus, jqXHR) {
                         myTemplate.data = data;
@@ -680,15 +967,7 @@
                 return true;
             }
             var defaultOptions = {
-                dialogOptions: {
-                    autoOpen: false,
-                    modal: true,
-                    title: "Error",
-                    width: 500,
-                    beforeClose: beforeClose,
-                    appendTo: ".uisptools-body",
-                    closeText: ""
-                },
+                dialogOptions: {backdrop:true, keyboard: true, focus:true},
                 error: undefined,
                 showRetry: true,
                 showCancel: true
@@ -699,13 +978,14 @@
                 options.error = $.uisptools.createErrorFromScriptException("Default Error Handler Error", "Default Error Handler Error");
             }
 
-            var $dialogElement = $('#uisptools_error_dialog');
-
+            var $dialogElement = $('#uisptools_error_dialog');  //If its already added to the page select it
+            var $errorModal = null;
             var onRetryClick = function () {
                 trigger = "retry"
-                $('#uisptools_error_dialog_error').hide();
+                $dialogElement.find('#uisptools_error_dialog_error').hide();
                 $.logToConsole("Error Dialog Retry Button Clicked");
-                $dialogElement.dialog("close");
+                //$dialogElement.dialog("close");
+                $errorModal.hide();
                 myDefer.resolve("Retry");
             }
             var onCancelClick = function () {
@@ -717,7 +997,8 @@
                     myDefer.reject("User Canceled Error Dialog");
                 }
 
-                $dialogElement.dialog("close");
+                //$dialogElement.dialog("close");
+                $errorModal.hide();
             }
             var onOkClick = function () {
                 trigger = "okclick";
@@ -728,14 +1009,15 @@
                     myDefer.reject("User Ok Error Dialog");
                 }
 
-                $dialogElement.dialog("close");
+                //$dialogElement.dialog("close");
+                $errorModal.hide();
             }
 
             var setDialogValues = function () {
                 trigger = "cancel";
-                $("#uisptools_error_dialog_errorMessageDetails_displayedErrorMessage").text(myOptions.error.message);
-                $("#uisptools_error_dialog_errorMessageDetails_ExceptionType").text(myOptions.error.exceptionType);
-                $("#uisptools_error_dialog_errorMessageDetails_ExceptionMessage").text(myOptions.error.exceptionMessage);
+                $dialogElement.find("#uisptools_error_dialog_errorMessageDetails_displayedErrorMessage").text(myOptions.error.message);
+                $dialogElement.find("#uisptools_error_dialog_errorMessageDetails_ExceptionType").text(myOptions.error.exceptionType);
+                $dialogElement.find("#uisptools_error_dialog_errorMessageDetails_ExceptionMessage").text(myOptions.error.exceptionMessage);
                 var stacktrace = myOptions.error.stackTrace;
 
                 //TODO: This approach for displaying the stack trace is a problem waiting to happen if the stack trace contains markup
@@ -745,54 +1027,60 @@
                 //    stacktrace = stacktrace.replace(/\n/gi, '<br/>');
                 //}
                 //$("#uisptools_error_dialog_errorMessageDetails_StackTrace").html(stacktrace);                
-                $("#uisptools_error_dialog_errorMessageDetails_StackTrace").text(stacktrace);
-                $('#uisptools_error_dialog_messageContent_Default').hide();
-                $('#uisptools_error_dialog_messageContent_NoInternet').hide();
-                $('#uisptools_error_dialog_messageContent_AccessDenied').hide();
-                $('#uisptools_error_dialog_messageContent_NotFound').hide();
-                switch (myOptions.error.StatusCode) {
+                $dialogElement.find("#uisptools_error_dialog_errorMessageDetails_StackTrace").text(stacktrace);
+                $dialogElement.find('#uisptools_error_dialog_messageContent_Default').hide();
+                $dialogElement.find('#uisptools_error_dialog_messageContent_NoInternet').hide();
+                $dialogElement.find('#uisptools_error_dialog_messageContent_AccessDenied').hide();
+                $dialogElement.find('#uisptools_error_dialog_messageContent_NotFound').hide();
+                switch (myOptions.error.statusCode) {
                     case 0:
-                        $('#uisptools_error_dialog_messageContent_NoInternet').show();
+                        $dialogElement.find('#uisptools_error_dialog_messageContent_NoInternet').show();
                         break;
                     case 402:
-                        $('#uisptools_error_dialog_messageContent_AccessDenied').show();
+                        $dialogElement.find('#uisptools_error_dialog_messageContent_AccessDenied').show();
                         break;
                     case 404:
-                        $('#uisptools_error_dialog_messageContent_NotFound').show();
+                        $dialogElement.find('#uisptools_error_dialog_messageContent_NotFound').show();
                         break;
                     default:
-                        $('#uisptools_error_dialog_messageContent_Default').show();
+                        $dialogElement.find('#uisptools_error_dialog_messageContent_Default').show();
                         break;
                 }
-                $('#uisptools_error_dialog_messageContent').show();
-                $('#uisptools_error_dialog_errorMessage_details').hide();
+                $dialogElement.find('#uisptools_error_dialog_messageContent').show();
+                $dialogElement.find('#uisptools_error_dialog_errorMessage_details').hide();
 
             }
             var initDialog = function () {
-                $('#uisptools_error_dialog_btnRetry').off("click.uisptools");
-                $('#uisptools_error_dialog_btnCancel').off("click.uisptools");
-                $('#uisptools_error_dialog_btnOk').off("click.uisptools");
-                $('#uisptools_error_dialog_btnRetry').on("click.uisptools", onRetryClick);
-                $('#uisptools_error_dialog_btnCancel').on("click.uisptools", onCancelClick);
-                $('#uisptools_error_dialog_btnOk').on("click.uisptools", onOkClick);
+                $dialogElement.find('#uisptools_error_dialog_btnRetry').off("click.uisptools");
+                $dialogElement.find('#uisptools_error_dialog_btnCancel').off("click.uisptools");
+                $dialogElement.find('#uisptools_error_dialog_btnOk').off("click.uisptools");
+                $dialogElement.find('#uisptools_error_dialog_btnRetry').on("click.uisptools", onRetryClick);
+                $dialogElement.find('#uisptools_error_dialog_btnCancel').on("click.uisptools", onCancelClick);
+                $dialogElement.find('#uisptools_error_dialog_btnOk').on("click.uisptools", onOkClick);
                 if (myOptions.showRetry == false) {
-                    $('#uisptools_error_dialog_btnRetry').hide();
+                    $dialogElement.find('#uisptools_error_dialog_btnRetry').hide();
                 }
                 if (myOptions.showCancel == false) {
-                    $('#uisptools_error_dialog_btnCancel').hide();
+                    $dialogElement.find('#uisptools_error_dialog_btnCancel').hide();
                 }
                 if (myOptions.showOk == false) {
-                    $('#uisptools_error_dialog_btnOk').hide();
+                    $dialogElement.find('#uisptools_error_dialog_btnOk').hide();
                 }
 
                 setDialogValues();
+                $errorModal.show();
             }
 
             if ($dialogElement.length == 0) {
-                $dialogElement = $('<div id="uisptools_error_dialog"></div>').dialog({ autoOpen: false });
+                
                 $.uisptools.getTemplateCache('error').then(
                     function (html) {
-                        $dialogElement.html(html);
+                        //$dialogElement = $('<div id="uisptools_error_dialog"></div>'); 
+                        $dialogElement = $(html); 
+                        //$dialogElement.html(html);
+                        //let dialogOptions = {backdrop:true, keyboard: true, focus:true};
+                        $errorModal = new bootstrap.Modal($dialogElement, myOptions.dialogOptions);
+                        //$errorModal = bootstrap.Modal.getInstance($dialogElement);
                         initDialog();
                     },
                     function () {
@@ -803,11 +1091,15 @@
             } else {
                 //setDialogValues();
                 // had to unbind and rebind to get myOptions update wierd but myOptions would stay to last values when bound not update like they got scoped funny
+                if($errorModal === null){
+                    $errorModal = bootstrap.Modal.getInstance($dialogElement);
+                }
                 initDialog();
             }
 
-            $dialogElement.dialog(myOptions.dialogOptions);
-            $dialogElement.dialog("open");
+            //$dialogElement.dialog(myOptions.dialogOptions);
+            //$dialogElement.dialog("open");
+            
             return myDefer.promise();
         },
 
@@ -1181,24 +1473,24 @@
                     // HTTP 402, Access is denied you tried to access a document that you do not have permissions to 
 
                     case 401:
-                        if (clonedDefaults.showLoginOn401Error) {
+                        if (clonedDefaults.showLoginOn401Error && jqXHR.statusText ==="Unauthorized" && jqXHR.responseJSON   ) {
                             // This is a unauthorized the StatusText tells us if this is an "Access Is 
                             // Denied" or "Not Logged In". If "Not Logged In" we need to try to refresh 
                             // the accessToken if we have a refreshToken or throw the Login Prompt  To specificaly throw Access is Denied as 
                             // in user is logged in but does not have permission 
                             // All API methods should be wrapped in Try Catch 
 
-                            switch (jqXHR.statusText) {
+                            switch (jqXHR.responseJSON.error) {
                                 case "Login Failed":
                                     $.uisptools.showLoginDialog().then(retryCallback, rejectCallback);
                                     break;
-                                case "Refresh Token Expired or Invalid":
+                                case "Invalid RefreshToken":
                                     $.logToConsole("Debug: uisptools.ajax: call error to url:\"" + clonedDefaults.url + "\". Refresh Token is invalid, clearing all the currently logged in information including refresh and auth tokens from storage");
                                     $.uisptools._clearLoginAccessTokenRefreshTokenAppCookie();
                                     $.uisptools.showLoginDialog().then(retryCallback, rejectCallback);
                                     break;
-                                case "AccessToken Timeout":
-                                    if ($.uisptools.hasRefreshToken() || $.uisptools.hasAspNetApplicationCookie()) {
+                                case "Invalid AccessToken":
+                                    if ($.uisptools.hasRefreshToken()) {
                                         // Attempt to use the refresh token. If the server rejects the token as 
                                         // having been expired, show login 
                                         $.uisptools.getNewAccessToken().then(
@@ -1238,7 +1530,7 @@
                         if (clonedDefaults.showErrorDialog) {
                             $.uisptools.showErrorDialog({ "error": objError }).then(retryCallback, rejectCallback);
                         } else {
-                            deferred.reject(jqXHR, reason, objError);
+                            deferred.reject(jqXHR, textStatus, objError);
                         }
                 }
             }
@@ -1359,7 +1651,7 @@
                     contentType: "application/x-www-form-urlencoded; charset=UTF-8",
                     //data: JSON.stringify(postdata),
                     data: myOptions,
-                    url: '/login/loginBoth',
+                    url: '/uisptools/login/loginBoth',
                     success: function (result) {
                         //If no data is returned, show message
                         if (!result) {
@@ -1549,7 +1841,8 @@
             if (stacktrace == undefined) {
                 try {
                     //We Throw an Error that was we get the full Javascript Stack Trace so we can tell what functions were called to get here
-                    throw ("Dummy Error");
+                    //throw ("Dummy Error");
+                    throw new Error("Dummy Error");
                 } catch (ex) {
                     stacktrace = ex.stack;
                 }
@@ -1602,7 +1895,8 @@
 
             try {
                 //We Throw an Error that was we get the full Javascript Stack Trace so we can tell what functions were called to get here
-                throw ("Dummy Error");
+                //throw ("Dummy Error");
+                throw new Error("Dummy Error");
             } catch (ex) {
                 javascriptStackTrace = ex.stack;
             }
@@ -1693,7 +1987,7 @@
         
         // End Auth -------------------------------------------------------
 
-
+        
 
 
         //Begin Common Error Handler
@@ -1711,7 +2005,8 @@
             if (stacktrace == undefined) {
                 try {
                     //We Throw an Error that was we get the full Javascript Stack Trace so we can tell what functions were called to get here
-                    throw ("Dummy Error");
+                    //throw ("Dummy Error");
+                    throw new Error("Dummy Error");
                 } catch (ex) {
                     stacktrace = ex.stack;
                 }
@@ -1764,7 +2059,8 @@
 
             try {
                 //We Throw an Error that was we get the full Javascript Stack Trace so we can tell what functions were called to get here
-                throw ("Dummy Error");
+                //throw ("Dummy Error");
+                throw new Error("Dummy Error");
             } catch (ex) {
                 javascriptStackTrace = ex.stack;
             }

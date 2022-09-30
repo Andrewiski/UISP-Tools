@@ -1,0 +1,54 @@
+<script>
+
+    
+    
+</script>
+<div>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="dialogContent">
+                <div class="col-md-12">
+                    <form name="API" onsubmit="return false">
+                        <div class="form-horizontal">
+                            
+                            <div class="form-group">
+                                <label for="uisptools_API_Path" class="form-label">API Path</label>
+                                <input type="text" id="uisptools_API_Path" class="form-control" tabindex="1" required="" placeholder="API Path To Call" value="" />
+                                <br/>or
+                                <select id="uisptools_API_Path_Select" class="form-control" tabindex="2" placeholder="Select API from List">
+                                    <option>Select a Path From the List</option>
+                                    <option>/uisptools/api/crm/clients/services</option>
+                                    <option>/uisptools/api/nms/devices</option>
+                                    <option>/uisptools/api/nms/devices/aps/profiles</option>
+                                    <option>/uisptools/errorHandlerTest</option>
+                                    <option>/uisptools/errorHandlerTestRawError</option>
+                                </select>
+                                <small id="ApiHelp" class="form-text text-muted">visit <a href="https://unmscrm.docs.apiary.io/">https://unmscrm.docs.apiary.io</a> for CRM</small>
+                            </div>
+                        </div>
+                        <div class="form-horizontal">
+                            
+                            <div class="form-group">
+                                <button class="btn btn-primary btnSubmit">Submit</button>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="uisptools_error" class="alert alert-danger" role="alert" style="margin:10px 0;display:none;">
+                        <div id="uisptools_errormsg" style="text-align: center; font-size: 1.5em;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+                <div class="col-md-12">
+                       <div class="form-horizontal">
+                            <div class="form-group">
+                                <label for="uisptools_API_results" class="form-label">Results</label>
+                                <textarea id="uisptools_API_results" class="form-control" rows="30"></textarea>
+                            </div>
+                        </div>
+                </div>
+            
+        </div>
+    </div>
+</div>

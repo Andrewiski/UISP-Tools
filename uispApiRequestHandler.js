@@ -72,7 +72,7 @@ var UcrmApiRequestHandler = function (options) {
                     opc.key = fs.readFileSync(path.join(__dirname, options.key));
                 } 
             } catch (ex) {
-                debug('error', 'remoteDownloader', ' error reading certificate files ', ex);
+                debug('error', 'remoteDownloader', ' error downloading data ', ex);
                 if (opc.key) {
                     delete opc.key;
                 }
@@ -93,7 +93,7 @@ var UcrmApiRequestHandler = function (options) {
             var request = protocol.request(options.url, opc, function (res) {
 
                 var data = '';
-
+                var retval = null;
                 res.on('data', function (d) {
                     data = data + d;
                 });
@@ -102,36 +102,55 @@ var UcrmApiRequestHandler = function (options) {
                     var error = null;
                     try {
                         if (res.statusCode === 200) {
-                            data = JSON.parse(data); 
+                            retval = JSON.parse(data); 
                             if (options.injectCookies) {
-                                data.cookies = res.cookies;
+                                retval.cookies = res.cookies;
                             }
                             if (options.injectHeaders) {
-                                data.headers = res.headers;
+                                retval.headers = res.headers;
                             }
-                            deferred.resolve(data);
+                            deferred.resolve(retval);
+                        }else if (res.statusCode === 401) {
+                            retval = JSON.parse(data);
+                            if(retval.message){
+                                retval.msg = retval.message + " " + "NMS Auth Token may be expired!";
+                            }else{
+                                retval.msg = "NMS Auth Token may be expired!";
+                            }
+                            //retval.code = retval.statusCode;
+                            retval.msg = retval.message + " " + "NMS Auth Token may also be expired!";
+                            deferred.reject(retval);
+                        }else if (res.statusCode === 404) {
+                            retval = JSON.parse(data);
+                            if(retval.message){
+                                retval.msg = retval.message + " " + "URL Not Found!";
+                            }else{
+                                retval.msg = "URL Not Found!";
+                            }
+                            
+                            deferred.reject(retval);
                         } else {
                             debug('warning', 'remoteDownloader', 'Error downloading the remote JSON', 'download.error', data);
                             try {
-                                data = JSON.parse(data); 
-                                if (data.message | data.message === "") {
-                                    data.msg = data.message;
-                                    delete data.message;
+                                retval = JSON.parse(data); 
+                                if (retval.message | retval.message === "") {
+                                    retval.msg = retval.message;
+                                    delete retval.message;
                                 }
-                                if (data.msg === undefined || data.msg === "") {
-                                    data.msg = "An Error Occured!";
+                                if (retval.msg === undefined || retval.msg === "") {
+                                    retval.msg = "An Error Occured!";
                                 }
                             } catch (ex) {
                                 debug('error', 'remoteDownloader',  {msg:ex.message, stack:ex.stack});
-                                data = { "code": 500, "msg": "An Error Occured!", "error": e };
+                                retval = { "code": 500, "msg": "An Error Occured!", "error": e };
                             }
-                            deferred.reject(data);
+                            deferred.reject(retval);
                         }
                     } catch (e) {
                         debug('error', 'remoteDownloader', 'Error reading the downloaded JSON:', 'download.error', {
                             e: e,
                             response: data,
-                            url: url
+                            url: options.url
                         });
                         deferred.reject({"code": 500, "msg": "An Error Occured!", "error": e }); 
                         return;
@@ -199,11 +218,11 @@ var UcrmApiRequestHandler = function (options) {
         if (objOptions.rejectUnauthorized !== undefined) {
             options.rejectUnauthorized = objOptions.rejectUnauthorized;
         }
-        if (options.sendAppKey !== false) {
-            options.headers['X-Auth-App-Key'] = objOptions.unmsAppKey;
-        }
-        if (options.authtoken) {
-            options.headers['x-auth-token'] = options.authtoken;
+        // if (options.sendAppKey !== false) {
+        //     options.headers['X-Auth-App-Key'] = objOptions.unmsAppKey;
+        // }
+        if (options.nmsAuthToken) {
+            options.headers['x-auth-token'] = options.nmsAuthToken;
         }
         return remoteDownloader(options);
     };
@@ -470,6 +489,7 @@ var UcrmApiRequestHandler = function (options) {
 
     
     self.handleUcrmRequest = handleUcrmRequest;
+    self.handleUnmsRequest = handleUnmsRequest;
     self.publicLoginData = publicLoginData;
     self.flushCache = flushCache;
     self.publicLoginCrm = publicLoginCrm;

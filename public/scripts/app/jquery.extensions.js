@@ -5,7 +5,7 @@
         /** Define a method for logging to the console */
         logToConsole: function (msg) {
             // Is a console defined?
-            if ($.deui && $.deui.isClientSideDebugging && $.deui.isClientSideDebugging()) {
+            if ($.uisptools && $.uisptools.isClientSideDebugging && $.uisptools.isClientSideDebugging()) {
                 if (window.console && console.log) {
                     var isChrome = navigator.userAgent.indexOf("Chrome") !== -1;
                     if (isChrome) {
