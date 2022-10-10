@@ -136,13 +136,14 @@ jobs:
           PACKAGE_NAME=${{ env.package_name }}
           APP_VERSION=${{ env.app_version }}
           VERSION=${{ env.version }}
+          DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
           echo ------------
           echo PACKAGE_NAME: $PACKAGE_NAME
           echo IMAGE_ID: $IMAGE_ID
           echo APP_VERSION: $APP_VERSION
           echo ------------
-          echo Try: "$IMAGE_ID:$APP_VERSION"
+          echo Try: "$DOCKER_USERNAME/$PACKAGE_NAME:$APP_VERSION"
           echo push step - Node Package Version $APP_VERSION
           # VERSION=latest
-          docker tag $PACKAGE_NAME $IMAGE_ID:$APP_VERSION
-          docker push $IMAGE_ID:$APP_VERSION
+          docker tag $PACKAGE_NAME $DOCKER_USERNAME/$PACKAGE_NAME:$APP_VERSION
+          docker push $DOCKER_USERNAME/$PACKAGE_NAME:$APP_VERSION
