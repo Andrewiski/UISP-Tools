@@ -1,7 +1,8 @@
 "use strict"
 
+
 import baseClientSide from "/plugins/baseClientSide.js";
-import {testapicalls} from "./widgets/testapicalls/testapicalls.js"
+import {towerclients} from "./widgets/towerclients/towerclients.js"
 
 class widgetFactory extends baseClientSide.widgetFactory
     {
@@ -16,7 +17,7 @@ class widgetFactory extends baseClientSide.widgetFactory
                         reject(err);
                     }
                 )
-                $.logToConsole("INFO: testapicalls widget factory " + this.name + " init");
+                $.logToConsole("INFO: wilcowireless widget factory " + this.name + " init");
             });
         }
         //This gets called once per widget created
@@ -24,9 +25,9 @@ class widgetFactory extends baseClientSide.widgetFactory
             return new Promise((resolve, reject) => {
                 let widget = null;
                 switch(widgetName){
-                    case "testapicalls":
+                    case "towerclients":
                         //constructor(widgetFactory, widgetname, element, options) 
-                        widget = new testapicalls(this, widgetName, element,options);
+                        widget = new towerclients(this, widgetName, element,options);
                         resolve(widget);
                 }
             });
@@ -38,5 +39,5 @@ class widgetFactory extends baseClientSide.widgetFactory
 
 
     export {widgetFactory}
-    export {testapicalls}
+    export {towerclients}
     export default widgetFactory

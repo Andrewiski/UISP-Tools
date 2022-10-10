@@ -27,6 +27,7 @@ const ioServer = require('socket.io');
 const UispApiRequestHandler = require("./uispApiRequestHandler.js");
 const UispToolsApiRequestHandler = require("./uispToolsApiRequestHandler.js");
 const { networkInterfaces } = require('os');
+const { Router } = require('express');
 
 var configFileOptions = {
     "configDirectory": "config",
@@ -427,9 +428,13 @@ var handlePluginPublicFileRequest = function (req, res) {
     if (filePath.indexOf("..") >= 0 ){
         throw new Error("Plugin Requests are not allowed to contain .. in the path")
     }
-    if(filePath.indexOf("/serverside") >= 0 ){
+    if(filePath.toLowerCase().indexOf("/serverside") >= 0 ){
     
         throw new Error("Plugin Requests via HTTP to serverside folder or serverside.js are denied")
+    }
+    if(filePath.toLowerCase().indexOf("serverside.js") >= 0 ){
+    
+        throw new Error("Plugin Requests via HTTP to serverside.js are denied")
     }
 
     // let contanerNameEndPosition = filePath.lastIndexOf("/");
@@ -653,11 +658,66 @@ routes.get("/admintool.js", function (req, res) {
     res.sendFile(path.join(__dirname, 'admin/admintool.js'));
 });
 
+
+
+//create, init, bindRoutes any plugins
+
+for (let index = 0; index < objOptions.plugins.length; index++) {
+    let pluginName = objOptions.plugins[index];
+    //remove any attempts to double dot move up folders
+    let pluginNamePath = pluginName.replace(/\.\./g, "");
+    pluginNamePath = pluginNamePath.replace(/\./g, "/");
+    pluginNamePath = path.join(".", "plugins", pluginNamePath, "serverSide.mjs");
+    pluginNamePath = pluginNamePath.replace(/\\/g,"/");
+    pluginNamePath = "./" + pluginNamePath.replace(/\\/g,"/");
+    var serverSideJSPath = pluginNamePath;
+    if (fs.existsSync(serverSideJSPath) === true){
+        import(serverSideJSPath).then(
+                            
+            function(Module) {
+                try{
+                    let plugin = null;
+                    if(Module[pluginName] && Module[pluginName].plugin){
+                        //widgetFactoryInfo.widgetFactory = Module["widgetFactory"];
+                        plugin = new Module[pluginName].plugin(pluginName, pluginNamePath, objOptions, logUtilHelper, uispToolsApiRequestHandler)
+                        
+                    }else if(Module["default"] && Module["default"].plugin){
+                        //widgetFactoryInfo.widgetFactory = Module["default"];
+                        plugin =  new Module["default"].plugin(pluginName, pluginNamePath, objOptions, logUtilHelper, uispToolsApiRequestHandler)
+                    }else{
+                        logUtilHelper.log(appLogName, "app", "error", "plugin serverSide import failed", pluginName, serverSideJSPath, "Unable to load module by name or default" )
+                    }
+                    if(plugin){
+                        plugin.init().then(
+                            function(){
+                                try{
+                                    plugin.bindRoutes(routes);
+                                }catch(ex){
+                                    logUtilHelper.log(appLogName, "app", "error", "plugin serverSide create", pluginName, serverSideJSPath, ex )
+                                }
+                            },function(err){
+                                logUtilHelper.log(appLogName, "app", "error", "plugin serverSide init failed", pluginName, serverSideJSPath, err )
+                            }
+                        );
+                    }
+                }catch(ex){
+                    logUtilHelper.log(appLogName, "app", "error", "plugin serverSide create", pluginName, serverSideJSPath, ex )
+                }
+            }, 
+            function(err){
+                logUtilHelper.log(appLogName, "app", "error", "plugin serverSide import failed", pluginName, serverSideJSPath, err )
+                
+            }   
+        );
+    }else{
+        logUtilHelper.log(appLogName, "app", "warning", "plugin serverSide not loaded", pluginName, serverSideJSPath )
+    }
+    
+}
+
 routes.get('/plugins/*', function (req, res) {
     handlePluginPublicFileRequest(req, res);
 });
-
-
 
 routes.get('/*', function (req, res) {
     handlePublicFileRequest(req, res);

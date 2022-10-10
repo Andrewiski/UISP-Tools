@@ -1,5 +1,5 @@
     "use strict"
-    import uisptools from "/plugins/uisptools/uispTools.js";
+    import baseClientSide from "/plugins/baseClientSide.js";
     /*
     * uisptools  1.0
     * Copyright (c) 2022 Digital Example
@@ -14,7 +14,7 @@
 
     
 
-    class detectdfs extends uisptools.widget
+    class detectdfs extends baseClientSide.widget
      {
         
         self = null;
@@ -48,6 +48,9 @@
 
         fetchApDevices(){
             return $.uisptools.ajax("/uisptools/api/nms/devices?role=ap");
+        }
+        fetchDevice(options){
+            return $.uisptools.ajax("/uisptools/api/nms/devices/" + options.deviceId);
         }
 
         
@@ -204,11 +207,12 @@
 
             return new Promise((resolve, reject) => {
                 var device = options.device;
-
-            
+                
+                var $deviceItem = options.$deviceItem
+                self.updateDeviceStatus($deviceItem, "refresh");
                 self.fetchDeviceConfiguration(device).then(
                     function(deviceConfig){
-                        self.updateDeviceConfiguration(options);
+                        self.updateDeviceItem(options);
                         resolve(options);
                     },
                     function(err){
@@ -222,77 +226,28 @@
             return 5000 + (channel * 5)
         }
 
-        updateDeviceConfiguration(options){
-            var device = options.device;
-            var $deviceItem = options.$element
-            if (device.deviceConfig){  //wireless.interfaces[0].frequency
-                
-                // if(device.deviceConfig.wireless 
-                //     && device.deviceConfig.wireless.interfaces 
-                //     && device.deviceConfig.wireless.interfaces.length > 0
-                //     && device.deviceConfig.wireless.interfaces[0].apMode === true
-                //     && device.deviceConfig.wireless.interfaces[0].frequency                    
-                //     && device.frequency != device.deviceConfig.wireless.interfaces[0].frequency.tx){
+        
 
-                //overview.frequency
+        onDeviceRefreshClick(evt){
+            //<i class="fa-solid fa-arrow-rotate-right"></i>
+            let $deviceItem = $(evt.currentTarget).parents(".deviceListItem");
+            let deviceId = $deviceItem.attr("data-deviceId");
+            self.updateDeviceStatus($deviceItem, "refresh");
+            self.fetchDevice({deviceId:deviceId}).then(
+                function(device){
+                    self.updateDeviceItem({device:device, $deviceItem:$deviceItem})
+                    //let device = {identification: {id:deviceId}};
+                    self.fetchDeviceConfigurationUpdateDisplay({device:device, $deviceItem:$deviceItem}).then(
+                        function(options){
+                            //$deviceItem.addClass("table-success"); 
+                            self.updateDeviceStatus($deviceItem, "ok");     
+                        }
+                    )
+                },
+                function(ex){
 
-                //Get Detail
-                let currentFrequency = null;
-                if(device.deviceConfig.airmax && device.deviceConfig.airmax.airmax && device.deviceConfig.airmax.airmax.frequency){
-                    currentFrequency = device.deviceConfig.airmax.airmax.frequency;
-                }else if(device.deviceConfig.aircube
-                    && device.deviceConfig.aircube.aircube 
-                    && device.deviceConfig.aircube.aircube.wifi5Ghz
-                    && device.deviceConfig.aircube.aircube.wifi5Ghz.channel){
-                        currentFrequency = self.wifi5GhzChannelToFrequency(device.deviceConfig.aircube.aircube.wifi5Ghz.channel);
-                }else if(device.overview && device.overview.frequency){
-                    currentFrequency = device.overview.frequency
                 }
-
-                let configFrequency = null;
-                if(device.deviceConfig.airmaxConfigWireless && device.deviceConfig.airmaxConfigWireless.controlFrequency ){
-                    configFrequency = device.deviceConfig.airmaxConfigWireless.controlFrequency;
-                }else if(device.deviceConfig.aircubeConfigWireless 
-                    && device.deviceConfig.aircubeConfigWireless.wifi5Ghz 
-                    && device.deviceConfig.aircubeConfigWireless.wifi5Ghz.channel){
-                        configFrequency = self.wifi5GhzChannelToFrequency(device.deviceConfig.aircubeConfigWireless.wifi5Ghz.channel);
-                }else if(device.deviceConfig.airmaxConfigWireless && device.deviceConfig.airmaxConfigWireless.controlFrequency ){
-                    configFrequency = device.deviceConfig.airmaxConfigWireless.controlFrequency;
-                }
-
-                
-
-                
-
-                // if(currentFrequency && configFrequency                     
-                //     && currentFrequency != configFrequency){
-                //     $deviceItem.addClass('table-warning');
-                // }else{
-                //     //$deviceItem.addClass('table-info');
-                // }
-                let displayFrequency = "";
-                if(currentFrequency){
-                    displayFrequency = displayFrequency + currentFrequency;
-                }
-                if(configFrequency ){
-                    displayFrequency = displayFrequency + " (" + configFrequency + ")" ;
-                }
-                
-                
-                
-
-                if(currentFrequency && configFrequency                     
-                    && currentFrequency != configFrequency){
-                        let $deviceFrequency = $deviceItem.find(".deviceFrequency");
-                        $deviceFrequency.addClass('table-warning').html(displayFrequency);
-                        $('<a class="deviceRestart" href="javascript:void(0)"><i class="fa-solid fa-arrow-rotate-right"></i></a>')
-                        .on("click", self.onDeviceRestartClick)
-                        .appendTo($deviceFrequency)
-                
-                }else{
-                    $deviceItem.find(".deviceFrequency").text(displayFrequency );
-                }
-            }
+            )
         }
 
         onDeviceRestartClick(evt){
@@ -332,94 +287,185 @@
             
         }
 
+        onDeviceOpenClick(evt){
+            let $deviceItem = $(evt.currentTarget).parents(".deviceListItem");
+            let deviceId = $deviceItem.attr("data-deviceId");
+            let deviceIp = $deviceItem.find(".deviceIpAddress").text();
+            let subnetPosition = deviceIp.indexOf("/");
+            if(subnetPosition > 0 ){
+                deviceIp = deviceIp.substring(0, subnetPosition);
+            }
+            let url = '/uisptools/api/nms/devices/' + deviceId +  '/iplink/redirect';
+            $.uisptools.ajax(url, {method:"POST"}).then(
+                function(result){
+                    //https://10.100.28.2/ticket.cgi?ticketid=a33e6abf434859a349e0699cb701e692
+                    let httpsPort = "";
+                    if(result.httpsPort && result.httpsPort !== 443){
+                        httpsPort = ":" + result.httpsPort
+                    }
+                    window.open("https://" + deviceIp + httpsPort + "/ticket.cgi?ticketid=" + result.token, "_blank");
+                },
+                function(err){
+                    window.open("https://" + deviceIp, "_blank");
+                }
+            )
+        }
+    
+
+        updateDeviceStatus($deviceItem, status){
+
+            if(status === "ok"){
+                $deviceItem.find(".deviceStatus .deviceStatusOk").show();
+            }else{
+                $deviceItem.find(".deviceStatus .deviceStatusOk").hide();
+            }
+            if(status === "refresh"){
+                $deviceItem.find(".deviceStatus .deviceStatusRefresh").show();
+            }else{
+                $deviceItem.find(".deviceStatus .deviceStatusRefresh").hide();
+            }
+
+            if(status === "warning"){
+                $deviceItem.find(".deviceStatus .deviceStatusWarning").show();
+            }else{
+                $deviceItem.find(".deviceStatus .deviceStatusWarning").hide();
+            }
+            if(status === "error"){
+                $deviceItem.find(".deviceStatus .deviceStatusError").show();
+            }else{
+                $deviceItem.find(".deviceStatus .deviceStatusError").hide();
+            }
+            
+
+           
+        }
+
+        updateDeviceItem(options){
+            let device = options.device;
+            let $deviceItem = options.$deviceItem;
+            $deviceItem.attr("data-deviceId", device.identification.id);
+            $deviceItem.find(".deviceName").text(device.identification.name);
+            $deviceItem.find(".deviceModel").text(device.identification.model);
+            $deviceItem.find(".deviceIpAddress").text(device.ipAddress);
+            $deviceItem.find(".deviceType").text(device.identification.type);
+            if(device.attributes.ssid){
+                $deviceItem.find(".deviceLinkName").text(device.attributes.ssid);
+            }else{
+                $deviceItem.find(".deviceLinkName").text("");
+            }
+
+            if(device.overview && device.overview.frequency){
+                $deviceItem.find(".deviceFrequency").text(device.overview.frequency );
+            }else{
+                $deviceItem.find(".deviceFrequency").text("");
+            }
+        
+
+            if(device.overview && device.overview.linkScore && device.overview.linkScore.linkScore){
+                $deviceItem.find(".deviceLinkScore").text((device.overview.linkScore.linkScore * 100).toFixed(1).toString() + "%" );
+            }else{
+                $deviceItem.find(".deviceLinkScore").text("");
+            }
+
+            if(device.overview && device.overview.stationsCount){
+                $deviceItem.find(".deviceStationCount").text(device.overview.stationsCount);
+            }else{
+                $deviceItem.find(".deviceStationCount").text("");
+            }
+            
+            if(device.overview && device.overview.status === "active"){
+                self.updateDeviceStatus($deviceItem, "ok");
+                $deviceItem.removeClass("table-danger");
+            }else{
+                if(device.overview && device.overview.status){
+                    
+                    self.updateDeviceStatus($deviceItem, "offline");
+                    
+                }
+                $deviceItem.addClass("table-danger");
+                
+            }
+
+
+            //Look for data in the DeviceConfig
+            if (device.deviceConfig){  
+
+                
+                let currentFrequency = null;
+                let configFrequency = null;
+                if(device.overview && device.overview.frequency){
+                    currentFrequency = device.overview.frequency
+                }
+                switch(device.identification.type){
+                    case "airMax":
+                        if(device.deviceConfig.airmax && device.deviceConfig.airmax.airmax && device.deviceConfig.airmax.airmax.frequency){
+                            currentFrequency = device.deviceConfig.airmax.airmax.frequency;
+                        }
+                        if(device.deviceConfig.airmaxConfigWireless && device.deviceConfig.airmaxConfigWireless.controlFrequency ){
+                            configFrequency = device.deviceConfig.airmaxConfigWireless.controlFrequency;
+                        }
+                    case "airCube":
+                        if(device.deviceConfig.aircube
+                            && device.deviceConfig.aircube.aircube 
+                            && device.deviceConfig.aircube.aircube.wifi5Ghz
+                            && device.deviceConfig.aircube.aircube.wifi5Ghz.channel){
+                                currentFrequency = self.wifi5GhzChannelToFrequency(device.deviceConfig.aircube.aircube.wifi5Ghz.channel);
+                        }
+                        if(device.deviceConfig.aircubeConfigWireless 
+                            && device.deviceConfig.aircubeConfigWireless.wifi5Ghz 
+                            && device.deviceConfig.aircubeConfigWireless.wifi5Ghz.channel){
+                                configFrequency = self.wifi5GhzChannelToFrequency(device.deviceConfig.aircubeConfigWireless.wifi5Ghz.channel);
+                        }
+                }
+                
+                let displayFrequency = "";
+                if(currentFrequency){
+                    displayFrequency = displayFrequency + currentFrequency;
+                }
+                if(configFrequency ){
+                    displayFrequency = displayFrequency + " (" + configFrequency + ")" ;
+                }
+                
+                $deviceItem.find(".deviceFrequency").text(displayFrequency );
+                
+                //DFS Channel Change Detected
+                if(currentFrequency && configFrequency                     
+                    && currentFrequency != configFrequency){
+                        $deviceItem.find(".deviceFrequency").addClass('table-warning');
+                }else{
+                    $deviceItem.find(".deviceFrequency").removeClass('table-warning');
+                }
+            }
+
+        }
+
+       
+
         bindDevices(devices){
             
             let $element = $(self.element);
             let $deviceList = $element.find(".deviceList").empty();
             let $deviceItemTemplate = $element.find(".templates").find(".deviceListTemplate").find(".deviceListItem");
             for(var i = 0; i < devices.length; i++){
-            //for(var i = 0; i < 10; i++){
+           
                 let device = devices[i];
                 let $deviceItem = $deviceItemTemplate.clone();
-                /*
-                <td class="deviceName"></td>
-                <td class="deviceModel"></td>
-                <td class="deviceUptime"></td>
-                <td class="deviceIpAddress"></td>
-                <td class="deviceLinkName"></td>
-                <td class="deviceFrequency"></td>
-                */
-                $deviceItem.attr("data-deviceId", device.identification.id);
-                $deviceItem.find(".deviceName").text(device.identification.name);
-                $deviceItem.find(".deviceModel").text(device.identification.model);
-                $deviceItem.find(".deviceIpAddress").html('<a class="deviceOpenLink" href="javascript:void(0)">' + device.ipAddress + '</a>');
-                $deviceItem.find(".deviceType").text(device.identification.type);
-                if(device.attributes.ssid){
-                    $deviceItem.find(".deviceLinkName").text(device.attributes.ssid);
-                }
-
-                if(device.overview && device.overview.frequency){
-                    $deviceItem.find(".deviceFrequency").text(device.overview.frequency );
-                }
-
-                if(device.overview && device.overview.linkScore && device.overview.linkScore.linkScore){
-                    $deviceItem.find(".deviceLinkScore").text((device.overview.linkScore.linkScore * 100).toFixed(1).toString() + "%" );
-                }
-
-                if(device.overview && device.overview.stationsCount){
-                    $deviceItem.find(".deviceStationCount").text(device.overview.stationsCount);
-                }
-                
+                self.updateDeviceItem({device:device, $deviceItem: $deviceItem});
                 $deviceList.append($deviceItem);
                 if(device.overview && device.overview.status === "active"){
-
-                    self.fetchDeviceConfigurationUpdateDisplay({device:device, $element:$deviceItem}).then(
+                    self.fetchDeviceConfigurationUpdateDisplay({device:device, $deviceItem:$deviceItem}).then(
                         function(options){
+                            
                             //$deviceItem.addClass("table-success"); 
-                            
-                            $deviceItem.find(".deviceStatus").html('<i class="fa-solid fa-check"></i>');
-                            
-                                   
+                            self.updateDeviceStatus($deviceItem, "ok");     
                         }
                     )
-                }else{
-                    if(device.overview && device.overview.status){
-                        //$deviceItem.find(".deviceStatus").text(device.overview.status );
-                        $deviceItem.find(".deviceStatus").html('<i class="fa-solid fa-circle-exclamation"></i>');
-                    }
-                    $deviceItem.addClass("table-danger");
-                    //$deviceList.append(options.$element);
                 }
-
-                
-                
-                
-                
             }
-            //.https://billing.digitalexample.com/nms/api/v2.1/devices/2b44668c-11fb-4fac-ad3e-0a0ca9dd90fb/iplink/redirect
-            $deviceList.find(".deviceOpenLink").on("click",
-                function(evt){
-                    let $deviceItem = $(evt.currentTarget).parents(".deviceListItem");
-                    let deviceId = $deviceItem.attr("data-deviceId");
-                    let deviceIp = $deviceItem.find(".deviceOpenLink").text();
-                    let subnetPosition = deviceIp.indexOf("/");
-                    if(subnetPosition > 0 ){
-                        deviceIp = deviceIp.substring(0, subnetPosition);
-                    }
-                    let url = '/uisptools/api/nms/devices/' + deviceId +  '/iplink/redirect';
-                    $.uisptools.ajax(url, {method:"POST"}).then(
-                        function(result){
-                            //https://10.100.28.2/ticket.cgi?ticketid=a33e6abf434859a349e0699cb701e692
-                            let httpsPort = "";
-                            if(result.httpsPort !== 443){
-                                httpsPort = ":" + result.httpsPort
-                            }
-                            window.open("https://" + deviceIp + httpsPort + "/ticket.cgi?ticketid=" + result.token, "_blank");
-                        }
-                    )
-                }
-            )
-            
+           
+            $deviceList.find(".btnDeviceOpen").on("click",this.onDeviceOpenClick)
+            $deviceList.find(".btnDeviceRestart").on("click", this.onDeviceRestartClick)
+            $deviceList.find(".btnDeviceRefresh").on("click", this.onDeviceRefreshClick)
             
         }
 
@@ -429,7 +475,7 @@
                     function(results){
                         let devices = results[0];
                         self.bindDevices(devices);
-                        //let $element = $(self.element);
+                        
                         
                     }
                 )
@@ -463,16 +509,4 @@
     export {detectdfs}
     export default detectdfs
 
-    // $(function(){
-    //     //This is excuted after the document is ready 
-    //     //This is a double check to see if the script is loaded make suere it onLoadDeferred if resolved to Bind any elements on a page 
-    //     //This allows us to Debug in Chrome by adding the script in the header manualy instead of dynamicaly
-
-    //     //let widget = $.uisptools.widgetFactory.getWidget("uisptools.testing.testapicalls");
-    //     let widget = $.uisptools.widgetFactory.getWidget({widgetNamespace: "uisptools.testing.testapicalls", caller:"uisptools.testing.testapicalls.js"});
-    //     if(widget.widgetObject.onJSLoadCompleteDeferred.state() === "pending"){
-    //         widget.widgetObject.onJSLoadCompleteDeferred.resolve({widgetNamespace:"uisptools.testing.testapicalls", caller:"uisptools.testing.testapicalls.js" });
-    //     }
-
-        
-    // })
+   

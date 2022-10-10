@@ -15,6 +15,7 @@
                             <th scope="col">STATIONS</th>
                             <th scope="col">LINK</th>
                             <th scope="col">STATUS</th>
+                            <th scope="col">Action</th>
                           </tr>
                         </thead>
                         <tbody class="deviceList">
@@ -25,19 +26,35 @@
             </div>
         </div>
     </div>
-    <div class="templates" style="display:hidden">
+    <div class="templates" style="display:none">
         <div class="deviceListTemplate">
             <table>
                 <tr class="deviceListItem">
                     <td class="deviceName"></td>
-                    <td class="deviceIpAddress"></td>
+                    <td class="deviceIpAddressRow"><a class="btnDeviceOpen" href="javascript:void(0)"><span class="deviceIpAddress"><span></a></td>
                     <td class="deviceType"></td>
                     <td class="deviceModel"></td>
                     <td class="deviceLinkName"></td>
                     <td class="deviceFrequency"></td>
                     <td class="deviceStationCount"></td>
                     <td class="deviceLinkScore"></td>
-                    <td class="deviceStatus"></td>
+                    <td class="deviceStatus">
+                        <i class="fa-solid fa-check text-success deviceStatusOk" role="status" style="display:none"></i>
+                        <div class="spinner-border text-primary deviceStatusRefresh" role="status" style="display:none">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                        <i class="fa-solid fa-circle-exclamation text-warning deviceStatusWarning" role="status" style="display:none"></i>
+                        <i class="fa-solid fa-circle-exclamation text-danger deviceStatusError" role="status" style="display:none"></i>
+                        <i class="fa-solid fa-circle-exclamation text-danger deviceStatusOffline" role="status" style="display:none"></i>
+
+                    </td>
+                    <td class="deviceAction">
+                        <div class="btn-group" role="group" aria-label="Device Actions">
+                            <button type="button" class="btn btn-small btn-outline-success btnDeviceRefresh"> <i class="fa-solid fa-arrow-rotate-right"></i></button>
+                            <button type="button" class="btn btn-small btn-outline-danger btnDeviceRestart"><i class="fa-solid fa-power-off"></i></button>
+                            
+                        </div>
+                    </td>
                 </tr>
             </table>
         </div>

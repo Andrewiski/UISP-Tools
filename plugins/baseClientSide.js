@@ -1,4 +1,4 @@
-        var uisptools = {
+        var baseClientSide = {
         
         /** The widgetFactory class for the UISPTools framework
         @name widgetFactory
@@ -6,17 +6,17 @@
         */
         widgetFactory: class widgetFactory{
             /**
-             * @param {number} x The number to raise.
-             * @param {number} n The power, must be a natural number.
-             * @return {number} x raised to the n-th power.
+             * @param {string} namespace The namespace.
+             * @param {string} widgetFactoryJSPath The path to the widgetFactory javascript file.
+             * @return {widgetFactory} x the new widgetFactory.
              */
-            constructor(widgetNamespace, widgetFactoryJSPath) {
-                this.widgetNamespace = widgetNamespace;
+            constructor(namespace, widgetFactoryJSPath) {
+                this.namespace = namespace;
                 this.widgetFactoryJSPath = widgetFactoryJSPath;
             }
             init(){
                 //this is where if we needed to excute some one time code would go only called first time widgetFactory is created
-                $.logToConsole("INFO: widgetfactory " + this.widgetNamespace + " " + this.widgetFactoryJSPath + " init"); 
+                $.logToConsole("INFO: widgetfactory " + this.namespace + " " + this.widgetFactoryJSPath + " init"); 
                 return new Promise((resolve, reject) => {
                     resolve();
                 });
@@ -58,14 +58,17 @@
             }
             init(){
                 //this is called to start the widget in motion
-                $.logToConsole("INFO: widget " + this.widgetFactory.widgetNamespace + " " + this.widgetname + " init");  
+                $.logToConsole("INFO: widget " + this.widgetFactory.namespace + " " + this.widgetname + " init");  
                 return new Promise((resolve, reject) => {
                     resolve();
                 });                 
             }
             
         }
+
+        
+
     }
 
-    export {uisptools}
-    export default uisptools
+    export {baseClientSide}
+    export default baseClientSide

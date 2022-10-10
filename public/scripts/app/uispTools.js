@@ -60,10 +60,10 @@
             
             getWidgetFactoryInfo: function(options){
                 let widgetFactoryNamespace = "";
-                if(options.widgetNamespace.indexOf(".widgets.") === -1){
+                if(options.namespace.indexOf(".widgets.") === -1){
                     throw new Error("namespace must include .widgets. IE namespace.widgets.widgetname");
                 };
-                let namespaceKeys = options.widgetNamespace.split(".");
+                let namespaceKeys = options.namespace.split(".");
                 if (namespaceKeys.length < 2){
                     throw new Error("widget must include a namespace prefix followed by a period");
                 }
@@ -78,10 +78,11 @@
                         if (key === "widgets" ){
                             let widgetFactoryJSPath = widgetFactoryNamespace;
                             //remove any attempts to double dot move up folders
-                            widgetFactoryJSPath = widgetFactoryJSPath.replace(/\.\./g, "")
-                            widgetFactoryJSPath = widgetFactoryJSPath.replace(/\./g, "/")
+                            widgetFactoryJSPath = widgetFactoryJSPath.replace(/\.\./g, "");
+                            widgetFactoryJSPath = widgetFactoryJSPath.replace(/\./g, "/");
                             widgetFactoryJSPath = "/plugins/" + widgetFactoryJSPath +  "/widgetFactory.js";
                             //add a script tag to the dom so the script goes into memory
+                            widgetFactoryInfo[key].namespace = widgetFactoryNamespace;
                             widgetFactoryInfo[key].created = new Date();
                             widgetFactoryInfo[key].widgetFactoryJSPath = widgetFactoryJSPath;
                             widgetFactoryInfo[key].onJSLoadCompleteDeferred = $.Deferred();
@@ -102,14 +103,14 @@
                     }                    
                 }
 
-                return  widgetFactoryInfo; //{widgetFactoryInfo: widgetFactoryInfo, widgetNamespace:widgetNamespace, widgetFactory:widgetFactory, }
+                return  widgetFactoryInfo; 
             },
             
             loadWidget: function (element, options){
                 var deferred = $.Deferred();
                 try{
                     
-                    let widgetFactoryInfo = $.uisptools.widgetFactoryHelper.getWidgetFactoryInfo({widgetNamespace: options.widgetNamespace, caller:"loadWidget"});
+                    let widgetFactoryInfo = $.uisptools.widgetFactoryHelper.getWidgetFactoryInfo({namespace: options.namespace, caller:"loadWidget"});
                     
                     if(widgetFactoryInfo.widgetFactory == null){
                         import(widgetFactoryInfo.widgetFactoryJSPath).then(
@@ -117,34 +118,34 @@
                             function(Module) {
                                 if(Module["widgetFactory"]){
                                     //widgetFactoryInfo.widgetFactory = Module["widgetFactory"];
-                                    widgetFactoryInfo.widgetFactory = new Module["widgetFactory"](widgetFactoryInfo.widgetNamespace,widgetFactoryInfo.widgetFactoryJSPath)
+                                    widgetFactoryInfo.widgetFactory = new Module["widgetFactory"](widgetFactoryInfo.namespace,widgetFactoryInfo.widgetFactoryJSPath)
                                     if(widgetFactoryInfo.widgetFactory.init){
                                         widgetFactoryInfo.widgetFactory.init().then(
                                             function(){
-                                                widgetFactoryInfo.onJSLoadCompleteDeferred.resolve({widgetNamespace:options.widgetNamespace, caller:"loadWidget.import.Module"});
+                                                widgetFactoryInfo.onJSLoadCompleteDeferred.resolve({namespace:options.namespace, caller:"loadWidget.import.Module"});
                                             },function(err){
                                                 widgetFactoryInfo.onJSLoadCompleteDeferred.reject(err);
                                                 //deferred.reject(err);
                                             }
                                         );
                                     }else{
-                                        widgetFactoryInfo.onJSLoadCompleteDeferred.resolve({widgetNamespace:options.widgetNamespace, caller:"loadWidget.import.Module"})
+                                        widgetFactoryInfo.onJSLoadCompleteDeferred.resolve({namespace:options.namespace, caller:"loadWidget.import.Module"})
                                     }
                                     
                                 }else if(Module["default"]){
                                     //widgetFactoryInfo.widgetFactory = Module["default"];
-                                    widgetFactoryInfo.widgetFactory = new Module["widgetFactory"](widgetFactoryInfo.widgetNamespace, widgetFactoryInfo.widgetFactoryJSPath)
+                                    widgetFactoryInfo.widgetFactory = new Module["widgetFactory"](widgetFactoryInfo.namespace, widgetFactoryInfo.widgetFactoryJSPath)
                                     if(widgetFactoryInfo.widgetFactory.init){
                                         widgetFactoryInfo.widgetFactory.init().then(
                                             function(){
-                                                widgetFactoryInfo.onJSLoadCompleteDeferred.resolve({widgetNamespace:options.widgetNamespace, caller:"loadWidget.import.Module"})
+                                                widgetFactoryInfo.onJSLoadCompleteDeferred.resolve({namespace:options.namespace, caller:"loadWidget.import.Module"})
                                             },function(err){
                                                 widgetFactoryInfo.onJSLoadCompleteDeferred.reject(err);
                                                 //deferred.reject(err);
                                             }
                                         );
                                     }else{
-                                        widgetFactoryInfo.onJSLoadCompleteDeferred.resolve({widgetNamespace:options.widgetNamespace, caller:"loadWidget.import.Module"})
+                                        widgetFactoryInfo.onJSLoadCompleteDeferred.resolve({namespace:options.namespace, caller:"loadWidget.import.Module"})
                                     }
                                     
                                 }else{
@@ -164,7 +165,7 @@
 
                     widgetFactoryInfo.onJSLoadCompleteDeferred.then(
                         function(){
-                            let widgetname = options.widgetNamespace.substring(options.widgetNamespace.lastIndexOf(".widgets.") + 9);
+                            let widgetname = options.namespace.substring(options.namespace.lastIndexOf(".widgets.") + 9);
                             widgetFactoryInfo.widgetFactory.createWidget(widgetname,element, options).then(
                                 function(widget){
                                     widget.init().then(
@@ -345,7 +346,7 @@
                 
                 var $element = $("<div></div>")
                 $(".pageContent").empty().append($element);
-                $.uisptools.widgetFactoryHelper.loadWidget( $element[0], {widgetNamespace: page.content}).then(
+                $.uisptools.widgetFactoryHelper.loadWidget( $element[0], {namespace: page.content}).then(
                     function(templateContent){
                         
                     },

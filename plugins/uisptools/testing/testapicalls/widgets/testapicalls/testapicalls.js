@@ -1,5 +1,5 @@
 "use strict"
-    import uisptools from "/plugins/uisptools/uispTools.js";
+    import baseClientSide from "/plugins/baseClientSide.js";
     /*
     * uisptools  1.0
     * Copyright (c) 2022 Digital Example
@@ -14,7 +14,7 @@
 
     
 
-    class testapicalls extends uisptools.widget
+    class testapicalls extends baseClientSide.widget
      {
         
         self = null;    

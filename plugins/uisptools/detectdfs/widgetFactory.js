@@ -1,9 +1,9 @@
 "use strict"
 
-import uisptools from "/plugins/uisptools/uispTools.js";
+import baseClientSide from "/plugins/baseClientSide.js";
 import {detectdfs} from "./widgets/detectdfs/detectdfs.js"
 
-class widgetFactory extends uisptools.widgetFactory
+class widgetFactory extends baseClientSide.widgetFactory
     {
         init(){
             return new Promise((resolve, reject) => {

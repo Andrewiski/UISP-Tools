@@ -822,5 +822,6 @@ var handleHttpRequestError = function (req, res, error) {
     self.cleanLoginData = cleanLoginData;
     self.handleHttpRequestError = handleHttpRequestError
     self.getErrorObject = getErrorObject;
+    self.checkApiAccess = checkApiAccess;
 };
 module.exports = UispToolsApiRequestHandler;
