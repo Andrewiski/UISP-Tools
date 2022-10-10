@@ -7,7 +7,7 @@ services:
       - "49080:49080"
     volumes:
       - /usr/src/uisptools/config:/usr/src/uisptools/config
-      - /var/log:/usr/src/uisptools/logs
+      - /usr/src/uisptools/logs:/usr/src/uisptools/logs
     container_name: uisptools
     environment:
       ME_CONFIG_MONGODB_ADMINUSERNAME: "uisptools"
