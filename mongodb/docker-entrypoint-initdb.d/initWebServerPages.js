@@ -176,17 +176,17 @@ db.ut_PageContent.insert(
         "linkMenuDisplay" : false,
         "linkStatus" : 1,
         "linkTarget" : "_self",
-        "linkText" : "Tower Clients",
+        "linkText" : "AP Map",
         "linkUrl" : "/digitalexample/apmap",
         "pageContentGuid" : "cb5570e8-8f5d-3557-f146-f4a07423afcd",
-        "pageDescription" : "Tower Clients",
+        "pageDescription" : "AP Map",
         "pageKeywords" : "",
-        "pageName" : "Tower Clients",
-        "pageTitle" : "Tower Clients",
+        "pageName" : "AP Map",
+        "pageTitle" : "AP Map",
         "parentPageContentGuid" : null,
         "roleId" : "admin",
         "updatedBy" : "adevries",
-        "updatedDate" : "2015-01-01T00:00:00+00:00"
+        "updatedDate" : "2022-01-01T00:00:00+00:00"
     },
 
 
