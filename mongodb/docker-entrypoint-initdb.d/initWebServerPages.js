@@ -173,7 +173,7 @@ db.ut_PageContent.insert(
         "deleted" : false,
         "displayOrder" : 106,
         "extendedData" : null,
-        "linkMenuDisplay" : false,
+        "linkMenuDisplay" : true,
         "linkStatus" : 1,
         "linkTarget" : "_self",
         "linkText" : "AP Map",
