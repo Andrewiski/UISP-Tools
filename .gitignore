@@ -1,6 +1,7 @@
 config/*
 config/certificates
 config/localdebug/*
+config/localDebug/*
 config/localdebug/certificates
 log
 !config/placeholder.txt

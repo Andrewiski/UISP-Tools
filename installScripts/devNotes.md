@@ -27,7 +27,7 @@ Results
 sudo docker container inspect unms-nginx
 ```
 
-
+```
 /usr/bin/dumb-init
 
  "ResolvConfPath": "/var/lib/docker/containers/cd2c2d5fe0f9009134a81853049f7b07c8ff95f6925ea9f3dc0c35ec920a7f5d/resolv.conf",
@@ -41,4 +41,32 @@ sudo docker container inspect unms-nginx
 
         unms-ngix/usr/local/openresty/nginx/conf/conf.d
 
-    
+
+ "Mounts": [
+            {
+                "Type": "bind",
+                "Source": "/home/unms/data/cert",
+                "Destination": "/cert",
+                "Mode": "rw",
+                "RW": true,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/etc/certificates",
+                "Destination": "/usercert",
+                "Mode": "ro",
+                "RW": false,
+                "Propagation": "rprivate"
+            },
+            {
+                "Type": "bind",
+                "Source": "/home/unms/data/firmwares",
+                "Destination": "/www/firmwares",
+                "Mode": "rw",
+                "RW": true,
+                "Propagation": "rprivate"
+            }
+        ],
+
+```    

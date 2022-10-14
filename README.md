@@ -20,20 +20,33 @@ sudo mkdir -p /usr/src/uisptools
 sudo chown "$USER":"docker" /usr/src/uisptools
 mkdir -p /usr/src/uisptools/config
 sudo chown "$USER":"docker" /usr/src/uisptools/config
+mkdir -p /usr/src/uisptools/logs
+sudo chown "$USER":"docker" /usr/src/uisptools/logs
 mkdir -p /usr/src/uisptools/data/mongodb
 sudo chown "$USER":"docker" /usr/src/uisptools/data
 sudo chown "$USER":"docker" /usr/src/uisptools/data/mongodb
 
 mkdir ~/uisptools
+mkdir ~/uisptools/dockerCompose
+mkdir ~/uisptools/mongodb
+mkdir ~/uisptools/mongodb/docker-entrypoint-initdb.d
 
-wget -c https://raw.githubusercontent.com/Andrewiski/UISP-Tools/main/dockerCompose/docker-compose.yml -O ~/uisptools/docker-compose.yml
-docker-compose -f ~/uisptools/docker-compose.yml up --force-recreate -d
+#Link the exsiting certs in the server 
+sudo ln -s /home/unms/data/cert/live/billing.example.com/fullchain.pem /usr/src/uisptools/config/server.cert
+sudo ln -s /home/unms/data/cert/live/billing.example.com/privkey.pem /usr/src/uisptools/config/server.key
+
+wget -c https://raw.githubusercontent.com/Andrewiski/UISP-Tools/main/mongodb/docker-entrypoint-initdb.d/createDatabase.js -O ~/uisptools/mongodb/docker-entrypoint-initdb.d/createDatabase.js
+
+wget -c https://raw.githubusercontent.com/Andrewiski/UISP-Tools/main/mongodb/docker-entrypoint-initdb.d/initWebServerPages.js -O ~/uisptools/mongodb/docker-entrypoint-initdb.d/initWebServerPages.js
+
+wget -c https://raw.githubusercontent.com/Andrewiski/UISP-Tools/main/dockerCompose/docker-compose.yml -O ~/uisptools/dockerCompose/docker-compose.yml
+sudo docker-compose -f ~/uisptools/dockerCompose/docker-compose.yml up --force-recreate -d
 
 ```
 
 
 
-docker pull docker.pkg.github.com/jon-gr/webstream/appliance_sqm_sip:latest
+sudo docker pull docker.pkg.github.com/jon-gr/webstream/appliance_sqm_sip:latest
 
 
 

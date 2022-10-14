@@ -1,5 +1,5 @@
 "use strict";
-const appName = 'ucrmApiRequestHandler';
+const appName = 'uispApiRequestHandler';
 const extend = require('extend');
 const Defer = require('node-promise').defer;
 const http = require('http');

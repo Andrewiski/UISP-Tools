@@ -448,18 +448,21 @@
             let $deviceItemTemplate = $element.find(".templates").find(".deviceListTemplate").find(".deviceListItem");
             for(var i = 0; i < devices.length; i++){
            
+                
                 let device = devices[i];
-                let $deviceItem = $deviceItemTemplate.clone();
-                self.updateDeviceItem({device:device, $deviceItem: $deviceItem});
-                $deviceList.append($deviceItem);
-                if(device.overview && device.overview.status === "active"){
-                    self.fetchDeviceConfigurationUpdateDisplay({device:device, $deviceItem:$deviceItem}).then(
-                        function(options){
-                            
-                            //$deviceItem.addClass("table-success"); 
-                            self.updateDeviceStatus($deviceItem, "ok");     
-                        }
-                    )
+                if(device.identification.type !== "airCube"){
+                    let $deviceItem = $deviceItemTemplate.clone();
+                    self.updateDeviceItem({device:device, $deviceItem: $deviceItem});
+                    $deviceList.append($deviceItem);
+                    if(device.overview && device.overview.status === "active"){
+                        self.fetchDeviceConfigurationUpdateDisplay({device:device, $deviceItem:$deviceItem}).then(
+                            function(options){
+                                
+                                //$deviceItem.addClass("table-success"); 
+                                self.updateDeviceStatus($deviceItem, "ok");     
+                            }
+                        )
+                    }
                 }
             }
            
