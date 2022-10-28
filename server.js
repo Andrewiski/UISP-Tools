@@ -409,6 +409,7 @@ app.use('/javascript/bootstrap-notify', express.static(path.join(__dirname, 'nod
 app.use('/javascript/animate-css', express.static(path.join(__dirname, 'node_modules', 'animate.css')));
 app.use('/javascript/jsoneditor', express.static(path.join(__dirname, 'node_modules', 'jsoneditor', 'dist')));
 app.use('/javascript/js-cookie', express.static(path.join(__dirname, 'node_modules', 'js-cookie', 'dist')));
+app.use('/javascript/googlemaps', express.static(path.join(__dirname, 'node_modules', '@googlemaps', 'js-api-loader', 'dist')));
 if(fs.existsSync(path.join(__dirname,configFolder, '/public/images', 'favicon.ico' ))){
     app.use(favicon(path.join(__dirname,configFolder, '/public/images', 'favicon.ico' )));
 }

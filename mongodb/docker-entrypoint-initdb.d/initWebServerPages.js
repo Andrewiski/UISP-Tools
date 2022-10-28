@@ -164,6 +164,30 @@ db.ut_PageContent.insert(
         "updatedBy" : "adevries",
         "updatedDate" : "2015-01-01T00:00:00+00:00"
     },
+
+    {
+        "content" : "wilcowireless.widgets.freqmapper",
+        "contentType": "plugin.widget",
+        "createdBy" : "adevries",
+        "createdDate" : "2015-01-01T00:00:00+00:00",
+        "deleted" : false,
+        "displayOrder" : 106,
+        "extendedData" : null,
+        "linkMenuDisplay" : true,
+        "linkStatus" : 1,
+        "linkTarget" : "_self",
+        "linkText" : "Frequency Mapper",
+        "linkUrl" : "/wilcowireless/freqmapper",
+        "pageContentGuid" : "ad5575c8-8f5a-4557-f145-f5c07423afcd",
+        "pageDescription" : "Frequency Mapper",
+        "pageKeywords" : "",
+        "pageName" : "Freq Map",
+        "pageTitle" : "Freq Map",
+        "parentPageContentGuid" : null,
+        "roleId" : "admin",
+        "updatedBy" : "adevries",
+        "updatedDate" : "2015-01-01T00:00:00+00:00"
+    },
  
     {
         "content" : "digitalexample.widgets.apmap",

@@ -18,6 +18,7 @@ var wilcowireless = {
                     )
                     this.debug("trace", "wilcowireless widget factory " + this.name + " init");
                 });
+                
             }
 
             bindRoutes(router){

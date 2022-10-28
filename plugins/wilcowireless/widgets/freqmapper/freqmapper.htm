@@ -1,0 +1,45 @@
+<div>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-12" style="height:800px">
+                <div id="map" style="flex-basis: 0;flex-grow: 4;height: 100%;"></div>       
+            </div>
+        </div>
+        <div class="row">
+            <div>
+                <div class="col-md-12">
+                    <table class="table table-striped">
+                        <thead>
+                          <tr>
+                            <th scope="col">NAME</th>
+                            <th scope="col">START DATE</th>
+                            <th scope="col">STATUS</th>
+                          </tr>
+                        </thead>
+                        <tbody class="clientList">
+                          
+                        </tbody>
+                      </table>       
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="templates" style="display:hidden">
+        <div class="clientListTemplate">
+            <table>
+                <tr class="clientListItem">
+                    <td class="clientName"></td>
+                    <td class="clientActiveFrom"></td>
+                    
+                    <td class="clientStatus">
+                        <i class="fa-solid fa-check text-success clientStatusOk" role="status" style="display:none"></i>
+                        <i class="fa-solid fa-circle-exclamation text-warning clientStatusWarning" role="status" style="display:none"></i>
+                        <i class="fa-solid fa-circle-exclamation text-danger clientStatusError" role="status" style="display:none"></i>
+                        <i class="fa-solid fa-circle-exclamation text-danger clientStatusOffline" role="status" style="display:none"></i>
+
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
