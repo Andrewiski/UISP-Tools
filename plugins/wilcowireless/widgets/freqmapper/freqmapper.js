@@ -38,122 +38,153 @@
                     );
                 }catch(ex){
                     $.logToConsole("ERROR wilcowireless.loadWidget: " + ex.toString());
-                    var objError = $.uisptools.createErrorFromScriptException(ex, "Server error during wilcowireless.loadWidget.");
-                    reject(objError);
+                    reject(ex);
                 }
             });
         }
 
-        fetchSiteClients(siteId){
-            return $.uisptools.ajax("/uisptools/api/nms/sites/" + siteId + "/clients");
-        }
-        
-        fetchSiteDetails(siteId){
-            return $.uisptools.ajax("/uisptools/api/nms/sites/" + siteId);
+        fetchApDevices(){
+            return $.uisptools.ajax("/uisptools/api/nms/devices?role=ap");
         }
 
-        fetchSiteClientsWithDetails(siteId){
-            return new Promise((resolve, reject) => {
-                try{
-                    
-                    var clientDetailPromise = [];
-                    self.fetchSiteClients(siteId).then(
-                        function(clientIds){
-                            for(var i = 0; i < clientIds.length; i++){
-                                let clientId = clientIds[i];
-                                clientDetailPromise.push(self.fetchSiteDetails(clientId))
-                            }
-                            Promise.all(clientDetailPromise).then(
-                                function(clients){
-                                    resolve(clients)
-                                },
-                                function(err){
-                                    var objError = $.uisptools.createErrorFromScriptException(ex, "Server error during wilcowireless.towerclients.fetchSiteClientsWithDetailes.");
-                                    reject(objError);        
-                                }
-                            )
-                        },
-                        function(err){
-                            var objError = $.uisptools.createErrorFromScriptException(ex, "Server error during wilcowireless.towerclients.fetchSiteClientsWithDetailes.");
-                            reject(objError);        
-                        }
-                    )
-                }catch(ex){
-                    $.logToConsole("ERROR wilcowireless.towerclients.fetchSiteClientsWithDetailes: " + ex.toString());
-                    var objError = $.uisptools.createErrorFromScriptException(ex, "Server error during wilcowireless.loadWidget.");
-                    reject(objError);
+        wifi5GhzChannelToFrequency(channel){
+            return 5000 + (channel * 5)
+        }
+
+        updateDeviceItem(options){
+            let device = options.device;
+            let $deviceItem = options.$deviceItem;
+            $deviceItem.attr("data-deviceId", device.identification.id);
+            $deviceItem.find(".deviceName").text(device.identification.name);
+            $deviceItem.find(".deviceModel").text(device.identification.model);
+            $deviceItem.find(".deviceIpAddress").text(device.ipAddress);
+            $deviceItem.find(".deviceType").text(device.identification.type);
+            if(device.attributes.ssid){
+                $deviceItem.find(".deviceLinkName").text(device.attributes.ssid);
+            }else{
+                $deviceItem.find(".deviceLinkName").text("");
+            }
+
+            if(device.overview && device.overview.frequency){
+                $deviceItem.find(".deviceFrequency").text(device.overview.frequency );
+            }else{
+                $deviceItem.find(".deviceFrequency").text("");
+            }
+        
+
+            if(device.overview && device.overview.linkScore && device.overview.linkScore.linkScore){
+                $deviceItem.find(".deviceLinkScore").text((device.overview.linkScore.linkScore * 100).toFixed(1).toString() + "%" );
+            }else{
+                $deviceItem.find(".deviceLinkScore").text("");
+            }
+
+            if(device.overview && device.overview.stationsCount){
+                $deviceItem.find(".deviceStationCount").text(device.overview.stationsCount);
+            }else{
+                $deviceItem.find(".deviceStationCount").text("");
+            }
+            
+            
+
+
+            //Look for data in the DeviceConfig
+            if (device.deviceConfig){  
+
+                
+                let currentFrequency = null;
+                let configFrequency = null;
+                if(device.overview && device.overview.frequency){
+                    currentFrequency = device.overview.frequency
                 }
-            })
-        }
-
-        updateClientStatus($clientItem, status){
-
-            if(status === "ok" || status === "active"){
-                $clientItem.find(".clientStatus .clientStatusOk").show();
-            }else{
-                $clientItem.find(".clientStatus .clientStatusOk").hide();
-            }
-            if(status === "refresh"){
-                $clientItem.find(".clientStatus .clientStatusRefresh").show();
-            }else{
-                $clientItem.find(".clientStatus .clientStatusRefresh").hide();
-            }
-
-            if(status === "warning"){
-                $clientItem.find(".clientStatus .clientStatusWarning").show();
-            }else{
-                $clientItem.find(".clientStatus .clientStatusWarning").hide();
-            }
-            if(status === "error" || status==="offline"){
-                $clientItem.find(".clientStatus .clientStatusError").show();
-            }else{
-                $clientItem.find(".clientStatus .clientStatusError").hide();
-            }   
-        }
-        
-        sortClientByActiveFrom(a,b){
-            let aDate = new Date(a.ucrm.service.activeFrom);
-            let bDate =new Date(b.ucrm.service.activeFrom)
-            if (aDate < bDate) {
-                return -1;
-              }
-              if (aDate > bDate) {
-                return 1;
-              }
-              // a must be equal to b
-              return 0;
-        }
-
-        bindClients(clients){
-            clients.sort(self.sortClientByActiveFrom);
-            let $element = $(self.element);
-            let $clientList = $element.find(".clientList").empty();
-            let $clientItemTemplate = $element.find(".templates").find(".clientListTemplate").find(".clientListItem");
-            for(var i = 0; i < clients.length; i++){
-                let client = clients[i];
-                let $clientItem = $clientItemTemplate.clone();
-                $clientList.append($clientItem);
-                //self.fetchSiteDetails(clientId).then(
-                //    function(client){
-                        //$deviceItem.addClass("table-success"); 
-                        $clientItem.attr("data-clientId", client.id);
-                        $clientItem.find(".clientName").text(client.identification.name);
-                        $clientItem.find(".clientActiveFrom").text(moment(client.ucrm.service.activeFrom).format("MM/DD/YYYY"));
-                        if(client.identification && client.identification.status === "active"){
-                            self.updateClientStatus($clientItem, "ok");
-                            $clientItem.removeClass("table-danger");
-                        }else{
-                            if(client.identification && client.identification.status){
-                                self.updateClientStatus($clientItem, "offline");
-                            }
-                            $clientItem.addClass("table-danger");
+                switch(device.identification.type){
+                    case "airMax":
+                        if(device.deviceConfig.airmax && device.deviceConfig.airmax.airmax && device.deviceConfig.airmax.airmax.frequency){
+                            currentFrequency = device.deviceConfig.airmax.airmax.frequency;
                         }
-                  //  },
-                    //function(err){
-                    //    $clientItem.addClass("table-danger");
-                   // }
-                //)    
-            }   
+                        if(device.deviceConfig.airmaxConfigWireless && device.deviceConfig.airmaxConfigWireless.controlFrequency ){
+                            configFrequency = device.deviceConfig.airmaxConfigWireless.controlFrequency;
+                        }
+                    case "airCube":
+                        if(device.deviceConfig.aircube
+                            && device.deviceConfig.aircube.aircube 
+                            && device.deviceConfig.aircube.aircube.wifi5Ghz
+                            && device.deviceConfig.aircube.aircube.wifi5Ghz.channel){
+                                currentFrequency = this.wifi5GhzChannelToFrequency(device.deviceConfig.aircube.aircube.wifi5Ghz.channel);
+                        }
+                        if(device.deviceConfig.aircubeConfigWireless 
+                            && device.deviceConfig.aircubeConfigWireless.wifi5Ghz 
+                            && device.deviceConfig.aircubeConfigWireless.wifi5Ghz.channel){
+                                configFrequency = this.wifi5GhzChannelToFrequency(device.deviceConfig.aircubeConfigWireless.wifi5Ghz.channel);
+                        }
+                }
+                
+                let displayFrequency = "";
+                if(currentFrequency){
+                    displayFrequency = displayFrequency + currentFrequency;
+                }
+                if(configFrequency ){
+                    displayFrequency = displayFrequency + " (" + configFrequency + ")" ;
+                }
+                
+                $deviceItem.find(".deviceFrequency").text(displayFrequency );
+                
+                //DFS Channel Change Detected
+                if(currentFrequency && configFrequency                     
+                    && currentFrequency != configFrequency){
+                        $deviceItem.find(".deviceFrequency").addClass('table-warning');
+                }else{
+                    $deviceItem.find(".deviceFrequency").removeClass('table-warning');
+                }
+            }
+
+        }
+
+
+        bindDevices(devices){
+            let map = this.map;
+            let $element = $(self.element);
+            let $deviceList = $element.find(".deviceList").empty();
+            let $deviceItemTemplate = $element.find(".templates").find(".deviceMapTemplate").find(".deviceMapItem");
+            const aircubeImage = "/images/devices/aircube.png";
+            const gpsLightImage = "/images/devices/gpslite.png";
+                
+            for(var i = 0; i < devices.length; i++){
+           
+                
+                let device = devices[i];
+                
+                
+                if(device.identification.type !== "airCube"){
+                    
+                    if(device.overview && device.overview.status === "active"){
+                        const deviceMarker = new google.maps.Marker({
+                            position: { lat: device.location.latitude, lng: device.location.longitude },
+                            map,
+                            icon: gpsLightImage,
+                            title: device.identification.displayName
+                        });
+                        let $deviceItem = $deviceItemTemplate.clone();
+                        this.updateDeviceItem({device:device, $deviceItem: $deviceItem});
+                        $deviceList.append($deviceItem);
+                        const infowindow = new google.maps.InfoWindow({
+                            content: $deviceItem[0],
+                            ariaLabel: device.identification.displayName,
+                          });
+                        deviceMarker.addListener("click", () => {
+                            infowindow.open({
+                              anchor: deviceMarker,
+                              map,
+                            });
+                          });
+                    }
+
+                }
+            }
+           
+            // $deviceList.find(".btnDeviceOpen").on("click",this.onDeviceOpenClick)
+            // $deviceList.find(".btnDeviceRestart").on("click", this.onDeviceRestartClick)
+            // $deviceList.find(".btnDeviceRefresh").on("click", this.onDeviceRefreshClick)
+            
         }
 
         bind(){
@@ -176,11 +207,10 @@
                   };
                   this.waypoints = [];
                 this.map = new google.maps.Map(document.getElementById("map"), mapOptions);
-                const siteId = parsedUrl.searchParams.get("siteid");
-                Promise.all([self.fetchSiteClientsWithDetails(siteId)]).then(
+                Promise.all([self.fetchApDevices()]).then(
                     function(results){
-                        let clients = results[0];
-                        self.bindClients(clients);
+                        let devices = results[0];
+                        self.bindDevices(devices);
                         //let $element = $(self.element);
                         
                     }
@@ -204,7 +234,7 @@
                           // new google.maps.Map(document.getElementById("map"), mapOptions);
                         }
                       });
-                    Promise.all([loader.load(),this.loadTemplate()]).then(
+                    Promise.all([googleLoader.load(),this.loadTemplate()]).then(
                         function(){
                             self.bind().then(
                                 function(){

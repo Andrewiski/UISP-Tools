@@ -216,7 +216,7 @@
                         //After Initialization we want to auto login the user if possible
                         $.uisptools.autoLogin(),
                         
-                        //$.uisptools.getSystemSettings(),
+                        $.uisptools.getSystemSettings(),
                         //is the GoogleLoginAPi Loaded if so lets init it
                         //$.uisptools.initExternalProviders()
 
@@ -275,7 +275,7 @@
             var deferred = $.Deferred();
             $.uisptools.ajax({
                 method: 'GET',
-                url: 'uisptools/api/Settings/AnonymousClientSideSettings'
+                url: '/uisptools/api/settings/anonymousClientSideSettings'
             }).then(
                 function (results) {
                     $.uisptools.common.settings.system = results;

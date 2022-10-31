@@ -62,7 +62,7 @@ var UispToolsApiRequestHandler = function (options) {
             //routes.get('/uisptools/login/userInfo', getUserInfo);
             routes.get('/uisptools/errorHandlerTest', errorHandlerTest);
             routes.get('/uisptools/errorHandlerTestRawError', errorHandlerTestRawError);
-            
+            routes.get('/uisptools/api/settings/anonymousClientSideSettings', getAnonymousClientSideSettings);
             //Any Routes above this line are not Checked for Auth and are Public
             routes.get('/uisptools/api/*', checkApiAccess);
             routes.post('/uisptools/api/*', checkApiAccess);
@@ -77,6 +77,24 @@ var UispToolsApiRequestHandler = function (options) {
            debug("error", ex.msg, ex.stack);
         }
         
+    }
+
+
+    var getAnonymousClientSideSettings = function(req, res, next){
+        try {
+            
+            var clientSideSettings = {
+                googleApiKey: self.objOptions.googleApiKey
+            }
+            
+            
+            res.json(clientSideSettings);
+            
+            
+        } catch (ex) {
+            debug("error", "getUserInfo", { "msg": ex.message, "stack": ex.stack });
+            res.status(500).json({ "msg": "An Error Occured!", "error": ex });
+        }
     }
 
     var errorHandlerTestRawError = function(req, res){

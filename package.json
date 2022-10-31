@@ -23,6 +23,7 @@
     "@andrewiski/logutilhelper": "^1.0.21",
     "@andrewiski/openssl": "^1.0.2",
     "@fortawesome/fontawesome-free": "^6.2.0",
+    "@googlemaps/js-api-loader": "^1.14.3",
     "@popperjs/core": "^2.10.1",
     "adm-zip": "^0.5.6",
     "animate.css": "^4.1.1",

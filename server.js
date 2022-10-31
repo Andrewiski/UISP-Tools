@@ -172,7 +172,8 @@ var uispToolsApiRequestHandler = new UispToolsApiRequestHandler({
     mongoDbServerUrl: objOptions.mongoDbServerUrl,
     mongoDbDatabaseName: objOptions.mongoDbDatabaseName,
     logUtilHelper:logUtilHelper,
-    uispApiRequestHandler:uispApiRequestHandler
+    uispApiRequestHandler:uispApiRequestHandler,
+    googleApiKey: objOptions.googleApiKey
 });
 
 
