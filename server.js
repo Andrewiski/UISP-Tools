@@ -50,7 +50,7 @@ var defaultConfig = {
     "adminRoute": "/admin",
     "logLevel": "info",
     "useHttp": true,
-    "useHttps": false,
+    "useHttps": true,
     "httpport": 49080,
     "httpsport": 49443,
     "adminUsername": "admin",
@@ -58,7 +58,7 @@ var defaultConfig = {
     "httpsServerKey": "/home/unms/data/cert/live.key",
     "httpsServerCert": "/home/unms/data/cert/live.crt",
     "unmsUrl": "http://unms:8081/nms/api/v2.1/",
-    "ucrmUrl": "http://uisp.example.com/crm/api/v1.0/",
+    "ucrmUrl": "http://ucrm:80/crm/api/v1.0/",
     "ucrmAppKey": "CreateAppKeyFromUISPWebSite",
     "opensslPath": "",
     "maxLogLength": 500,
@@ -114,8 +114,6 @@ if(objOptions.httpsServerCert.startsWith("/") === true){
     httpsServerCert = path.join(__dirname, configFolder, objOptions.httpsServerCert);
 }
 
-
-; path.join(__dirname, configFolder, objOptions.httpsServerKey)
 var letsEncryptCertificateFolder = path.join(certificatesFolder, 'letsEncrypt');
 if(fs.existsSync(letsEncryptCertificateFolder) === false){
     fs.mkdirSync(letsEncryptCertificateFolder,{recursive:true});
@@ -749,7 +747,7 @@ routes.get('/*', function (req, res) {
 
 var loadCertificates = function () {
     try {
-        letsEncrypt.loadX509CertSync({ certFile: path.join(__dirname, configFolder, objOptions.httpsServerCert), keyFile: path.join(__dirname, configFolder, objOptions.httpsServerKey) }).then(
+        letsEncrypt.loadX509CertSync({ certFile: httpsServerCert, keyFile: objOptions.httpsServerKey }).then(
             function (Certs) {
                 try {
                     //clean up the binary data we don't need 
@@ -799,9 +797,9 @@ var getHttpsServerOptions = function () {
 
     var httpsOptions = {};
 
-    if (fs.existsSync(path.join(__dirname, configFolder, objOptions.httpsServerKey)) === true && fs.existsSync(path.join(__dirname, configFolder, objOptions.httpsServerCert)) === true) {
-        httpsOptions.key = fs.readFileSync(path.join(__dirname, configFolder, objOptions.httpsServerKey));
-        httpsOptions.cert = fs.readFileSync(path.join(__dirname, configFolder, objOptions.httpsServerCert));
+    if (fs.existsSync(httpsServerKey) === true && fs.existsSync(httpsServerCert) === true) {
+        httpsOptions.key = fs.readFileSync(httpsServerKey);
+        httpsOptions.cert = fs.readFileSync(httpsServerCert);
     } else {
         logUtilHelper.log(appLogName, "app", "warning", "httpsServer certificate files missing unable to use https");
     }
