@@ -9,6 +9,36 @@ hostname -I | cut -f 1 -d ' '
 ```
 
 
+```
+docker-compose -p "unms" -f "docker-compose.yml" down
+docker stop unms
+docker stop ucrm
+docker stop unms-netflow
+docker stop unms-rabbitmq
+docker stop unms-siridb
+docker stop unms-nginx
+docker stop unms-postgres
+docker stop unms-fluentd
+docker stop uisptools_mongodb
+docker stop uisptools
+
+docker rm unms
+docker rm ucrm
+docker rm unms-netflow
+docker rm unms-rabbitmq
+docker rm unms-siridb
+docker rm unms-nginx
+docker rm unms-postgres
+docker rm unms-fluentd
+docker rm uisptools_mongodb
+docker rm uisptools
+
+docker network prune
+#docker network rm app_internal
+#docker network rm app_public
+
+docker-compose up -d
+```
 
 
 UISP is using ngix running in docker to use same url for CRM and UISP 
@@ -37,7 +67,7 @@ sudo docker container inspect unms-nginx
         /usr/local/openresty
 
         /home/unms/app/docker-compose.yml
-        docker container export -o /home/adevries/unms-nginx unms-nginx.tar
+        sudo docker container export -o /home/adevries/unms-nginx unms-nginx.tar
 
         unms-ngix/usr/local/openresty/nginx/conf/conf.d
 
