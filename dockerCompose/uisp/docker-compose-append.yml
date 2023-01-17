@@ -1,0 +1,35 @@
+  uisptools:
+    image: "andrewiski/uisptools:0.0.6"
+    user: "1001"
+    ports:
+      - "49443:49443"
+      - "49080:49080"
+    volumes:
+      - /home/unms/data/uisptools/config:/usr/src/uisptools/config
+      - /home/unms/data/uisptools/logs:/usr/src/uisptools/logs
+    container_name: uisptools
+    environment:
+      - UNMS_USER_ID=1001
+    depends_on:
+      - uisptools_mongo
+    networks:
+      - internal
+      - public
+    restart: always
+  uisptools_mongo:
+    image: mongo
+    user: "1001"
+    container_name: uisptools_mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "uisptools"
+      MONGO_INITDB_ROOT_PASSWORD: "U!spT00ls!"
+      MONGO_INITDB_DATABASE: "uisptools"
+    volumes:
+      - /home/unms/data/uisptools/mongodb/data:/data/db
+      - /home/unms/data/uisptools/mongodb/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "27017:27017"  
+    restart: always
+    networks:
+      - internal
+      - public 

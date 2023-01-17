@@ -55,10 +55,10 @@ var defaultConfig = {
     "httpsport": 49443,
     "adminUsername": "admin",
     "adminPasswordHash": "01b7783d35cfcbbc957461516f337075",  //  UISPToolsPassword
-    "httpsServerKey": "server.key",
-    "httpsServerCert": "server.cert",
-    "unmsUrl": "https://uisp.example.com/nms/api/v2.1/",
-    "ucrmUrl": "https://uisp.example.com/crm/api/v1.0/",
+    "httpsServerKey": "/home/unms/data/cert/live.key",
+    "httpsServerCert": "/home/unms/data/cert/live.crt",
+    "unmsUrl": "http://unms:8081/nms/api/v2.1/",
+    "ucrmUrl": "http://uisp.example.com/crm/api/v1.0/",
     "ucrmAppKey": "CreateAppKeyFromUISPWebSite",
     "opensslPath": "",
     "maxLogLength": 500,
@@ -69,7 +69,12 @@ var defaultConfig = {
         },
         "ucrmApiRequestHandler":{"app":"info"},
         "deApiRequestHandler":{"app":"info"}
-    }
+    },
+    "plugins":[
+        "uisptools.testing",
+        "uisptools.dfsdetect",
+        "wilcowireless"
+      ]
 };
 
 // let envDebug = process.env.DEBUG ;
@@ -95,6 +100,22 @@ var configFolder = objOptions.configDirectory;
 var certificatesFolder = path.join(objOptions.configDirectory, 'certificates');
 var caFolder = path.join(certificatesFolder, 'ca');
 
+var httpsServerKey = null
+var httpsServerCert = null; 
+if(objOptions.httpsServerKey.startsWith("/") === true){
+    httpsServerKey = objOptions.httpsServerKey
+}else{
+    httpsServerKey = path.join(__dirname, configFolder, objOptions.httpsServerKey);
+}
+
+if(objOptions.httpsServerCert.startsWith("/") === true){
+    httpsServerCert = objOptions.httpsServerCert
+}else{
+    httpsServerCert = path.join(__dirname, configFolder, objOptions.httpsServerCert);
+}
+
+
+; path.join(__dirname, configFolder, objOptions.httpsServerKey)
 var letsEncryptCertificateFolder = path.join(certificatesFolder, 'letsEncrypt');
 if(fs.existsSync(letsEncryptCertificateFolder) === false){
     fs.mkdirSync(letsEncryptCertificateFolder,{recursive:true});

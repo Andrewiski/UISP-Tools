@@ -51,6 +51,19 @@
             return 5000 + (channel * 5)
         }
 
+        sortDeviceByFrequency(a,b){
+            let aFreq = a.overview.frequency;
+            let bFreq = b.overview.frequency
+            if (aFreq < bFreq) {
+                return -1;
+              }
+              if (aFreq > bFreq) {
+                return 1;
+              }
+              // a must be equal to b
+              return 0;
+        }
+
         updateDeviceItem(options){
             let device = options.device;
             let $deviceItem = options.$deviceItem;
@@ -144,10 +157,13 @@
             let map = this.map;
             let $element = $(self.element);
             let $deviceList = $element.find(".deviceList").empty();
-            let $deviceItemTemplate = $element.find(".templates").find(".deviceMapTemplate").find(".deviceMapItem");
+            let $deviceMapList = $element.find(".deviceMapList").empty();
+            let $deviceItemTemplate = $element.find(".templates").find(".deviceTemplate").find(".deviceItem");
+            let $deviceMapItemTemplate = $element.find(".templates").find(".deviceMapTemplate").find(".deviceMapItem");
             const aircubeImage = "/images/devices/aircube.png";
             const gpsLightImage = "/images/devices/gpslite.png";
-                
+            
+            let latlngbounds = new google.maps.LatLngBounds();
             for(var i = 0; i < devices.length; i++){
            
                 
@@ -157,17 +173,22 @@
                 if(device.identification.type !== "airCube"){
                     
                     if(device.overview && device.overview.status === "active"){
+                        
                         const deviceMarker = new google.maps.Marker({
                             position: { lat: device.location.latitude, lng: device.location.longitude },
                             map,
                             icon: gpsLightImage,
-                            title: device.identification.displayName
+                            title: device.identification.displayName + " " + device.overview.frequency
                         });
+                        latlngbounds.extend(new google.maps.LatLng(device.location.latitude, device.location.longitude))
                         let $deviceItem = $deviceItemTemplate.clone();
+                        let $deviceMapItem = $deviceMapItemTemplate.clone();
                         this.updateDeviceItem({device:device, $deviceItem: $deviceItem});
+                        this.updateDeviceItem({device:device, $deviceItem: $deviceMapItem});
                         $deviceList.append($deviceItem);
+                        $deviceMapList.append($deviceMapItem);
                         const infowindow = new google.maps.InfoWindow({
-                            content: $deviceItem[0],
+                            content: $deviceMapItem[0],
                             ariaLabel: device.identification.displayName,
                           });
                         deviceMarker.addListener("click", () => {
@@ -180,6 +201,7 @@
 
                 }
             }
+            this.map.fitBounds(latlngbounds);
            
             // $deviceList.find(".btnDeviceOpen").on("click",this.onDeviceOpenClick)
             // $deviceList.find(".btnDeviceRestart").on("click", this.onDeviceRestartClick)
@@ -208,8 +230,9 @@
                   this.waypoints = [];
                 this.map = new google.maps.Map(document.getElementById("map"), mapOptions);
                 Promise.all([self.fetchApDevices()]).then(
-                    function(results){
+                    (results) => {
                         let devices = results[0];
+                        devices.sort(this.sortDeviceByFrequency);
                         self.bindDevices(devices);
                         //let $element = $(self.element);
                         

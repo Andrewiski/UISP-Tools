@@ -16,4 +16,8 @@ db.createCollection( "ut_PageContent")
 
 db.ut_PageContent.createIndex( { "pageContentGuid": 1 } )
 
+db.createCollection("ut_DeviceDetails")
+
+
+
 
