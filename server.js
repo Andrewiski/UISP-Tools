@@ -801,7 +801,7 @@ var getHttpsServerOptions = function () {
         httpsOptions.key = fs.readFileSync(httpsServerKey);
         httpsOptions.cert = fs.readFileSync(httpsServerCert);
     } else {
-        logUtilHelper.log(appLogName, "app", "warning", "httpsServer certificate files missing unable to use https");
+        logUtilHelper.log(appLogName, "app", "warning", "httpsServer certificate files missing unable to use https", httpsServerCert, httpsServerKey);
     }
 
     return httpsOptions;
