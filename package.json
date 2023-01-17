@@ -1,6 +1,6 @@
 {
   "name": "uisp-tools",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Tools for UISP",
   "main": "server.js",
   "license": "GPL-3.0-or-later",
@@ -20,7 +20,7 @@
   "dependencies": {
     "@andrewiski/confighandler": "^1.0.1",
     "@andrewiski/letsencrypt": "^1.0.1",
-    "@andrewiski/logutilhelper": "^1.0.21",
+    "@andrewiski/logutilhelper": "^1.0.22",
     "@andrewiski/openssl": "^1.0.2",
     "@fortawesome/fontawesome-free": "^6.2.0",
     "@googlemaps/js-api-loader": "^1.14.3",
