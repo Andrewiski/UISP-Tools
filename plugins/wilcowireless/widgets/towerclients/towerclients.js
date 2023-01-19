@@ -1,5 +1,5 @@
     "use strict"
-    import baseClientSide from "/plugins/baseClientSide.js";
+    import baseClientSide from "/uisptools/plugins/baseClientSide.js";
     /*
     * uisptools  1.0
     * Copyright (c) 2022 Wilco Wireless
@@ -112,8 +112,20 @@
         }
         
         sortClientByActiveFrom(a,b){
-            let aDate = new Date(a.ucrm.service.activeFrom);
-            let bDate =new Date(b.ucrm.service.activeFrom)
+            let aDate;
+            if(a && a.ucrm && a.ucrm.service && a.ucrm.service.activeFrom){
+                aDate = new Date(a.ucrm.service.activeFrom);
+            }else{
+                return -1;
+            }
+            
+            let bDate;
+            if(b && b.ucrm && b.ucrm.service && b.ucrm.service.activeFrom){
+                bDate = new Date(b.ucrm.service.activeFrom);
+            }else{
+                return 1;
+            }
+
             if (aDate < bDate) {
                 return -1;
               }
@@ -138,7 +150,12 @@
                         //$deviceItem.addClass("table-success"); 
                         $clientItem.attr("data-clientId", client.id);
                         $clientItem.find(".clientName").text(client.identification.name);
-                        $clientItem.find(".clientActiveFrom").text(moment(client.ucrm.service.activeFrom).format("MM/DD/YYYY"));
+                        if(client.ucrm && client.ucrm.service && client.ucrm.service.activeFrom){
+                            $clientItem.find(".clientActiveFrom").text(moment(client.ucrm.service.activeFrom).format("MM/DD/YYYY"));
+                        }else{
+                            $clientItem.find(".clientActiveFrom").text("");
+                        }
+
                         if(client.identification && client.identification.status === "active"){
                             self.updateClientStatus($clientItem, "ok");
                             $clientItem.removeClass("table-danger");
@@ -156,18 +173,32 @@
             }   
         }
 
+        ///uisptools/api/pluginUserData/wilcowireless.widgets.towerclients
+
         bind(){
             return new Promise((resolve, reject) => {
-                const parsedUrl = new URL(window.location.href);
-                const siteId = parsedUrl.searchParams.get("siteid");
-                Promise.all([self.fetchSiteClientsWithDetails(siteId)]).then(
-                    function(results){
-                        let clients = results[0];
-                        self.bindClients(clients);
-                        //let $element = $(self.element);
-                        
+                //const parsedUrl = new URL(window.location.href);
+                //const siteId = parsedUrl.searchParams.get("siteid");
+                this.getPluginUserData().then((userPluginData) =>{
+                    this.userPluginData=userPluginData;
+                    if(userPluginData && userPluginData.sites){
+                        var dataFetches = []
+                        userPluginData.sites.forEach(siteId => {
+                            dataFetches.push(self.fetchSiteClientsWithDetails(siteId))
+                        });
+                        Promise.all(dataFetches).then(
+                            function(results){
+                                var clients = []
+                                results.forEach(siteClients => {
+                                    clients = clients.concat(siteClients);
+                                });
+                                self.bindClients(clients);
+                                //let $element = $(self.element);
+                                
+                            }
+                        )
                     }
-                )
+                })
             });
         }
 

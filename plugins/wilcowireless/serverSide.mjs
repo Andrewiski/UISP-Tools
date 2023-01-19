@@ -26,8 +26,8 @@ var wilcowireless = {
                 try {
                     super.bindRoutes(router);
                     //Any Routes above this line are not Checked for Auth and are Public
-                    router.get('/wilcowireless/*', this.checkApiAccess);
-                    router.get('/wilcowireless/towerclients', this.getTowerClients); 
+                    router.get('/uisptools/wilcowireless/api/*', this.checkApiAccess);
+                    router.get('/uisptools/wilcowireless/api/towerclients', this.getTowerClients); 
                 } catch (ex) {
                    this.debug("error", ex.msg, ex.stack);
                 }

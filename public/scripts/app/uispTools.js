@@ -80,7 +80,7 @@
                             //remove any attempts to double dot move up folders
                             widgetFactoryJSPath = widgetFactoryJSPath.replace(/\.\./g, "");
                             widgetFactoryJSPath = widgetFactoryJSPath.replace(/\./g, "/");
-                            widgetFactoryJSPath = "/plugins/" + widgetFactoryJSPath +  "/widgetFactory.js";
+                            widgetFactoryJSPath = "/uisptools/plugins/" + widgetFactoryJSPath +  "/widgetFactory.js";
                             //add a script tag to the dom so the script goes into memory
                             widgetFactoryInfo[key].namespace = widgetFactoryNamespace;
                             widgetFactoryInfo[key].created = new Date();
@@ -771,7 +771,14 @@
         },
 
         displayError: function (objError) {
-            return $.uisptools.showErrorDialog({ error: objError });
+            let theError;
+            if(objError.error){
+                theError = objError;
+            }else{
+                theError = { error: objError }
+            }
+
+            return $.uisptools.showErrorDialog(theError);
         },
         getErrorAccessIsDenied: function (debug) {
             return $.uisptools.createError("Access is denied", debug, "Client Error", "Access is denied", 402);

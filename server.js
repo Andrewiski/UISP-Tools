@@ -55,8 +55,8 @@ var defaultConfig = {
     "httpsport": 49443,
     "adminUsername": "admin",
     "adminPasswordHash": "01b7783d35cfcbbc957461516f337075",  //  UISPToolsPassword
-    "httpsServerKey": "/home/unms/data/cert/live.key",
-    "httpsServerCert": "/home/unms/data/cert/live.crt",
+    "httpsServerKey": "/usr/src/uisptools/uisp_certs/live.key",
+    "httpsServerCert": "/usr/src/uisptools/uisp_certs/live.crt",
     "unmsUrl": "http://unms:8081/nms/api/v2.1/",
     "ucrmUrl": "http://ucrm:80/crm/api/v1.0/",
     "ucrmAppKey": "CreateAppKeyFromUISPWebSite",
@@ -420,16 +420,17 @@ app.use(function (req, res, next) {
     return;
 })
 
-// not needed already served up by io app.use('/javascript/socket.io', express.static(path.join(__dirname, 'node_modules', 'socket.io', 'node_modules', 'socket.io-client', 'dist')));
-app.use('/javascript/fontawesome', express.static(path.join(__dirname, 'node_modules', '@fortawesome', 'fontawesome-free')));
-app.use('/javascript/bootstrap', express.static(path.join(__dirname, 'node_modules', 'bootstrap', 'dist')));
-app.use('/javascript/jquery', express.static(path.join(__dirname, 'node_modules', 'jquery', 'dist')));
-app.use('/javascript/moment', express.static(path.join(__dirname, 'node_modules', 'moment', 'min')));
-app.use('/javascript/bootstrap-notify', express.static(path.join(__dirname, 'node_modules', 'bootstrap-notify')));
-app.use('/javascript/animate-css', express.static(path.join(__dirname, 'node_modules', 'animate.css')));
-app.use('/javascript/jsoneditor', express.static(path.join(__dirname, 'node_modules', 'jsoneditor', 'dist')));
-app.use('/javascript/js-cookie', express.static(path.join(__dirname, 'node_modules', 'js-cookie', 'dist')));
-app.use('/javascript/googlemaps', express.static(path.join(__dirname, 'node_modules', '@googlemaps', 'js-api-loader', 'dist')));
+app.use('/uisptools/javascript/socket.io', express.static(path.join(__dirname, 'node_modules', 'socket.io', 'client-dist')));
+app.use('/uisptools/javascript/fontawesome', express.static(path.join(__dirname, 'node_modules', '@fortawesome', 'fontawesome-free')));
+app.use('/uisptools/javascript/bootstrap', express.static(path.join(__dirname, 'node_modules', 'bootstrap', 'dist')));
+app.use('/uisptools/javascript/jquery', express.static(path.join(__dirname, 'node_modules', 'jquery', 'dist')));
+app.use('/uisptools/javascript/moment', express.static(path.join(__dirname, 'node_modules', 'moment', 'min')));
+app.use('/uisptools/javascript/bootstrap-notify', express.static(path.join(__dirname, 'node_modules', 'bootstrap-notify')));
+app.use('/uisptools/javascript/animate-css', express.static(path.join(__dirname, 'node_modules', 'animate.css')));
+app.use('/uisptools/javascript/jsoneditor', express.static(path.join(__dirname, 'node_modules', 'jsoneditor', 'dist')));
+app.use('/uisptools/javascript/js-cookie', express.static(path.join(__dirname, 'node_modules', 'js-cookie', 'dist')));
+app.use('/uisptools/javascript/googlemaps', express.static(path.join(__dirname, 'node_modules', '@googlemaps', 'js-api-loader', 'dist')));
+
 if(fs.existsSync(path.join(__dirname,configFolder, '/public/images', 'favicon.ico' ))){
     app.use(favicon(path.join(__dirname,configFolder, '/public/images', 'favicon.ico' )));
 }
@@ -445,6 +446,11 @@ var routes = express.Router();
 
 var handlePluginPublicFileRequest = function (req, res) {
     let filePath = req.path;
+
+    if (filePath.startsWith("/uisptools/")){
+        filePath = filePath.substring(10);
+    }
+
 
     if (filePath.indexOf("..") >= 0 ){
         throw new Error("Plugin Requests are not allowed to contain .. in the path")
@@ -487,8 +493,16 @@ var handlePublicFileRequest = function (req, res) {
     var filePath = req.path;
 
     if (filePath === "/") {
-        filePath = "/index.htm";
+        //filePath = "/index.htm";
+        res.redirect("/uisptools");
     }
+    if (filePath === "/uisptools/") {
+        filePath = "/index.htm";
+    }else if (filePath.startsWith("/uisptools/")){
+        filePath = filePath.substring(10);
+    }
+
+    
     console.log('handlePublicFileRequest ' + filePath + ' ...');
 
     //var extname = path.extname(filePath);
@@ -736,11 +750,15 @@ for (let index = 0; index < objOptions.plugins.length; index++) {
     
 }
 
-routes.get('/plugins/*', function (req, res) {
+routes.get('/uisptools/plugins/*', function (req, res) {
     handlePluginPublicFileRequest(req, res);
 });
 
 routes.get('/*', function (req, res) {
+    handlePublicFileRequest(req, res);
+});
+
+routes.get('/uisptools/*', function (req, res) {
     handlePublicFileRequest(req, res);
 });
 

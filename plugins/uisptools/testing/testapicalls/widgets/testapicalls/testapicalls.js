@@ -1,5 +1,5 @@
 "use strict"
-    import baseClientSide from "/plugins/baseClientSide.js";
+    import baseClientSide from "/uisptools/plugins/baseClientSide.js";
     /*
     * uisptools  1.0
     * Copyright (c) 2022 Digital Example
@@ -48,28 +48,35 @@
 
         //This gets called once per widget created
         bind(){
-            let $element = $(self.element)
-            $.logToConsole("INFO: " + this.name + " create");
-            $element.find(".btnSubmit").on("click", 
-                function(){
-                    let apiPath = $element.find("#uisptools_API_Path").val();
-                    $.uisptools.ajax(apiPath).then(
-                        function(results){
-                            $element.find("#uisptools_API_results").text(JSON.stringify(results, null, 2))
-                        },
-                        function(err){
-                            $.logToConsole("ERROR: uisptools.testing.testapicall");
-                            $.uisptools.displayError(err);
+            return new Promise((resolve, reject) => {
+                try{
+                    let $element = $(self.element)
+                    $.logToConsole("INFO: " + this.name + " create");
+                    $element.find(".btnSubmit").on("click", 
+                        function(){
+                            let apiPath = $element.find("#uisptools_API_Path").val();
+                            $.uisptools.ajax(apiPath).then(
+                                function(results){
+                                    $element.find("#uisptools_API_results").text(JSON.stringify(results, null, 2))
+                                },
+                                function(err){
+                                    $.logToConsole("ERROR: uisptools.testing.testapicall");
+                                    $.uisptools.displayError(err);
+                                }
+                            )
+                        }
+                    );
+
+                    $element.find("#uisptools_API_Path_Select").on("change",
+                        function(evt){
+                            $element.find("#uisptools_API_Path").val($element.find("#uisptools_API_Path_Select").val());
                         }
                     )
+                    resolve();
+                }catch(ex){
+                    reject(ex);
                 }
-            );
-
-            $element.find("#uisptools_API_Path_Select").on("change",
-                function(evt){
-                    $element.find("#uisptools_API_Path").val($element.find("#uisptools_API_Path_Select").val());
-                }
-            )
+            })
         }
 
         
@@ -77,21 +84,19 @@
             self = this;
             return new Promise((resolve, reject) => {
                 self.loadTemplate().then(
-                    function(){
-                        self.bind().then(
-                            function(){
+                    () =>
+                    {
+                        self.bind().then(() =>
+                            {
                                 resolve();
-                            },
-                            function(err){
-                                reject(err)
                             }
-
-                        );
-                    },
-                    function(err){
-                        reject(err)
+                        ).catch((err)=>{
+                            reject(err)
+                        });
                     } 
-                )
+                ).catch((err)=>{
+                        reject(err)
+                })
             })
         }
        

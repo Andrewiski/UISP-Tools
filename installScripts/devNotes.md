@@ -8,6 +8,22 @@ hostname -I | cut -f 1 -d ' '
 
 ```
 
+```
+docker exec -it uisptools sh
+
+
+```
+
+```
+docker exec -it unms-nginx sh
+
+vi /usr/local/openresty/nginx/templates/conf.d/unms+ucrm-https+wss.conf.template
+
+  location /uisptools/ {
+    allow all;
+    proxy_pass       http://uisptools:49080;
+  }
+```
 
 ```
 docker-compose -p "unms" -f "docker-compose.yml" down

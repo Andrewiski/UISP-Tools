@@ -6,49 +6,74 @@ This Node.js application runs in a seperate docker instance will interface to yo
 UISP-Tools is compatible with UCRM 2.10.0+
 
 ## How does it work?
-* install uisptools using docker-compose 
-* using a web browser connect to UISPTools docker container [http://127.0.0.0](http://127.0.0.0)
-* using a web browser login to the admin page using default username and password "admin" and "UISPToolsPassword" [http://127.0.0.0/admin](http://127.0.0.0/admin)
- * That's it, .
+* uisptools docker services are added to the UISP docker-compose.yaml file that is created during the UISP install process located at /home/unms/app/docker-compose.yml
+* next the /uisptools path is added to the unms-nginx conf.d so that it can accessed using the UNMS url  /uisp
+* plugins can be added by copying them to the config/plugin folder and adding them to the plugins section of config.json file
+* all of the uisptools reside in a completly seperate paths as well as seperate containers so easy to remove and upgrade
 
 
+## How to install  (Could use some help creating an install.sh script to make this easier)
 ```
-# sudo groupadd docker
-# sudo usermod -aG docker $USER
-# newgrp docker  or reboot/logout-login
-sudo mkdir -p /usr/src/uisptools
-sudo chown "$USER":"docker" /usr/src/uisptools
-mkdir -p /usr/src/uisptools/config
-sudo chown "$USER":"docker" /usr/src/uisptools/config
-mkdir -p /usr/src/uisptools/logs
-sudo chown "$USER":"docker" /usr/src/uisptools/logs
-mkdir -p /usr/src/uisptools/data/mongodb
-sudo chown "$USER":"docker" /usr/src/uisptools/data
-sudo chown "$USER":"docker" /usr/src/uisptools/data/mongodb
+# Create a password for the unms user
+sudo passwd unms
+#Login as unms as thats the user uisp runs under
 
-mkdir ~/uisptools
-mkdir ~/uisptools/dockerCompose
-mkdir ~/uisptools/mongodb
-mkdir ~/uisptools/mongodb/docker-entrypoint-initdb.d
+#get the unms userid make sure it matches the user in the docker-compose.yml so the container runs as correct user
+id -u
+#Change the /home/unms/app folder where the docker-compose.yml file resides  it too will have the user id set needs to be the same so updated if not 1001 from my example append file
+cd ~/app
+#Stop the uisp docker containers
+docker-compose down
+# create the uisptools folder using unms user so they have correct permissions
+mkdir ~/data/uisptools
+mkdir ~/data/uisptools/config
+mkdir ~/data/uisptools/config/public
+mkdir ~/data/uisptools/config/plugins
+mkdir ~/data/uisptools/logs
+mkdir ~/data/uisptools/mongodb
+mkdir ~/data/uisptools/mongodb/data
+mkdir ~/data/uisptools/mongodb/docker-entrypoint-initdb.d
+#copy the mongo db init scripts from github (note this are only ran once and only if there is an empty database  I use Studio 3T as windows mongo Client see below)
+wget -o ~/data/uisptools/mongodb/docker-entrypoint-initdb.d/01_createDatabase.js https://raw.githubusercontent.com/Andrewiski/UISP-Tools/main/mongodb/docker-entrypoint-initdb.d/01_createDatabase.js 
+wget -o ~/data/uisptools/mongodb/docker-entrypoint-initdb.d/02_initWebServerPages.js https://raw.githubusercontent.com/Andrewiski/UISP-Tools/main/mongodb/docker-entrypoint-initdb.d/02_initWebServerPages.js 
 
-#Link the exsiting certs in the server 
-sudo ln -s /home/unms/data/cert/live/billing.example.com/fullchain.pem /usr/src/uisptools/config/server.cert
-sudo ln -s /home/unms/data/cert/live/billing.example.com/privkey.pem /usr/src/uisptools/config/server.key
+# append the contents of https://github.com/Andrewiski/UISP-Tools/blob/main/dockerCompose/uisp/docker-compose-append.yml to the end of /home/unms/app/docker-compose.yml
+vi docker-compose.yml
+#Note that by changing the version of of uisptools in the docker-compose.yml will allow it to be upgraded with a "docker-compose down" followed by a "docker-compose up -d"
+#restart  uisp including the uisptools services
+docker-compose up -d
+# shell into the uisp-nginx container and update the nginx config
+docker exec -it unms-nginx sh
+# determine which template your setup is using by listing what is in the conf.d folder
+ls /usr/local/openresty/nginx/conf/conf.d
+# in my case ls returned "nginx-api.conf" and "unms-https+wss.conf"  these files are recreated at restart so we need to edit the template they are created from so it survives a reboot.
 
-wget -c https://raw.githubusercontent.com/Andrewiski/UISP-Tools/main/mongodb/docker-entrypoint-initdb.d/createDatabase.js -O ~/uisptools/mongodb/docker-entrypoint-initdb.d/createDatabase.js
+vi /usr/local/openresty/nginx/templates/conf.d/unms-https+wss.conf.template
+# Append the following to the template so uisptools is accessable on the /uisptools/ path
 
-wget -c https://raw.githubusercontent.com/Andrewiski/UISP-Tools/main/mongodb/docker-entrypoint-initdb.d/initWebServerPages.js -O ~/uisptools/mongodb/docker-entrypoint-initdb.d/initWebServerPages.js
+  location /uisptools/ {
+    allow all;
+    proxy_pass       http://uisptools:49080;
+  }
+# vi commands require pressing i to insert then "esc  :  w" to write the file then "esc : q" to quit vi 
 
-wget -c https://raw.githubusercontent.com/Andrewiski/UISP-Tools/main/dockerCompose/docker-compose.yml -O ~/uisptools/dockerCompose/docker-compose.yml
-sudo docker-compose -f ~/uisptools/dockerCompose/docker-compose.yml up --force-recreate -d
-
+#need to exit the container shell with a exit
+exit
+#now restart the unms-nginx container so it uses the template to update the conf.d file and to make sure are changes survive a reboot
+docker restart unms-nginx
 ```
 
+Should be ablle to get the default website to open by visiting https://uispserver/uisptools
 
 
-sudo docker pull docker.pkg.github.com/jon-gr/webstream/appliance_sqm_sip:latest
+## How to edit the Mongo Database
+I use the free Windows app Studio 3T and connect to the mongo instance using ssh and then authentication using the uisptools and password set in docker-compose.yaml. 
+Note that username password combo if changed needs to be updated in the /home/unms/uisptools/config/config.json as well in the mongodb url
 
 
+## Plugins General Usage and Warnings
+* Installing uisptools can allow any NMS superadmin to make any nms api call exposed this includes Posts and Deletes via urls using the generic passthrough this can be disabled with a config option.  The user does need to using the uisptools login and have an active short lived access token
+* Any plugin can be copied and extended by coping to the config/plugins folder, config/plugins is served before /plugins this way any and all plugins can be extended
 
 ## How can I contribute?
 * This application are under GNU General Public License v3.0 enabling anyone to contribute any upgrades or create whole new ones

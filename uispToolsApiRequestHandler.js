@@ -5,9 +5,10 @@ const Defer = require('node-promise').defer;
 
 var MongoClient = require('mongodb').MongoClient;
 var moment = require('moment');
-const assert = require('assert');
-const { v4: uuidv4 } = require('uuid');
+
+const { v4: uuidv4, validate: uuidValidate } = require('uuid');
 const { nextTick } = require('process');
+const { noop } = require('jquery');
 
 var UispToolsApiRequestHandler = function (options) {
     var self = this;
@@ -59,19 +60,28 @@ var UispToolsApiRequestHandler = function (options) {
             routes.get('/uisptools/api/PageContent/LinkUrl/*', getPageByLinkUrl);
             routes.post('/uisptools/login/loginBoth', loginBoth);
             routes.get('/uisptools/login/loginData', getLoginData);
+            routes.get('/uisptools/api/pluginData/:pluginName', getPluginData);
+            
             //routes.get('/uisptools/login/userInfo', getUserInfo);
             routes.get('/uisptools/errorHandlerTest', errorHandlerTest);
             routes.get('/uisptools/errorHandlerTestRawError', errorHandlerTestRawError);
             routes.get('/uisptools/api/settings/anonymousClientSideSettings', getAnonymousClientSideSettings);
             //Any Routes above this line are not Checked for Auth and are Public
             routes.get('/uisptools/api/*', checkApiAccess);
-            routes.post('/uisptools/api/*', checkApiAccess);
-            routes.delete('/uisptools/api/*', checkApiAccess);
-            routes.get('/uisptools/api/UserInfo', getUserInfo);    
+            routes.get('/uisptools/api/UserInfo', getUserInfo);
+            routes.get('/uisptools/api/pluginUserData/:pluginName', getPluginUserData);
+
+
+            //Any Routes above this are basic User Authed if below 
+            routes.get('/uisptools/api/*', checkSuperAdminApiAccess);
+            routes.post('/uisptools/api/*', checkSuperAdminApiAccess);
+            routes.delete('/uisptools/api/*', checkSuperAdminApiAccess);
             routes.get('/uisptools/api/crm/*', getCRM);
             routes.get('/uisptools/api/nms/*', getNMS);
             routes.post('/uisptools/api/crm/*', getCRM);
             routes.post('/uisptools/api/nms/*', getNMS);
+            routes.delete('/uisptools/api/crm/*', getCRM);
+            routes.delete('/uisptools/api/nms/*', getNMS);
             
         } catch (ex) {
            debug("error", ex.msg, ex.stack);
@@ -121,7 +131,9 @@ var UispToolsApiRequestHandler = function (options) {
                         if(accessToken != null){
                             //double check not Expired etc but not sure why Mongo would not delete it
                             res.locals.accessToken = accessToken;
-                            next("route")
+                            if(next){
+                                next("route")
+                            }
                         }else{
                             debug("debug", "checkApiAccess access_token not found", req.headers.authorization);
                             res.status(401).json({ "msg": "Invalid AccessToken!", "error": "Invalid AccessToken"});    
@@ -139,6 +151,27 @@ var UispToolsApiRequestHandler = function (options) {
             
         } catch (ex) {
             debug("error", "checkApiAccess", { "msg": ex.message, "stack": ex.stack });
+            res.status(500).json({ "msg": "An Error Occured!", "error": ex });
+        }
+    }
+
+    var checkSuperAdminApiAccess = function (req, res, next) {
+        try {
+
+            if(res.locals.accessToken == undefined){
+                checkApiAccess(req,res)
+            }
+            
+            if(res.locals.accessToken && res.locals.accessToken.loginData.userType === "nms" && res.locals.accessToken.loginData.nmsLoginData.role === "superadmin" ){
+                next("route")
+            }else{
+                debug("debug", "checkSuperAdminApiAccess", "Not Super Admin", req.headers.authorization);
+                res.status(403).json({ "msg": "Invalid AccessToken Not Super Admin!", "error": "Invalid AccessToken Not Super Admin"});    
+            }
+                    
+            
+        } catch (ex) {
+            debug("error", "checkSuperAdminApiAccess", { "msg": ex.message, "stack": ex.stack });
             res.status(500).json({ "msg": "An Error Occured!", "error": ex });
         }
     }
@@ -268,42 +301,55 @@ var UispToolsApiRequestHandler = function (options) {
         try {
             const client = new MongoClient(objOptions.mongoDbServerUrl,objOptions.mongoClientOptions);
             // Use connect method to connect to the Server
-            client.connect(function (err, client) {
-                try {
-                    assert.equal(null, err);
-                    const db = client.db(objOptions.mongoDbDatabaseName);
-                    const collection = db.collection('ut_RefreshToken');
-                    if (collection) {
-                        let refreshToken = {};
-                        refreshToken.refresh_token = uuidv4();
-                        //if (options.expiresIn === undefined || options.expiresIn === null){
-                            refreshToken.expiresIn = 259200; // 3 * 24 * 60 * 60;  //expire Token in 3 days ie it will get auto deleted by Mongo
-                        //}
-                        refreshToken.token_type = "bearer";
-                        let expiresOn = new Date();
-                        expiresOn = new Date(expiresOn.getTime() + (refreshToken.expiresIn * 1000));
-                        
-                        refreshToken.expiresOn = expiresOn //used by Momgo to auto delete when expired
-                        //refreshToken.expiresAt = moment().add( refreshToken.expiresIn, 'seconds').toISOString();
-                        refreshToken.loginData = options.loginData;
-                        collection.insertOne(refreshToken,                            
+            client.connect().then(
+                function () {
+                    try {
+                    
+                        const db = client.db(objOptions.mongoDbDatabaseName);
+                        const collection = db.collection('ut_RefreshToken');
+                        if (collection) {
+                            let refreshToken = {};
+                            refreshToken.refresh_token = uuidv4();
+                            //if (options.expiresIn === undefined || options.expiresIn === null){
+                                refreshToken.expiresIn = 259200; // 3 * 24 * 60 * 60;  //expire Token in 3 days ie it will get auto deleted by Mongo
+                            //}
+                            refreshToken.token_type = "bearer";
+                            let expiresOn = new Date();
+                            expiresOn = new Date(expiresOn.getTime() + (refreshToken.expiresIn * 1000));
+                            
+                            refreshToken.expiresOn = expiresOn //used by Momgo to auto delete when expired
+                            //refreshToken.expiresAt = moment().add( refreshToken.expiresIn, 'seconds').toISOString();
+                            refreshToken.loginData = options.loginData;
+                            collection.insertOne(refreshToken).then(                            
                                 function (err, doc) {
-                                    assert.equal(err, null);
+                                    
                                     client.close();
                                     delete refreshToken.loginData;
                                     deferred.resolve(refreshToken);
-                                });
-                    } else {
-                        debug("error", "createRefreshToken", { "msg": "Not Able to Open MongoDB Connection", "stack": "" });
+                                },
+                                function(err){
+                                    debug('error', 'createRefreshToken',  { "msg": err.message, "stack": err.stack });
+                                    client.close();
+                                    deferred.reject({ "code": 500, "msg": "An Error Occured!", "error": err });
+                                }
+                            );
+                        } else {
+                            debug("error", "createRefreshToken", { "msg": "Not Able to Open MongoDB Connection", "stack": "" });
+                            client.close();
+                            deferred.reject({ "code": 500, "msg": "Not Able to Open MongoDB Connection", "error": "collection is null"});
+                        }
+                    } catch (ex) {
+                        debug("error", "createRefreshToken", { "msg": ex.message, "stack": ex.stack });
                         client.close();
-                        deferred.reject({ "code": 500, "msg": "Not Able to Open MongoDB Connection", "error": "collection is null"});
+                        deferred.reject({ "code": 500, "msg": ex.message, "error": ex });
                     }
-                } catch (ex) {
-                    debug("error", "createRefreshToken", { "msg": ex.message, "stack": ex.stack });
-                    client.close();
-                    deferred.reject({ "code": 500, "msg": ex.message, "error": ex });
+                },
+                function(err){
+                    debug('error', 'createRefreshToken',  { "msg": err.message, "stack": err.stack });
+                    deferred.reject({ "code": 500, "msg": "An Error Occured!", "error": err });
                 }
-            });
+
+            );
         } catch (ex) {
             debug('error', 'createRefreshToken',  { "msg": ex.message, "stack": ex.stack });
             deferred.reject({ "code": 500, "msg": "An Error Occured!", "error": ex });
@@ -318,44 +364,56 @@ var UispToolsApiRequestHandler = function (options) {
         try {
             const client = new MongoClient(objOptions.mongoDbServerUrl,objOptions.mongoClientOptions);
             // Use connect method to connect to the Server
-            client.connect(function (err, client) {
-                try {
-                    assert.equal(null, err);
-                    const db = client.db(objOptions.mongoDbDatabaseName);
-                    const collection = db.collection('ut_AccessToken');
-                    if (collection) {
-                        var accessToken = {};
-                        accessToken.access_token = uuidv4();
-                        accessToken.expiresIn = 3600; 
-                         
-                        let expiresOn = new Date();
-                        expiresOn = new Date(expiresOn.getTime() + (accessToken.expiresIn * 1000));
-                        accessToken.expiresOn = expiresOn //used by Momgo to auto delete when expired with a expireAfterSecond index
-                        //accessToken.expiresOn = moment().add( accessToken.expiresIn, 'seconds');  //This is set in a expireAfterSecond index in Mongo To Autodelete the row
-                        //accessToken.expiresAt = moment().add( accessToken.expiresIn, 'seconds').toISOString();  //This is set in a expireAfterSecond index in Mongo To Autodelete the row
-                        accessToken.refresh_token = options.refreshToken.refresh_token;
-                        accessToken.refreshToken = options.refreshToken; //used as a way to prevent having to fetch refreshToken as this way it is a short cache as its a 10 minute of all connected users
-                        accessToken.loginData = options.loginData;
-                        //data.authTokenExpiresOn = moment().add( data.expireAt, 'seconds').toISOString();
-                        collection.insertOne(accessToken,                            
-                                function (err, doc) {
-                                    assert.equal(err, null);
+            client.connect().then(
+                function () {
+                    try {
+                        
+                        const db = client.db(objOptions.mongoDbDatabaseName);
+                        const collection = db.collection('ut_AccessToken');
+                        if (collection) {
+                            var accessToken = {};
+                            accessToken.access_token = uuidv4();
+                            accessToken.expiresIn = 3600; 
+                            
+                            let expiresOn = new Date();
+                            expiresOn = new Date(expiresOn.getTime() + (accessToken.expiresIn * 1000));
+                            accessToken.expiresOn = expiresOn //used by Momgo to auto delete when expired with a expireAfterSecond index
+                            //accessToken.expiresOn = moment().add( accessToken.expiresIn, 'seconds');  //This is set in a expireAfterSecond index in Mongo To Autodelete the row
+                            //accessToken.expiresAt = moment().add( accessToken.expiresIn, 'seconds').toISOString();  //This is set in a expireAfterSecond index in Mongo To Autodelete the row
+                            accessToken.refresh_token = options.refreshToken.refresh_token;
+                            accessToken.refreshToken = options.refreshToken; //used as a way to prevent having to fetch refreshToken as this way it is a short cache as its a 10 minute of all connected users
+                            accessToken.loginData = options.loginData;
+                            //data.authTokenExpiresOn = moment().add( data.expireAt, 'seconds').toISOString();
+                            collection.insertOne(accessToken).then(                            
+                                function (doc) {
                                     client.close();
                                     delete accessToken.refreshToken
                                     delete accessToken.loginData
                                     deferred.resolve(accessToken);
-                                });
-                    } else {
-                        debug("error", "createAccessToken", { "msg": "Not Able to Open MongoDB Connection", "stack": "" });
+                                },
+                                function(err){
+                                    debug("error", "createAccessToken", { "msg": err.message, "stack": err.stack });
+                                    client.close();
+                                    deferred.reject({ "code": 500, "msg": err.message, "error": err });
+                                }
+                                    
+                            );
+                        } else {
+                            debug("error", "createAccessToken", { "msg": "Not Able to Open MongoDB Connection", "stack": "" });
+                            client.close();
+                            deferred.reject({ "code": 500, "msg": "Not Able to Open MongoDB Connection", "error": "collection is null"});
+                        }
+                    } catch (ex) {
+                        debug("error", "createAccessToken", { "msg": ex.message, "stack": ex.stack });
                         client.close();
-                        deferred.reject({ "code": 500, "msg": "Not Able to Open MongoDB Connection", "error": "collection is null"});
+                        deferred.reject({ "code": 500, "msg": ex.message, "error": ex });
                     }
-                } catch (ex) {
-                    debug("error", "createAccessToken", { "msg": ex.message, "stack": ex.stack });
-                    client.close();
-                    deferred.reject({ "code": 500, "msg": ex.message, "error": ex });
+                },
+                function(err){
+                    debug("error", "createAccessToken", { "msg": err.message, "stack": err.stack });
+                    deferred.reject({ "code": 500, "msg": err.message, "error": err });
                 }
-            });
+            );
         } catch (ex) {
             debug('error', 'createAuthToken',  { "msg": ex.message, "stack": ex.stack });
             deferred.reject({ "code": 500, "msg": "An Error Occured!", "error": ex });
@@ -376,35 +434,41 @@ var UispToolsApiRequestHandler = function (options) {
         try {
             const client = new MongoClient(objOptions.mongoDbServerUrl,objOptions.mongoClientOptions);
             // Use connect method to connect to the Server
-            client.connect(function (err, client) {
-                try {
-                    assert.equal(null, err);
-                    const db = client.db(objOptions.mongoDbDatabaseName);
-                    const collection = db.collection('ut_AccessToken');
-                    var findQuery = {  access_token : options.access_token}
-                    if (collection) {
-                        collection.findOne(findQuery, null).then(
-                            function (doc) {
-                                deferred.resolve(doc);
-                                client.close();
-                            },
-                            function(err){
-                                debug("error", "getAccessToken", { "msg": err.message, "stack": err.stack });
-                                deferred.reject({ "msg": "An Error Occured!", "error": err });
-                                client.close();            
-                            }
-                        );
-                    } else {
-                        debug("error", "getAccessToken", { "msg": "An Error Occured!", "stack": "Collection Not Found" });
-                        deferred.reject({ "msg": "An Error Occured!", "error": "getAccessToken Collection Not Found" });
-                        client.close(); 
+            client.connect().then(
+                function () {
+                    try {
+                        
+                        const db = client.db(objOptions.mongoDbDatabaseName);
+                        const collection = db.collection('ut_AccessToken');
+                        var findQuery = {  access_token : options.access_token}
+                        if (collection) {
+                            collection.findOne(findQuery, null).then(
+                                function (doc) {
+                                    deferred.resolve(doc);
+                                    client.close();
+                                },
+                                function(err){
+                                    debug("error", "getAccessToken", { "msg": err.message, "stack": err.stack });
+                                    deferred.reject({ "msg": "An Error Occured!", "error": err });
+                                    client.close();            
+                                }
+                            );
+                        } else {
+                            debug("error", "getAccessToken", { "msg": "An Error Occured!", "stack": "Collection Not Found" });
+                            deferred.reject({ "msg": "An Error Occured!", "error": "getAccessToken Collection Not Found" });
+                            client.close(); 
+                        }
+                    } catch (ex) {
+                        debug("error", "getAccessToken", { "msg": ex.message, "stack": ex.stack });
+                        deferred.reject({ "msg": "An Error Occured!", "error": ex });
+                        client.close();
                     }
-                } catch (ex) {
-                    debug("error", "getAccessToken", { "msg": ex.message, "stack": ex.stack });
-                    deferred.reject({ "msg": "An Error Occured!", "error": ex });
-                    client.close();
+                },
+                function(err){
+                    debug("error", "getAccessToken", { "msg": err.message, "stack": err.stack });
+                    deferred.reject({ "code": 500, "msg": err.message, "error": err });
                 }
-            });
+            );
         } catch (ex) {
             debug("error", "getAccessToken", { "msg": ex.message, "stack": ex.stack });
             deferred.reject({ "msg": "An Error Occured!", "error": ex });
@@ -418,35 +482,40 @@ var UispToolsApiRequestHandler = function (options) {
         try {
             const client = new MongoClient(objOptions.mongoDbServerUrl,objOptions.mongoClientOptions);
             // Use connect method to connect to the Server
-            client.connect(function (err, client) {
-                try {
-                    assert.equal(null, err);
-                    const db = client.db(objOptions.mongoDbDatabaseName);
-                    const collection = db.collection('ut_RefreshToken');
-                    var findQuery = {  refresh_token : options.refresh_token}
-                    if (collection) {
-                        collection.findOne(findQuery, null).then(
-                            function (doc) {
-                                deferred.resolve(doc);
-                                client.close();
-                            },
-                            function(err){
-                                debug("error", "getRefreshToken", { "msg": err.message, "stack": err.stack });
-                                deferred.reject({ "msg": "An Error Occured!", "error": err });
-                                client.close();            
-                            }
-                        );
-                    } else {
-                        debug("error", "getRefreshToken", { "msg": "An Error Occured!", "stack": "Collection Not Found" });
-                        deferred.reject({ "msg": "An Error Occured!", "error": "getRefreshToken Collection Not Found" });
-                        client.close(); 
+            client.connect().then(
+                function () {
+                    try {
+                        const db = client.db(objOptions.mongoDbDatabaseName);
+                        const collection = db.collection('ut_RefreshToken');
+                        var findQuery = {  refresh_token : options.refresh_token}
+                        if (collection) {
+                            collection.findOne(findQuery, null).then(
+                                function (doc) {
+                                    deferred.resolve(doc);
+                                    client.close();
+                                },
+                                function(err){
+                                    debug("error", "getRefreshToken", { "msg": err.message, "stack": err.stack });
+                                    deferred.reject({ "msg": "An Error Occured!", "error": err });
+                                    client.close();            
+                                }
+                            );
+                        } else {
+                            debug("error", "getRefreshToken", { "msg": "An Error Occured!", "stack": "Collection Not Found" });
+                            deferred.reject({ "msg": "An Error Occured!", "error": "getRefreshToken Collection Not Found" });
+                            client.close(); 
+                        }
+                    } catch (ex) {
+                        debug("error", "getRefreshToken", { "msg": ex.message, "stack": ex.stack });
+                        deferred.reject({ "msg": "An Error Occured!", "error": ex });
+                        client.close();
                     }
-                } catch (ex) {
-                    debug("error", "getRefreshToken", { "msg": ex.message, "stack": ex.stack });
-                    deferred.reject({ "msg": "An Error Occured!", "error": ex });
-                    client.close();
+                },
+                function(err){
+                    debug("error", "getRefreshToken", { "msg": err.message, "stack": err.stack });
+                    deferred.reject({ "msg": "An Error Occured!", "error": err });           
                 }
-            });
+            );
         } catch (ex) {
             debug("error", "getRefreshToken", { "msg": ex.message, "stack": ex.stack });
             deferred.reject({ "msg": "An Error Occured!", "error": ex });
@@ -679,6 +748,106 @@ var getLoginData = function (req, res) {
     );
 };
 
+
+var getPluginData = function(req, res){
+    try {
+            const client = new MongoClient(objOptions.mongoDbServerUrl,objOptions.mongoClientOptions);
+            // Use connect method to connect to the Server
+            client.connect().then( 
+                function () {
+                    try {
+                        
+                        const db = client.db(objOptions.mongoDbDatabaseName);
+                        const collection = db.collection('ut_PluginData');
+                        var findQuery = null;
+                        if(req.params.pluginName){
+                            if(uuidValidate(req.params.pluginName)){
+                                findQuery = { pluginId: req.params.pluginName };
+                            }else{
+                                findQuery = { pluginName: req.params.pluginName };
+                            }
+                        }else{
+                            throw new Error("pluginDataID or Name must be set");
+                        }
+                        if (collection) {
+                            collection.findOne(findQuery).then(
+                                    function ( doc) {   
+                                        res.json(doc);
+                                        client.close();
+                                    },
+                                    function(err){
+                                        handleHttpRequestError(req, res, err, "getPluginData");
+                                        client.close();
+                                    }
+                                );
+                        } else {
+                            return null;
+                        }
+                    } catch (ex) {
+                        handleHttpRequestError(req, res, ex, "getPluginData" );
+                        client.close();
+                    }
+                },
+                function(err){
+                    handleHttpRequestError(req, res, err, "getPluginData");
+                }    
+            );
+        } catch (ex) {
+            handleHttpRequestError(req, res, ex, "getPluginData");
+        }
+}
+
+var getPluginUserData = function(req, res){
+    try {
+            const client = new MongoClient(objOptions.mongoDbServerUrl,objOptions.mongoClientOptions);
+            // Use connect method to connect to the Server
+            client.connect().then( 
+                function () {
+                    try {
+                        
+                        const db = client.db(objOptions.mongoDbDatabaseName);
+                        const collection = db.collection('ut_PluginUserData');
+                        var findQuery = null;
+                        //can be passed in as a guid or as pluginName    
+                        if(req.params.pluginName){
+                            if(uuidValidate(req.params.pluginName)){
+                                findQuery = { pluginId: req.params.pluginName };
+                            }else{
+                                findQuery = { pluginName: req.params.pluginName };
+                            }
+                            
+                        }else{
+                            throw new Error("pluginDataID or Name must be set");
+                        }
+                        findQuery.userId =  res.locals.accessToken.loginData.userId
+                        if (collection) {
+                            collection.findOne(findQuery).then(
+                                    function ( doc) {   
+                                        res.json(doc);
+                                        client.close();
+                                    },
+                                    function(err){
+                                        handleHttpRequestError(req, res, err, "getPluginUserData");
+                                        client.close();
+                                    }
+                                );
+                        } else {
+                            return null;
+                        }
+                    } catch (ex) {
+                        handleHttpRequestError(req, res, ex, "getPluginUserData" );
+                        client.close();
+                    }
+                },
+                function(err){
+                    handleHttpRequestError(req, res, err, "getPluginUserData");
+                }    
+            );
+        } catch (ex) {
+            handleHttpRequestError(req, res, ex, "getPluginUserData");
+        }
+}
+
 // var getUserInfo = function (req, res) {
 //     var loginData = {};
 //     self.objOptions.uispApiRequestHandler.loginUserInfo().then(
@@ -740,8 +909,13 @@ var getErrorObject = function(error){
     return errorData;
 }
 
-var handleHttpRequestError = function (req, res, error) {
-    let errorData = getErrorObject(error)
+var handleHttpRequestError = function (req, res, err, debugData) {
+    let errorData = getErrorObject(err)
+    if (debugData){
+        debug("error", "handleHttpRequestError", debugData, errorData);
+    }else{
+        debug("error", "handleHttpRequestError", errorData);
+    }
     res.status(errorData.statuscode).json(errorData.error);
 };
 
@@ -750,36 +924,47 @@ var handleHttpRequestError = function (req, res, error) {
         try {
             const client = new MongoClient(objOptions.mongoDbServerUrl,objOptions.mongoClientOptions);
             // Use connect method to connect to the Server
-            client.connect(function (err, client) {
-                try {
-                    assert.equal(null, err);
-                    const db = client.db(objOptions.mongoDbDatabaseName);
-                    const collection = db.collection('ut_PageContent');
-                    var findQuery = { linkMenuDisplay: true, deleted: false };
-                    var projections = { linkText: 1, linkUrl: 1, linkTarget: 1, pageContentGuid: 1, roleId: 1, contentType: 1 };
-                    var sort = [['displayOrder', 1]];
-                    if (collection) {
-                        collection.find(findQuery)
-                            .project(projections)
-                            .sort(sort)
-                            .toArray(
-                                function (err, docs) {
-                                    assert.equal(err, null);
-                                    res.json(docs);
-                                    client.close();
-                                });
-                    } else {
-                        return null;
+            client.connect().then( 
+                function () {
+                    try {
+                        
+                        const db = client.db(objOptions.mongoDbDatabaseName);
+                        const collection = db.collection('ut_PageContent');
+                        var findQuery = { linkMenuDisplay: true, deleted: false };
+                        var projections = { linkText: 1, linkUrl: 1, linkTarget: 1, pageContentGuid: 1, roleId: 1, contentType: 1 };
+                        var sort = [['displayOrder', 1]];
+                        if (collection) {
+                            collection.find(findQuery)
+                                .project(projections)
+                                .sort(sort)
+                                .toArray().then(
+                                    function ( docs) {   
+                                        res.json(docs);
+                                        client.close();
+                                    },
+                                    function(err){
+                                        handleHttpRequestError(req, res, err, "getMenuItems");
+                                        client.close();
+                                    }
+                                );
+                        } else {
+                            return null;
+                        }
+                    } catch (ex) {
+                        //debug("error", "getMenuItems", { "msg": ex.message, "stack": ex.stack });
+                        //res.status(500).json({ "msg": "An Error Occured!", "error": ex });
+                        handleHttpRequestError(req, res, ex, "getMenuItems" );
+                        client.close();
                     }
-                } catch (ex) {
-                    debug("error", "getMenuItems", { "msg": ex.message, "stack": ex.stack });
-                    res.status(500).json({ "msg": "An Error Occured!", "error": ex });
-                    client.close();
-                }
-            });
+                },
+                function(err){
+                    handleHttpRequestError(req, res, err, "getMenuItems");
+                }    
+            );
         } catch (ex) {
-            debug("error", "getMenuItems", { "msg": ex.message, "stack": ex.stack });
-            res.status(500).json({ "msg": "An Error Occured!", "error": ex });
+            //debug("error", "getMenuItems", { "msg": ex.message, "stack": ex.stack });
+            //res.status(500).json({ "msg": "An Error Occured!", "error": ex });
+            handleHttpRequestError(req, res, ex);
         }
 
     };
@@ -789,33 +974,42 @@ var handleHttpRequestError = function (req, res, error) {
             let findDefaults = { deleted: false }
             const client = new MongoClient(objOptions.mongoDbServerUrl,objOptions.mongoClientOptions);
             // Use connect method to connect to the Server
-            client.connect(function (err, client) {
-                try {
-                    assert.equal(null, err);
-                    const db = client.db(objOptions.mongoDbDatabaseName);
-                    const collection = db.collection('ut_PageContent');
-                    var findQuery = extend({}, options.find, findDefaults);
-                    var projections = { linkText: 1, linkUrl: 1, linkTarget: 1, pageContentGuid: 1, pageDescription: 1, pageKeywords: 1, updatedDate: 1, pageTitle: 1, contentType: 1, extendedData:1, content: 1 };
-                    if (collection) {
-                        collection.findOne(findQuery, { projection: projections },
-                                function (err, docs) {
-                                    assert.equal(err, null);
+            client.connect().then(
+                function () {
+                    try {
+                        const db = client.db(objOptions.mongoDbDatabaseName);
+                        const collection = db.collection('ut_PageContent');
+                        var findQuery = extend({}, options.find, findDefaults);
+                        var projections = { linkText: 1, linkUrl: 1, linkTarget: 1, pageContentGuid: 1, pageDescription: 1, pageKeywords: 1, updatedDate: 1, pageTitle: 1, contentType: 1, extendedData:1, content: 1 };
+                        if (collection) {
+                            collection.findOne(findQuery, { projection: projections }).then(
+                                function (docs) {
                                     res.json(docs);
                                     client.close();
-                                });
-                    } else {
-                        return null;
+                                },
+                                function(err){
+                                    handleHttpRequestError(req, res, err);
+                                    client.close();
+                                }
+                            );
+                        } else {
+                            return null;
+                        }
+                    } catch (ex) {
+                        //debug("error", "getPage", { "msg": ex.message, "stack": ex.stack });
+                        //res.status(500).json({ "msg": "An Error Occured!", "error": ex });
+                        handleHttpRequestError(req, res, ex);
+                        client.close();
                     }
-                } catch (ex) {
-                    debug("error", "getPage", { "msg": ex.message, "stack": ex.stack });
-                    res.status(500).json({ "msg": "An Error Occured!", "error": ex });
-                    client.close();
+                },
+                function(err){
+                    handleHttpRequestError(req, res, err);
                 }
-
-            });
+            );
         } catch (ex) {
-            debug("error", "getPage", { "msg": ex.message, "stack": ex.stack });
-            res.status(500).json({ "msg": "An Error Occured!", "error": ex });
+            //debug("error", "getPage", { "msg": ex.message, "stack": ex.stack });
+            //res.status(500).json({ "msg": "An Error Occured!", "error": ex });
+            handleHttpRequestError(req, res, ex);
         }
     };
 
@@ -841,5 +1035,6 @@ var handleHttpRequestError = function (req, res, error) {
     self.handleHttpRequestError = handleHttpRequestError
     self.getErrorObject = getErrorObject;
     self.checkApiAccess = checkApiAccess;
+    self.checkSuperAdminApiAccess = checkSuperAdminApiAccess;
 };
 module.exports = UispToolsApiRequestHandler;

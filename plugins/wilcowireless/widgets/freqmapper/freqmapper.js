@@ -1,5 +1,5 @@
     "use strict"
-    import baseClientSide from "/plugins/baseClientSide.js";
+    import baseClientSide from "/uisptools/plugins/baseClientSide.js";
     /*
     * uisptools  1.0
     * Copyright (c) 2022 Wilco Wireless

@@ -63,6 +63,14 @@
                     resolve();
                 });                 
             }
+
+            getPluginUserData(options){
+                    if(options && options.pluginId) {
+                        return $.uisptools.ajax("/uisptools/api/pluginUserData/" + options.pluginId);
+                    }else{
+                        return $.uisptools.ajax("/uisptools/api/pluginUserData/" + this.widgetFactory.namespace + "." + this.widgetname);
+                    }                
+            }
             
         }
 

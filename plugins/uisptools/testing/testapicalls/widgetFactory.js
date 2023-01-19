@@ -1,6 +1,6 @@
 "use strict"
 
-import baseClientSide from "/plugins/baseClientSide.js";
+import baseClientSide from "/uisptools/plugins/baseClientSide.js";
 import {testapicalls} from "./widgets/testapicalls/testapicalls.js"
 
 class widgetFactory extends baseClientSide.widgetFactory

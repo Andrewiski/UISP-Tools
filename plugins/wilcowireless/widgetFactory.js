@@ -1,7 +1,7 @@
 "use strict"
 
 
-import baseClientSide from "/plugins/baseClientSide.js";
+import baseClientSide from "/uisptools/plugins/baseClientSide.js";
 import {towerclients} from "./widgets/towerclients/towerclients.js"
 import {freqmapper} from "./widgets/freqmapper/freqmapper.js"
 
