@@ -1,5 +1,5 @@
   uisptools:
-    image: "andrewiski/uisptools:0.0.13"
+    image: "andrewiski/uisptools:0.0.14"
     user: "1001"
     ports:
       - "49443:49443"
