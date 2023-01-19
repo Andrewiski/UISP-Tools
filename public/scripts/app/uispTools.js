@@ -34,9 +34,9 @@
             },
             dataCache: [],
             templateCache: {
-                "login": { url: '/scripts/app/templates/login.htm', data: '', isLoaded: false },
-                "error": { url: '/scripts/app/templates/error.htm', data: '', isLoaded: false },
-                "defaultModal" : {url: '/scripts/app/templates/default.modal.htm', data: '', isLoaded: false}
+                "login": { url: '/uisptools/scripts/app/templates/login.htm', data: '', isLoaded: false },
+                "error": { url: '/uisptools/scripts/app/templates/error.htm', data: '', isLoaded: false },
+                "defaultModal" : {url: '/uisptools/scripts/app/templates/default.modal.htm', data: '', isLoaded: false}
                 
             },
             menu: {
@@ -486,7 +486,7 @@
             }
             //remove any attempts to double dot move up folders
             templatePath = templatePath.replace(/../g, "")
-            var url = '/scripts/app/templates/' + templatePath;
+            var url = '/uisptools/scripts/app/templates/' + templatePath;
             $.uisptools.ajax({
                 method: 'GET',
                 url:  url,
@@ -558,7 +558,7 @@
                 if(myTemplate && myTemplate.url){
                     url = myTemplate.url;
                 }else{
-                    url = "/scripts/app/templates/" + templateName;
+                    url = "/uisptools/scripts/app/templates/" + templateName;
                     myTemplate = {url:url};
                     $.uisptools.common.templateCache[templateName] = myTemplate;
                 }
@@ -1126,7 +1126,7 @@
                     method: "GET",
                     //timeout: 60000,
                     dataType: "json",
-                    url: "api/Account/Logoff",
+                    url: "/uisptools/api/Account/Logoff",
                     success: function (result) {
                         //If no data is returned, spit up a message
                         if (!result || result == null) {
