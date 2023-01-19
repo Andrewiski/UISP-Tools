@@ -428,6 +428,7 @@ app.use('/uisptools/javascript/polyfill.io/polyfill.min.js',function(req, res){
         unknown:'polyfill',
         stream:false
     }).then(function(bundleString) {
+        res.contentType("text/javascript");
         res.send(bundleString);
     });
 })
@@ -440,6 +441,7 @@ app.use('/uisptools/javascript/polyfill.io/polyfill.js',function(req, res){
         unknown:'polyfill',
         stream:false
     }).then(function(bundleString) {
+        res.contentType("text/javascript");
         res.send(bundleString);
     });
 })

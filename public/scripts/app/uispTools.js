@@ -2113,3 +2113,15 @@
         //End Common Error Handler
     });
 })(jQuery);
+
+$(function () {
+    $.uisptools.appInit().then(
+        function () {
+
+        },
+        function (err) {
+            console.log('error', err)
+        }
+
+    )
+})
