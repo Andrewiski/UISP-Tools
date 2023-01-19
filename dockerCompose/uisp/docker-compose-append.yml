@@ -1,5 +1,5 @@
   uisptools:
-    image: "andrewiski/uisptools:0.0.10"
+    image: "andrewiski/uisptools:0.0.11"
     user: "1001"
     ports:
       - "49443:49443"
@@ -9,8 +9,6 @@
       - /home/unms/data/uisptools/logs:/usr/src/uisptools/logs
       - /home/unms/data/cert:/usr/src/uisptools/config/uisp_certs
     container_name: uisptools
-    environment:
-      - UNMS_USER_ID=1001
     depends_on:
       - uisptools_mongo
     networks:

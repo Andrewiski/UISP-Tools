@@ -22,8 +22,6 @@ sudo passwd unms
 id -u
 #Change the /home/unms/app folder where the docker-compose.yml file resides  it too will have the user id set needs to be the same so updated if not 1001 from my example append file
 cd ~/app
-#Stop the uisp docker containers
-docker-compose down
 # create the uisptools folder using unms user so they have correct permissions
 mkdir ~/data/uisptools
 mkdir ~/data/uisptools/config
@@ -33,34 +31,46 @@ mkdir ~/data/uisptools/logs
 mkdir ~/data/uisptools/mongodb
 mkdir ~/data/uisptools/mongodb/data
 mkdir ~/data/uisptools/mongodb/docker-entrypoint-initdb.d
+mkdir ~/data/uisptools/nginx/
+mkdir ~/data/uisptools/nginx/templates
+
+
+#copy existing enginx templates to our override folder.
+docker cp unms-nginx:/usr/local/openresty/nginx/templates/conf.d/ ~/data/uisptools/nginx/templates/
+
+
 #copy the mongo db init scripts from github (note this are only ran once and only if there is an empty database  I use Studio 3T as windows mongo Client see below)
 wget -o ~/data/uisptools/mongodb/docker-entrypoint-initdb.d/01_createDatabase.js https://raw.githubusercontent.com/Andrewiski/UISP-Tools/main/mongodb/docker-entrypoint-initdb.d/01_createDatabase.js 
 wget -o ~/data/uisptools/mongodb/docker-entrypoint-initdb.d/02_initWebServerPages.js https://raw.githubusercontent.com/Andrewiski/UISP-Tools/main/mongodb/docker-entrypoint-initdb.d/02_initWebServerPages.js 
+
+
+
+#Stop the uisp docker containers
+docker-compose down
+
 
 # append the contents of https://github.com/Andrewiski/UISP-Tools/blob/main/dockerCompose/uisp/docker-compose-append.yml to the end of /home/unms/app/docker-compose.yml
 vi docker-compose.yml
 #Note that by changing the version of of uisptools in the docker-compose.yml will allow it to be upgraded with a "docker-compose down" followed by a "docker-compose up -d"
 #restart  uisp including the uisptools services
-docker-compose up -d
-# shell into the uisp-nginx container and update the nginx config
-docker exec -it unms-nginx sh
-# determine which template your setup is using by listing what is in the conf.d folder
-ls /usr/local/openresty/nginx/conf/conf.d
-# in my case ls returned "nginx-api.conf" and "unms-https+wss.conf"  these files are recreated at restart so we need to edit the template they are created from so it survives a reboot.
+#because unms_nginx stores its template in the image a down and up will revert the template back to the docker image
+#to prevent this we copy the templates to a local folder make the changes and map them by adding a volume to the uisp_nginx service in docker-compose.yml 
+- /home/unms/data/uisptools/nginx/templates/conf.d:/usr/local/openresty/nginx/templates/conf.d
 
-vi /usr/local/openresty/nginx/templates/conf.d/unms-https+wss.conf.template
-# Append the following to the template so uisptools is accessable on the /uisptools/ path
+nano ~/data/uisptools/nginx/templates/conf.d/unms-https+wss.conf.template
+nano ~/data/uisptools/nginx/templates/conf.d/unms+ucrm-https.conf.template 
+nano ~/data/uisptools/nginx/templates/conf.d/unms+ucrm-https+wss.conf.template 
+
+# Append the following to the templates so uisptools is accessable on the /uisptools/ path
 
   location /uisptools/ {
     allow all;
     proxy_pass       http://uisptools:49080;
   }
-# vi commands require pressing i to insert then "esc  :  w" to write the file then "esc : q" to quit vi 
 
-#need to exit the container shell with a exit
-exit
-#now restart the unms-nginx container so it uses the template to update the conf.d file and to make sure are changes survive a reboot
-docker restart unms-nginx
+
+docker-compose up -d
+
 ```
 
 Should be ablle to get the default website to open by visiting https://uispserver/uisptools

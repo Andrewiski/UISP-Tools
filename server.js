@@ -7,7 +7,7 @@ const extend = require('extend');
 const express = require('express');
 const favicon = require('serve-favicon');
 const cookieParser = require('cookie-parser');
-
+const polyfillLibrary = require('polyfill-library');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const Deferred = require('node-promise').defer;
@@ -419,6 +419,32 @@ app.use(function (req, res, next) {
     next();
     return;
 })
+
+app.use('/uisptools/javascript/polyfill.io/polyfill.min.js',function(req, res){
+    polyfillLibrary.getPolyfillString({
+        uaString: req.get('user-agent'),
+        minify: true,
+        features: {},
+        unknown:'polyfill',
+        stream:false
+    }).then(function(bundleString) {
+        res.send(bundleString);
+    });
+})
+
+app.use('/uisptools/javascript/polyfill.io/polyfill.js',function(req, res){
+    polyfillLibrary.getPolyfillString({
+        uaString: req.get('user-agent'),
+        minify: false,
+        features: {},
+        unknown:'polyfill',
+        stream:false
+    }).then(function(bundleString) {
+        res.send(bundleString);
+    });
+})
+
+
 
 app.use('/uisptools/javascript/socket.io', express.static(path.join(__dirname, 'node_modules', 'socket.io', 'client-dist')));
 app.use('/uisptools/javascript/fontawesome', express.static(path.join(__dirname, 'node_modules', '@fortawesome', 'fontawesome-free')));
