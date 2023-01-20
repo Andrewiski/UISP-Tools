@@ -1,6 +1,6 @@
 {
   "name": "uisp-tools",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "description": "Tools for UISP",
   "main": "server.js",
   "license": "GPL-3.0-or-later",
@@ -39,6 +39,7 @@
     "jquery": "^3.6.0",
     "js-cookie": "^3.0.1",
     "jsoneditor": "^9.5.5",
+    "mdb-ui-kit": "^6.1.0",
     "moment": "^2.29.1",
     "mongodb": "^4.1.2",
     "node-promise": "^0.5.14",

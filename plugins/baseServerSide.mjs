@@ -79,6 +79,28 @@
             checkApiAccess (req, res, next){
                 this.uispToolsApiRequestHandler.checkApiAccess (req, res, next)
             }
+
+            checkSuperAdminApiAccess (req, res, next){
+                this.uispToolsApiRequestHandler.checkSuperAdminApiAccess (req, res, next)
+            }
+
+            getPluginUserData = function(res){
+                try {
+                    let options = {
+                        pluginName : this.namespace, 
+                        userId:res.locals.accessToken.loginData.userId
+                    };
+                    this.uispToolsApiRequestHandler.getPluginUserData(options);
+                } catch (ex) {
+                    handleHttpRequestError(req, res, ex, "getPluginUserData");
+                }
+            }
+
+            getPluginData(){
+                let options = {pluginName : this.namespace}
+                this.uispToolsApiRequestHandler.getPluginData(options);
+            }
+
         },
 
     }

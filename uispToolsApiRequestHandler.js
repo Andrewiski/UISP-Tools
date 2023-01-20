@@ -3,7 +3,7 @@ const appName = "uispToolsApiRequestHandler";
 const extend = require('extend');
 const Defer = require('node-promise').defer;
 
-var MongoClient = require('mongodb').MongoClient;
+
 var moment = require('moment');
 
 const { v4: uuidv4, validate: uuidValidate } = require('uuid');
@@ -13,11 +13,8 @@ const { noop } = require('jquery');
 var UispToolsApiRequestHandler = function (options) {
     var self = this;
     var defaultOptions = {
-        mongoDbServerUrl: "",
-        mongoDbDatabaseName:"",
-        mongoClientOptions: {useUnifiedTopology: true},
         logUtilHelper:null,
-        uispApiRequestHandler: null
+        uispToolsApiHandler: null
     };
     var objOptions = extend({}, defaultOptions, options);
     self.objOptions = objOptions;
@@ -59,23 +56,30 @@ var UispToolsApiRequestHandler = function (options) {
             routes.get('/uisptools/api/PageContent/PageContentGuid/:guid', getPageByPageContentGuid);
             routes.get('/uisptools/api/PageContent/LinkUrl/*', getPageByLinkUrl);
             routes.post('/uisptools/login/loginBoth', loginBoth);
-            routes.get('/uisptools/login/loginData', getLoginData);
-            routes.get('/uisptools/api/pluginData/:pluginName', getPluginData);
             
-            //routes.get('/uisptools/login/userInfo', getUserInfo);
+            routes.get('/uisptools/login/loginData', getLoginData);
             routes.get('/uisptools/errorHandlerTest', errorHandlerTest);
             routes.get('/uisptools/errorHandlerTestRawError', errorHandlerTestRawError);
             routes.get('/uisptools/api/settings/anonymousClientSideSettings', getAnonymousClientSideSettings);
             //Any Routes above this line are not Checked for Auth and are Public
             routes.get('/uisptools/api/*', checkApiAccess);
             routes.get('/uisptools/api/UserInfo', getUserInfo);
-            routes.get('/uisptools/api/pluginUserData/:pluginName', getPluginUserData);
-
-
-            //Any Routes above this are basic User Authed if below 
+            routes.get('/uisptools/login/logout', checkApiAccess);
+            routes.get('/uisptools/login/logout', logout);
+            
+            //Any /uisptools/api Routes above this are basic User Authed if below then only SuperAdmin can call them
             routes.get('/uisptools/api/*', checkSuperAdminApiAccess);
             routes.post('/uisptools/api/*', checkSuperAdminApiAccess);
             routes.delete('/uisptools/api/*', checkSuperAdminApiAccess);
+
+            //These should be accessed server side via the baseServerSideJs calls so not to reveil contents
+            //routes.get('/uisptools/api/pluginUserData/:pluginName', handlePluginUserDataRequest);
+            // routes.post('/uisptools/api/pluginData/:pluginName', savePluginData);
+            // routes.post('/uisptools/api/pluginUserData/:pluginName', savePluginUserData);
+            // routes.delete('/uisptools/api/pluginData/:pluginName', deletePluginData);
+            // routes.delete('/uisptools/api/pluginUserData/:pluginName', deletePluginUserData);
+
+            //Only Admin plugins can call these directly plugins should only expose what should exposed as you can pull credit card data etc.
             routes.get('/uisptools/api/crm/*', getCRM);
             routes.get('/uisptools/api/nms/*', getNMS);
             routes.post('/uisptools/api/crm/*', getCRM);
@@ -89,6 +93,7 @@ var UispToolsApiRequestHandler = function (options) {
         
     }
 
+    
 
     var getAnonymousClientSideSettings = function(req, res, next){
         try {
@@ -126,7 +131,7 @@ var UispToolsApiRequestHandler = function (options) {
             let access_token = req.headers.authorization;
             if(access_token && access_token.startsWith("Bearer ")){
                 access_token = access_token.substring(7);
-                getAccessToken({access_token:access_token}).then(
+                self.objOptions.uispToolsApiHandler.getAccessToken({access_token:access_token}).then(
                     function(accessToken){
                         if(accessToken != null){
                             //double check not Expired etc but not sure why Mongo would not delete it
@@ -215,7 +220,7 @@ var UispToolsApiRequestHandler = function (options) {
                 method : req.method
                 //ucrmAppKey:accessToken.loginData.nmsLoginData.x-auth-token
             }
-            self.objOptions.uispApiRequestHandler.handleUcrmRequest(ucrmOptions).then(
+            self.objOptions.uispToolsApiHandler.handleUcrmRequest(ucrmOptions).then(
                 function(data){
                     res.json(data);
                 },
@@ -275,7 +280,7 @@ var UispToolsApiRequestHandler = function (options) {
                 nmsAuthToken:accessToken.loginData.nmsLoginData["x-auth-token"],
                 method : req.method
             }
-            self.objOptions.uispApiRequestHandler.handleUnmsRequest(unmsOptions).then(
+            self.objOptions.uispToolsApiHandler.handleUnmsRequest(unmsOptions).then(
                 function(data){
                     res.json(data);
                 },
@@ -283,7 +288,6 @@ var UispToolsApiRequestHandler = function (options) {
                     debug("error", "getNMS", { "msg": err.message, "stack": err.stack });
                     res.status(500).json({ "msg": "An Error Occured!", "error": err });
                 }
-
 
             )
            
@@ -295,258 +299,14 @@ var UispToolsApiRequestHandler = function (options) {
 
     };
 
-    var createRefreshToken = function (options){
-        var deferred = Defer();
-        
-        try {
-            const client = new MongoClient(objOptions.mongoDbServerUrl,objOptions.mongoClientOptions);
-            // Use connect method to connect to the Server
-            client.connect().then(
-                function () {
-                    try {
-                    
-                        const db = client.db(objOptions.mongoDbDatabaseName);
-                        const collection = db.collection('ut_RefreshToken');
-                        if (collection) {
-                            let refreshToken = {};
-                            refreshToken.refresh_token = uuidv4();
-                            //if (options.expiresIn === undefined || options.expiresIn === null){
-                                refreshToken.expiresIn = 259200; // 3 * 24 * 60 * 60;  //expire Token in 3 days ie it will get auto deleted by Mongo
-                            //}
-                            refreshToken.token_type = "bearer";
-                            let expiresOn = new Date();
-                            expiresOn = new Date(expiresOn.getTime() + (refreshToken.expiresIn * 1000));
-                            
-                            refreshToken.expiresOn = expiresOn //used by Momgo to auto delete when expired
-                            //refreshToken.expiresAt = moment().add( refreshToken.expiresIn, 'seconds').toISOString();
-                            refreshToken.loginData = options.loginData;
-                            collection.insertOne(refreshToken).then(                            
-                                function (err, doc) {
-                                    
-                                    client.close();
-                                    delete refreshToken.loginData;
-                                    deferred.resolve(refreshToken);
-                                },
-                                function(err){
-                                    debug('error', 'createRefreshToken',  { "msg": err.message, "stack": err.stack });
-                                    client.close();
-                                    deferred.reject({ "code": 500, "msg": "An Error Occured!", "error": err });
-                                }
-                            );
-                        } else {
-                            debug("error", "createRefreshToken", { "msg": "Not Able to Open MongoDB Connection", "stack": "" });
-                            client.close();
-                            deferred.reject({ "code": 500, "msg": "Not Able to Open MongoDB Connection", "error": "collection is null"});
-                        }
-                    } catch (ex) {
-                        debug("error", "createRefreshToken", { "msg": ex.message, "stack": ex.stack });
-                        client.close();
-                        deferred.reject({ "code": 500, "msg": ex.message, "error": ex });
-                    }
-                },
-                function(err){
-                    debug('error', 'createRefreshToken',  { "msg": err.message, "stack": err.stack });
-                    deferred.reject({ "code": 500, "msg": "An Error Occured!", "error": err });
-                }
-
-            );
-        } catch (ex) {
-            debug('error', 'createRefreshToken',  { "msg": ex.message, "stack": ex.stack });
-            deferred.reject({ "code": 500, "msg": "An Error Occured!", "error": ex });
-        }
-        
-        return deferred.promise;     
-    }
-
-
-    var createAccessToken = function (options){
-        var deferred = Defer();
-        try {
-            const client = new MongoClient(objOptions.mongoDbServerUrl,objOptions.mongoClientOptions);
-            // Use connect method to connect to the Server
-            client.connect().then(
-                function () {
-                    try {
-                        
-                        const db = client.db(objOptions.mongoDbDatabaseName);
-                        const collection = db.collection('ut_AccessToken');
-                        if (collection) {
-                            var accessToken = {};
-                            accessToken.access_token = uuidv4();
-                            accessToken.expiresIn = 3600; 
-                            
-                            let expiresOn = new Date();
-                            expiresOn = new Date(expiresOn.getTime() + (accessToken.expiresIn * 1000));
-                            accessToken.expiresOn = expiresOn //used by Momgo to auto delete when expired with a expireAfterSecond index
-                            //accessToken.expiresOn = moment().add( accessToken.expiresIn, 'seconds');  //This is set in a expireAfterSecond index in Mongo To Autodelete the row
-                            //accessToken.expiresAt = moment().add( accessToken.expiresIn, 'seconds').toISOString();  //This is set in a expireAfterSecond index in Mongo To Autodelete the row
-                            accessToken.refresh_token = options.refreshToken.refresh_token;
-                            accessToken.refreshToken = options.refreshToken; //used as a way to prevent having to fetch refreshToken as this way it is a short cache as its a 10 minute of all connected users
-                            accessToken.loginData = options.loginData;
-                            //data.authTokenExpiresOn = moment().add( data.expireAt, 'seconds').toISOString();
-                            collection.insertOne(accessToken).then(                            
-                                function (doc) {
-                                    client.close();
-                                    delete accessToken.refreshToken
-                                    delete accessToken.loginData
-                                    deferred.resolve(accessToken);
-                                },
-                                function(err){
-                                    debug("error", "createAccessToken", { "msg": err.message, "stack": err.stack });
-                                    client.close();
-                                    deferred.reject({ "code": 500, "msg": err.message, "error": err });
-                                }
-                                    
-                            );
-                        } else {
-                            debug("error", "createAccessToken", { "msg": "Not Able to Open MongoDB Connection", "stack": "" });
-                            client.close();
-                            deferred.reject({ "code": 500, "msg": "Not Able to Open MongoDB Connection", "error": "collection is null"});
-                        }
-                    } catch (ex) {
-                        debug("error", "createAccessToken", { "msg": ex.message, "stack": ex.stack });
-                        client.close();
-                        deferred.reject({ "code": 500, "msg": ex.message, "error": ex });
-                    }
-                },
-                function(err){
-                    debug("error", "createAccessToken", { "msg": err.message, "stack": err.stack });
-                    deferred.reject({ "code": 500, "msg": err.message, "error": err });
-                }
-            );
-        } catch (ex) {
-            debug('error', 'createAuthToken',  { "msg": ex.message, "stack": ex.stack });
-            deferred.reject({ "code": 500, "msg": "An Error Occured!", "error": ex });
-        }
-        
-        return deferred.promise;     
-    }
-
-
     
-
-
-    
-
-    var getAccessToken = function(options){
-        var deferred = Defer();
-        //We may want to add a redis server to the mix to cache accessToken and RefreshTokens for performance since they both have expiration dates
-        try {
-            const client = new MongoClient(objOptions.mongoDbServerUrl,objOptions.mongoClientOptions);
-            // Use connect method to connect to the Server
-            client.connect().then(
-                function () {
-                    try {
-                        
-                        const db = client.db(objOptions.mongoDbDatabaseName);
-                        const collection = db.collection('ut_AccessToken');
-                        var findQuery = {  access_token : options.access_token}
-                        if (collection) {
-                            collection.findOne(findQuery, null).then(
-                                function (doc) {
-                                    deferred.resolve(doc);
-                                    client.close();
-                                },
-                                function(err){
-                                    debug("error", "getAccessToken", { "msg": err.message, "stack": err.stack });
-                                    deferred.reject({ "msg": "An Error Occured!", "error": err });
-                                    client.close();            
-                                }
-                            );
-                        } else {
-                            debug("error", "getAccessToken", { "msg": "An Error Occured!", "stack": "Collection Not Found" });
-                            deferred.reject({ "msg": "An Error Occured!", "error": "getAccessToken Collection Not Found" });
-                            client.close(); 
-                        }
-                    } catch (ex) {
-                        debug("error", "getAccessToken", { "msg": ex.message, "stack": ex.stack });
-                        deferred.reject({ "msg": "An Error Occured!", "error": ex });
-                        client.close();
-                    }
-                },
-                function(err){
-                    debug("error", "getAccessToken", { "msg": err.message, "stack": err.stack });
-                    deferred.reject({ "code": 500, "msg": err.message, "error": err });
-                }
-            );
-        } catch (ex) {
-            debug("error", "getAccessToken", { "msg": ex.message, "stack": ex.stack });
-            deferred.reject({ "msg": "An Error Occured!", "error": ex });
-        }
-        return deferred.promise;
-    }
-
-    var getRefreshToken = function(options){
-        var deferred = Defer();
-        //We may want to add a redis server to the mix to cache accessToken and RefreshTokens for performance since they both have expiration dates
-        try {
-            const client = new MongoClient(objOptions.mongoDbServerUrl,objOptions.mongoClientOptions);
-            // Use connect method to connect to the Server
-            client.connect().then(
-                function () {
-                    try {
-                        const db = client.db(objOptions.mongoDbDatabaseName);
-                        const collection = db.collection('ut_RefreshToken');
-                        var findQuery = {  refresh_token : options.refresh_token}
-                        if (collection) {
-                            collection.findOne(findQuery, null).then(
-                                function (doc) {
-                                    deferred.resolve(doc);
-                                    client.close();
-                                },
-                                function(err){
-                                    debug("error", "getRefreshToken", { "msg": err.message, "stack": err.stack });
-                                    deferred.reject({ "msg": "An Error Occured!", "error": err });
-                                    client.close();            
-                                }
-                            );
-                        } else {
-                            debug("error", "getRefreshToken", { "msg": "An Error Occured!", "stack": "Collection Not Found" });
-                            deferred.reject({ "msg": "An Error Occured!", "error": "getRefreshToken Collection Not Found" });
-                            client.close(); 
-                        }
-                    } catch (ex) {
-                        debug("error", "getRefreshToken", { "msg": ex.message, "stack": ex.stack });
-                        deferred.reject({ "msg": "An Error Occured!", "error": ex });
-                        client.close();
-                    }
-                },
-                function(err){
-                    debug("error", "getRefreshToken", { "msg": err.message, "stack": err.stack });
-                    deferred.reject({ "msg": "An Error Occured!", "error": err });           
-                }
-            );
-        } catch (ex) {
-            debug("error", "getRefreshToken", { "msg": ex.message, "stack": ex.stack });
-            deferred.reject({ "msg": "An Error Occured!", "error": ex });
-        }
-        return deferred.promise;
-    }
-
-
-    
-
-    var cleanLoginData = function(loginData){
-        let userInfoData = loginData
-        userInfoData.roles = [];
-            if(userInfoData.nmsLoginData){
-                if(userInfoData.nmsLoginData.role === "superadmin"){
-                    userInfoData.roles.push({roleName:"admin"});
-                }
-                delete userInfoData.nmsLoginData;
-            }
-            if(userInfoData.crmLoginData){
-                delete userInfoData.crmLoginData;
-            }
-            return userInfoData;
-    }
 
     var getUserInfo = function (req, res) {
         try {
             
             //We strip and message the loginData to fit the application here
 
-            var userInfo = cleanLoginData(res.locals.accessToken.loginData)
+            var userInfo = objOptions.uispToolsApiHandler.cleanLoginData(res.locals.accessToken.loginData)
             
             res.json(userInfo);
             
@@ -557,71 +317,14 @@ var UispToolsApiRequestHandler = function (options) {
         }
     };
 
-    //Login Unms
-// routes.post('/login/loginNms', function (req, res) {
-//     var loginData = {};
-//     self.objOptions.uispApiRequestHandler.publicLoginNms(req.body).then(
-//         function (data) {
-//             try {
-//                 uispToolsApiRequestHandler.createRefreshToken(data).then(
-//                     function(data){
-//                         delete data.loginData
-//                         delete data.nmsAuthToken
-//                         if(data.access_token){
-//                             res.setHeader("Cache-Control", "no-store");
-//                             res.setHeader("Pragma", "no-cache");
-//                         }
-//                         res.json(data);
-//                     },
-//                     function(error){
-//                         handleHttpRequestError(req,res,error);    
-//                     }
-//                 )
-//             } catch (ex) {
-//                 handleHttpRequestError(req, res, ex);
-//             }
-//         },
-//         function (error) {
-//             handleHttpRequestError(req,res,error);
-//         }
-//     );
-// });
+    
 
-// //Login Unms
-// routes.post('/login/loginCms', function (req, res) {
-//     var loginData = {};
-//     self.objOptions.uispApiRequestHandler.publicLoginCrm(req.body).then(
-//         function (data) {
-//             try {
-//                 uispToolsApiRequestHandler.createRefreshToken(data).then(
-//                     function(data){
-//                         delete data.loginData;
-//                         if(data.access_token){
-//                             res.setHeader("Cache-Control", "no-store");
-//                             res.setHeader("Pragma", "no-cache");
-//                         }
-//                         res.json(data);
-//                     },
-//                     function(error){
-//                         handleHttpRequestError(req,res,error);    
-//                     }
-//                 )
-//             } catch (ex) {
-//                 handleHttpRequestError(req, res, ex);
-//             }
-//         },
-//         function (error) {
-//             handleHttpRequestError(req, res, error);
-//         }
-//     );
-// });
 
-//Login CRM if not Successfull try login as unms
 var loginBoth =  function (req, res) {
     var loginData = {};
     if(req.body && req.body.grant_type === "refresh_token"){
         try {
-            getRefreshToken({refresh_token: req.body.refresh_token}).then(
+            objOptions.uispToolsApiHandler.getRefreshToken({refresh_token: req.body.refresh_token}).then(
                 function(refreshToken){   
                     if(refreshToken === null){
                         debug("debug", "loginBoth refresh_token not found", req.body.refresh_token);
@@ -629,7 +332,7 @@ var loginBoth =  function (req, res) {
                     }else{
                         var loginData = refreshToken.loginData 
                         delete refreshToken.loginData                 
-                        createAccessToken({refreshToken: refreshToken,loginData:loginData}).then(
+                        objOptions.uispToolsApiHandler.createAccessToken({refreshToken: refreshToken,loginData:loginData}).then(
                             function(accessToken){
                                 delete loginData.crmLoginData
                                 delete accessToken._id
@@ -639,7 +342,7 @@ var loginBoth =  function (req, res) {
                                 loginData.refreshToken = refreshToken
                                 res.setHeader("Cache-Control", "no-store");
                                 res.setHeader("Pragma", "no-cache");
-                                loginData = cleanLoginData(loginData);
+                                loginData = objOptions.uispToolsApiHandler.cleanLoginData(loginData);
                                 res.json(loginData);
                             },
                             function(err){
@@ -657,12 +360,12 @@ var loginBoth =  function (req, res) {
             handleHttpRequestError(req, res, ex);
         }
     }else{
-        self.objOptions.uispApiRequestHandler.publicLoginCrm(req.body).then(
+        self.objOptions.uispToolsApiHandler.publicLoginCrm(req.body).then(
             function (loginData) {
                 try {
-                    createRefreshToken({loginData:loginData}).then(
+                    objOptions.uispToolsApiHandler.createRefreshToken({loginData:loginData}).then(
                         function(refreshToken){                       
-                            createAccessToken({refreshToken: refreshToken,loginData:loginData}).then(
+                            objOptions.uispToolsApiHandler.createAccessToken({refreshToken: refreshToken,loginData:loginData}).then(
                                 function(accessToken){
                                     delete loginData.crmLoginData
                                     delete accessToken._id
@@ -671,7 +374,7 @@ var loginBoth =  function (req, res) {
                                     loginData.refreshToken = refreshToken
                                     res.setHeader("Cache-Control", "no-store");
                                     res.setHeader("Pragma", "no-cache");
-                                    loginData = cleanLoginData(loginData);
+                                    loginData = objOptions.uispToolsApiHandler.cleanLoginData(loginData);
                                     res.json(loginData);
                                 },
                                 function(err){
@@ -690,12 +393,12 @@ var loginBoth =  function (req, res) {
             },
             function (error) {
                 //Try to login to NMS see if its an Admin loging in 
-                self.objOptions.uispApiRequestHandler.publicLoginNms(req.body).then(
+                self.objOptions.uispToolsApiHandler.publicLoginNms(req.body).then(
                     function (loginData) {
                         try {
-                            createRefreshToken({loginData:loginData}).then(
+                            objOptions.uispToolsApiHandler.createRefreshToken({loginData:loginData}).then(
                                 function(refreshToken){
-                                    createAccessToken({refreshToken: refreshToken, loginData:loginData}).then(
+                                    objOptions.uispToolsApiHandler.createAccessToken({refreshToken: refreshToken, loginData:loginData}).then(
                                         function(accessToken){
                                             delete loginData.nmsLoginData
                                             delete loginData.nmsAuthToken
@@ -705,7 +408,7 @@ var loginBoth =  function (req, res) {
                                             loginData.accessToken = accessToken;
                                             res.setHeader("Cache-Control", "no-store");
                                             res.setHeader("Pragma", "no-cache");
-                                            loginData = cleanLoginData(loginData);
+                                            loginData = objOptions.uispToolsApiHandler.cleanLoginData(loginData);
                                             res.json(loginData);
                                         },
                                         function(err){
@@ -731,10 +434,44 @@ var loginBoth =  function (req, res) {
     }
 };
 
+
+var logout =  function (req, res) {
+
+    var refresh_token = res.locals.accessToken.refresh_token;
+    
+    var isNmsLogin = (res.locals.accessToken.loginData.userType === "nms");
+    
+    var logoutPromises = []
+    if(isNmsLogin){
+        var nmsAuthToken = res.locals.accessToken.loginData.nmsLoginData["x-auth-token"];
+        let unmsOptions = {
+            url:'user/logout',  //figure this out from request 
+            rejectUnauthorized: true, 
+            nmsAuthToken:nmsAuthToken,
+            method : "POST"
+        }
+        logoutPromises.push(objOptions.uispToolsApiHandler.handleUnmsRequest(unmsOptions))
+    }
+    logoutPromises.push(objOptions.uispToolsApiHandler.deleteRefreshToken({refresh_token: refresh_token}));
+    logoutPromises.push(objOptions.uispToolsApiHandler.deleteAccessToken({refresh_token: refresh_token}))
+    Promise.all(logoutPromises)
+    .then(
+        function(){
+            res.json({success:true});
+        },
+        function(ex){
+            handleHttpRequestError(req,res,ex, "logout" );                        
+        }
+    )
+        
+    
+};
+
+
 //Login Page Public Data
 var getLoginData = function (req, res) {
     var loginData = {};
-    self.objOptions.uispApiRequestHandler.publicLoginData().then(
+    self.objOptions.uispToolsApiHandler.publicLoginData().then(
         function (data) {
             try {
                 res.json(data);
@@ -749,108 +486,15 @@ var getLoginData = function (req, res) {
 };
 
 
-var getPluginData = function(req, res){
-    try {
-            const client = new MongoClient(objOptions.mongoDbServerUrl,objOptions.mongoClientOptions);
-            // Use connect method to connect to the Server
-            client.connect().then( 
-                function () {
-                    try {
-                        
-                        const db = client.db(objOptions.mongoDbDatabaseName);
-                        const collection = db.collection('ut_PluginData');
-                        var findQuery = null;
-                        if(req.params.pluginName){
-                            if(uuidValidate(req.params.pluginName)){
-                                findQuery = { pluginId: req.params.pluginName };
-                            }else{
-                                findQuery = { pluginName: req.params.pluginName };
-                            }
-                        }else{
-                            throw new Error("pluginDataID or Name must be set");
-                        }
-                        if (collection) {
-                            collection.findOne(findQuery).then(
-                                    function ( doc) {   
-                                        res.json(doc);
-                                        client.close();
-                                    },
-                                    function(err){
-                                        handleHttpRequestError(req, res, err, "getPluginData");
-                                        client.close();
-                                    }
-                                );
-                        } else {
-                            return null;
-                        }
-                    } catch (ex) {
-                        handleHttpRequestError(req, res, ex, "getPluginData" );
-                        client.close();
-                    }
-                },
-                function(err){
-                    handleHttpRequestError(req, res, err, "getPluginData");
-                }    
-            );
-        } catch (ex) {
-            handleHttpRequestError(req, res, ex, "getPluginData");
-        }
-}
 
-var getPluginUserData = function(req, res){
-    try {
-            const client = new MongoClient(objOptions.mongoDbServerUrl,objOptions.mongoClientOptions);
-            // Use connect method to connect to the Server
-            client.connect().then( 
-                function () {
-                    try {
-                        
-                        const db = client.db(objOptions.mongoDbDatabaseName);
-                        const collection = db.collection('ut_PluginUserData');
-                        var findQuery = null;
-                        //can be passed in as a guid or as pluginName    
-                        if(req.params.pluginName){
-                            if(uuidValidate(req.params.pluginName)){
-                                findQuery = { pluginId: req.params.pluginName };
-                            }else{
-                                findQuery = { pluginName: req.params.pluginName };
-                            }
-                            
-                        }else{
-                            throw new Error("pluginDataID or Name must be set");
-                        }
-                        findQuery.userId =  res.locals.accessToken.loginData.userId
-                        if (collection) {
-                            collection.findOne(findQuery).then(
-                                    function ( doc) {   
-                                        res.json(doc);
-                                        client.close();
-                                    },
-                                    function(err){
-                                        handleHttpRequestError(req, res, err, "getPluginUserData");
-                                        client.close();
-                                    }
-                                );
-                        } else {
-                            return null;
-                        }
-                    } catch (ex) {
-                        handleHttpRequestError(req, res, ex, "getPluginUserData" );
-                        client.close();
-                    }
-                },
-                function(err){
-                    handleHttpRequestError(req, res, err, "getPluginUserData");
-                }    
-            );
-        } catch (ex) {
-            handleHttpRequestError(req, res, ex, "getPluginUserData");
-        }
-}
+
+
+
+
 
 // var getUserInfo = function (req, res) {
 //     var loginData = {};
-//     self.objOptions.uispApiRequestHandler.loginUserInfo().then(
+//     self.objOptions.uispToolsApiHandler.loginUserInfo().then(
 //         function (data) {
 //             try {
 //                 res.json(data);
@@ -920,95 +564,41 @@ var handleHttpRequestError = function (req, res, err, debugData) {
 };
 
 
-    var getMenuItems = function (req, res) {
-        try {
-            const client = new MongoClient(objOptions.mongoDbServerUrl,objOptions.mongoClientOptions);
-            // Use connect method to connect to the Server
-            client.connect().then( 
-                function () {
-                    try {
-                        
-                        const db = client.db(objOptions.mongoDbDatabaseName);
-                        const collection = db.collection('ut_PageContent');
-                        var findQuery = { linkMenuDisplay: true, deleted: false };
-                        var projections = { linkText: 1, linkUrl: 1, linkTarget: 1, pageContentGuid: 1, roleId: 1, contentType: 1 };
-                        var sort = [['displayOrder', 1]];
-                        if (collection) {
-                            collection.find(findQuery)
-                                .project(projections)
-                                .sort(sort)
-                                .toArray().then(
-                                    function ( docs) {   
-                                        res.json(docs);
-                                        client.close();
-                                    },
-                                    function(err){
-                                        handleHttpRequestError(req, res, err, "getMenuItems");
-                                        client.close();
-                                    }
-                                );
-                        } else {
-                            return null;
-                        }
-                    } catch (ex) {
-                        //debug("error", "getMenuItems", { "msg": ex.message, "stack": ex.stack });
-                        //res.status(500).json({ "msg": "An Error Occured!", "error": ex });
-                        handleHttpRequestError(req, res, ex, "getMenuItems" );
-                        client.close();
-                    }
-                },
-                function(err){
-                    handleHttpRequestError(req, res, err, "getMenuItems");
-                }    
-            );
-        } catch (ex) {
-            //debug("error", "getMenuItems", { "msg": ex.message, "stack": ex.stack });
-            //res.status(500).json({ "msg": "An Error Occured!", "error": ex });
-            handleHttpRequestError(req, res, ex);
-        }
-
-    };
+var getMenuItems = function (req, res, next) {
+    try {
+        let options = {}
+        objOptions.uispToolsApiHandler.getMenuItems(options).then(
+            function (docs) {
+                res.json(docs);
+            },
+            function(err){
+                handleHttpRequestError(req, res, err);
+            }
+        )
+    } catch (ex) {
+        handleHttpRequestError(req, res, ex);
+    }
+}
+    
 
     var getPage = function (req, res, options) {
         try {
-            let findDefaults = { deleted: false }
-            const client = new MongoClient(objOptions.mongoDbServerUrl,objOptions.mongoClientOptions);
-            // Use connect method to connect to the Server
-            client.connect().then(
-                function () {
-                    try {
-                        const db = client.db(objOptions.mongoDbDatabaseName);
-                        const collection = db.collection('ut_PageContent');
-                        var findQuery = extend({}, options.find, findDefaults);
-                        var projections = { linkText: 1, linkUrl: 1, linkTarget: 1, pageContentGuid: 1, pageDescription: 1, pageKeywords: 1, updatedDate: 1, pageTitle: 1, contentType: 1, extendedData:1, content: 1 };
-                        if (collection) {
-                            collection.findOne(findQuery, { projection: projections }).then(
-                                function (docs) {
-                                    res.json(docs);
-                                    client.close();
-                                },
-                                function(err){
-                                    handleHttpRequestError(req, res, err);
-                                    client.close();
-                                }
-                            );
-                        } else {
-                            return null;
-                        }
-                    } catch (ex) {
-                        //debug("error", "getPage", { "msg": ex.message, "stack": ex.stack });
-                        //res.status(500).json({ "msg": "An Error Occured!", "error": ex });
-                        handleHttpRequestError(req, res, ex);
-                        client.close();
-                    }
+            let defaultOptions = {
+                find: { deleted: false },
+                projections: { linkText: 1, linkUrl: 1, linkTarget: 1, pageContentGuid: 1, pageDescription: 1, pageKeywords: 1, updatedDate: 1, pageTitle: 1, contentType: 1, extendedData:1, content: 1 }
+            }
+            let m_options = extend({}, options, defaultOptions); 
+            m_options.find = extend({}, options.find, defaultOptions.find);
+            m_options.projections = extend({}, options.projections, defaultOptions.projections);
+            objOptions.uispToolsApiHandler.getPageContent(m_options).then(
+                function (docs) {
+                    res.json(docs);
                 },
                 function(err){
                     handleHttpRequestError(req, res, err);
                 }
-            );
+            )
         } catch (ex) {
-            //debug("error", "getPage", { "msg": ex.message, "stack": ex.stack });
-            //res.status(500).json({ "msg": "An Error Occured!", "error": ex });
             handleHttpRequestError(req, res, ex);
         }
     };
@@ -1027,14 +617,12 @@ var handleHttpRequestError = function (req, res, err, debugData) {
         getPage(req, res, options);
     }
 
-    self.createRefreshToken = createRefreshToken;
-    self.createAccessToken = createAccessToken;
-    self.getRefreshToken = getRefreshToken;
+    
     self.bindRoutes = BindRoutes;
-    self.cleanLoginData = cleanLoginData;
     self.handleHttpRequestError = handleHttpRequestError
     self.getErrorObject = getErrorObject;
     self.checkApiAccess = checkApiAccess;
     self.checkSuperAdminApiAccess = checkSuperAdminApiAccess;
+
 };
 module.exports = UispToolsApiRequestHandler;

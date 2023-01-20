@@ -27,15 +27,75 @@ var wilcowireless = {
                     super.bindRoutes(router);
                     //Any Routes above this line are not Checked for Auth and are Public
                     router.get('/uisptools/wilcowireless/api/*', this.checkApiAccess);
-                    router.get('/uisptools/wilcowireless/api/towerclients', this.getTowerClients); 
+                    router.get('/uisptools/wilcowireless/api/towerclients', this.getTowerSitesClients); 
                 } catch (ex) {
                    this.debug("error", ex.msg, ex.stack);
                 }
             }
 
-            getTowerClients(req, res){
+            fetchSiteClients(siteId){
+                return $.uisptools.ajax("/uisptools/api/nms/sites/" + siteId + "/clients");
+            }
+            
+            fetchSiteDetails(siteId){
+                return $.uisptools.ajax("/uisptools/api/nms/sites/" + siteId);
+            }
+    
+            fetchSiteClientsWithDetails(siteId){
+                return new Promise((resolve, reject) => {
+                    try{
+                        
+                        var clientDetailPromise = [];
+                        self.fetchSiteClients(siteId).then(
+                            function(clientIds){
+                                for(var i = 0; i < clientIds.length; i++){
+                                    let clientId = clientIds[i];
+                                    clientDetailPromise.push(self.fetchSiteDetails(clientId))
+                                }
+                                Promise.all(clientDetailPromise).then(
+                                    function(clients){
+                                        resolve(clients)
+                                    },
+                                    function(err){
+                                        var objError = $.uisptools.createErrorFromScriptException(ex, "Server error during wilcowireless.towerclients.fetchSiteClientsWithDetailes.");
+                                        reject(objError);        
+                                    }
+                                )
+                            },
+                            function(err){
+                                var objError = $.uisptools.createErrorFromScriptException(ex, "Server error during wilcowireless.towerclients.fetchSiteClientsWithDetailes.");
+                                reject(objError);        
+                            }
+                        )
+                    }catch(ex){
+                        $.logToConsole("ERROR wilcowireless.towerclients.fetchSiteClientsWithDetailes: " + ex.toString());
+                        var objError = $.uisptools.createErrorFromScriptException(ex, "Server error during wilcowireless.loadWidget.");
+                        reject(objError);
+                    }
+                })
+            }
+
+            getTowerSitesClients(req, res){
                 try{
-                    res.json({test:true});
+                    this.getPluginUserData(req,res).then((userPluginData) =>{
+                        if(userPluginData && userPluginData.sites){
+                            var dataFetches = []
+                            userPluginData.sites.forEach(siteId => {
+                                dataFetches.push(self.fetchSiteClientsWithDetails(siteId))
+                            });
+                            Promise.all(dataFetches).then(
+                                function(results){
+                                    var clients = []
+                                    results.forEach(siteClients => {
+                                        clients = clients.concat(siteClients);
+                                    });
+                                    self.bindClients(clients);
+                                    //let $element = $(self.element);
+                                    
+                                }
+                            )
+                        }
+                    })
                 }catch(ex){
                     this.debug("error", "getTowerClients", ex.msg, ex.stack);
                     res.status(500).json({ "msg": "An Error Occured!", "error": ex });

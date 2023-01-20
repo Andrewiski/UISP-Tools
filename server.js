@@ -24,7 +24,7 @@ const LogUtilHelper = require("@andrewiski/logutilhelper");
 const LetsEncrypt =  require('@andrewiski/letsencrypt');
 const OpenSSL = require("@andrewiski/openssl");
 const ioServer = require('socket.io');
-const UispApiRequestHandler = require("./uispApiRequestHandler.js");
+const UispToolsApiHandler = require("./uispToolsApiHandler.js");
 const UispToolsApiRequestHandler = require("./uispToolsApiRequestHandler.js");
 const { networkInterfaces } = require('os');
 const { Router } = require('express');
@@ -170,7 +170,6 @@ let logUtilHelper = new LogUtilHelper({
 
 })
 
-
 // var appLogger = new Logger({
 //     logLevels: objOptions.logLevels,
 //     debugUtilName: "uisptools",
@@ -179,25 +178,33 @@ let logUtilHelper = new LogUtilHelper({
 //     logFolder: objOptions.logDirectory
 // })
 
-var uispApiRequestHandler = new UispApiRequestHandler({
+var uispToolsApiHandler = new UispToolsApiHandler({
     ucrmUrl: objOptions.ucrmUrl,
     ucrmAppKey: objOptions.ucrmAppKey,
     unmsUrl: objOptions.unmsUrl,
+    mongoDbServerUrl: objOptions.mongoDbServerUrl,
+    mongoDbDatabaseName: objOptions.mongoDbDatabaseName,
     rejectUnauthorized : objOptions.rejectUnauthorized,
     logUtilHelper:logUtilHelper
 });
 
 var uispToolsApiRequestHandler = new UispToolsApiRequestHandler({
-    mongoDbServerUrl: objOptions.mongoDbServerUrl,
-    mongoDbDatabaseName: objOptions.mongoDbDatabaseName,
     logUtilHelper:logUtilHelper,
-    uispApiRequestHandler:uispApiRequestHandler,
+    uispToolsApiHandler:uispToolsApiHandler,
     googleApiKey: objOptions.googleApiKey
 });
 
 
 var startupReady = Deferred();
 var app = express();
+
+if(localDebug){
+    //this will allow us to emulate the CSP set by UNMS via the NGINX server
+    app.use(function(req, res, next) {
+        res.setHeader("Content-Security-Policy", "default-src 'self' data: wss: *.tile.openstreetmap.org *.gstatic.com *.googleapis.com geocode.arcgis.com nominatim.openstreetmap.org sp-dir.uwn.com web.delighted.com; style-src 'self' 'unsafe-inline' *.googleapis.com; img-src 'self' *.tile.openstreetmap.org maps.gstatic.com *.googleapis.com blog.ui.com *.svc.ui.com data:; script-src 'self' data: wss: *.tile.openstreetmap.org *.gstatic.com *.googleapis.com geocode.arcgis.com nominatim.openstreetmap.org d2yyd1h5u9mauk.cloudfront.net sp-dir.uwn.com 'sha256-VWlS8Ik7XRVhz/AxeiqW/Fz0x8ZwAlOO7KdRrOwgP0Q='");
+        return next();
+    });
+}
 
 var commonData = {
     logins: {},
@@ -262,6 +269,9 @@ var getConnectionInfo = function (req) {
     var ua = req.headers['user-agent'];
     return { ip: ip, port: port, ua: ua };
 };
+
+
+
 
 var getSocketInfo = function (socket) {
     var ip = socket.handshake.headers['x-forwarded-for'] || socket.conn.remoteAddress;
@@ -458,6 +468,8 @@ app.use('/uisptools/javascript/animate-css', express.static(path.join(__dirname,
 app.use('/uisptools/javascript/jsoneditor', express.static(path.join(__dirname, 'node_modules', 'jsoneditor', 'dist')));
 app.use('/uisptools/javascript/js-cookie', express.static(path.join(__dirname, 'node_modules', 'js-cookie', 'dist')));
 app.use('/uisptools/javascript/googlemaps', express.static(path.join(__dirname, 'node_modules', '@googlemaps', 'js-api-loader', 'dist')));
+app.use('/uisptools/javascript/mdb-ui-kit/js', express.static(path.join(__dirname, 'node_modules', 'mdb-ui-kit', 'js')));
+app.use('/uisptools/javascript/mdb-ui-kit/css', express.static(path.join(__dirname, 'node_modules', 'mdb-ui-kit', 'css')));
 
 if(fs.existsSync(path.join(__dirname,configFolder, '/public/images', 'favicon.ico' ))){
     app.use(favicon(path.join(__dirname,configFolder, '/public/images', 'favicon.ico' )));

@@ -2,7 +2,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>An Error has Occurred</h3><span style="float:right;" ng-show="displayMessageContent"><a href="javascript:void(0);" onclick="$('#uisptools_error_dialog_messageContent').toggle();$('#uisptools_error_dialog_errorMessage_details').toggle();">show details</a></span>
+                <h3>An Error has Occurred</h3>
             </div>
             <div class="modal-body">
                 <div style="height: 200px; width: 100%;">
@@ -42,15 +42,13 @@
                             <div><b>Stack&nbsp;Trace:&nbsp;</b><div style="white-space: pre;" id="uisptools_error_dialog_errorMessageDetails_StackTrace"></div></div>
                         </div>
                     </div>
-
                 </div>
-
             </div>
             <div class="modal-footer">
-
-                <button class="btn btn-primary" ng-hide="allowRetry" id="uisptools_error_dialog_btnOk">OK</button>
-                <button class="btn btn-primary" ng-show="allowRetry" id="uisptools_error_dialog_btnRetry">Retry</button>
-                <button class="btn btn-warning" ng-show="allowRetry" id="uisptools_error_dialog_btnCancel">Cancel</button>
+                <button class="btn btn-primary" id="uisptools_error_dialog_btnShowDetails">Details</button>
+                <button class="btn btn-primary" id="uisptools_error_dialog_btnOk">OK</button>
+                <button class="btn btn-primary" id="uisptools_error_dialog_btnRetry">Retry</button>
+                <button class="btn btn-warning" id="uisptools_error_dialog_btnCancel">Cancel</button>
 
             </div>
         </div>

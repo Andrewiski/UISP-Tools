@@ -523,19 +523,22 @@
                                     $menuItem.find("a").attr("target", item.linkTarget);
                                 }
                             } else {
-                                $menuItem.find("a").attr("href", "javascript:void(0)").attr("data-id", item.pageContentGuid).text(item.linkText).on("click", $.uisptools.menuItemClick);
+                                //.attr("href", "javascript:void(0)")
+                                $menuItem.find("a").attr("data-id", item.pageContentGuid).text(item.linkText).on("click", $.uisptools.menuItemClick);
                             }
                             $menuItemsContainer.append($menuItem);
                         }
                     });
                     
-                    if($.uisptools.isUserLoggedIn === true){
+                    if($.uisptools.isUserLoggedIn() === true){
                         //add Login MenuItem menuItemLoginTemplate
                         let $logoutMenuItem = $(".menuItemLogoutTemplate").find(".menuItem").clone();
+                        $logoutMenuItem.find(".menuItemLogout").on("click",$.uisptools.logout);
                         $menuItemsContainer.append($logoutMenuItem);
                     }else{
                         //add Login MenuItem menuItemLoginTemplate
                         let $loginMenuItem = $(".menuItemLoginTemplate").find(".menuItem").clone();
+                        $loginMenuItem.find(".menuItemLogin").on("click",$.uisptools.showLoginDialog);
                         $menuItemsContainer.append($loginMenuItem);
                     }
                     deferred.resolve();
@@ -1058,6 +1061,10 @@
                 $dialogElement.find('#uisptools_error_dialog_errorMessage_details').hide();
 
             }
+            var toggleErrorDetails = function (){
+                $dialogElement.find('#uisptools_error_dialog_messageContent').toggle();
+                $dialogElement.find('#uisptools_error_dialog_errorMessage_details').toggle();
+            }
             var initDialog = function () {
                 $dialogElement.find('#uisptools_error_dialog_btnRetry').off("click.uisptools");
                 $dialogElement.find('#uisptools_error_dialog_btnCancel').off("click.uisptools");
@@ -1074,6 +1081,10 @@
                 if (myOptions.showOk == false) {
                     $dialogElement.find('#uisptools_error_dialog_btnOk').hide();
                 }
+                if (myOptions.showDetails == false) {
+                    $dialogElement.find('#uisptools_error_dialog_btnShowDetails').hide();
+                }
+                $dialogElement.find('#uisptools_error_dialog_btnShowDetails').on("click",toggleErrorDetails);
 
                 setDialogValues();
                 $errorModal.show();
@@ -1116,9 +1127,6 @@
             $.logToConsole("Debug: $.uisptools.logout Called");
 
             var myDeferred = $.Deferred();
-
-
-
             try {
 
                 $.logToConsole("Debug: $.uisptools.logout sending logout to server")
@@ -1126,14 +1134,11 @@
                     method: "GET",
                     //timeout: 60000,
                     dataType: "json",
-                    url: "/uisptools/api/Account/Logoff",
+                    url: "/uisptools/login/logout",
                     success: function (result) {
                         //If no data is returned, spit up a message
                         if (!result || result == null) {
-
-
                             $.logToConsole("CRITICAL ERROR: $.uisptools.logout - No Data Returned");
-
                             //this clears all of the Storage and UserInfo resets isLoggedIn etc
                             $.uisptools._clearLoginAccessTokenRefreshTokenAiToken();
                             var objError = $.uisptools.createErrorFromScriptException(new Error("No Data Returned"), "No Data returned by server");
@@ -1148,7 +1153,15 @@
                             //this clears all of the Storage and UserInfo resets isLoggedIn etc
                             $.uisptools._clearLoginAccessTokenRefreshTokenAiToken();
                             $.logToConsole("Debug: $.uisptools.logout Success");
-                            myDeferred.resolve(result);
+                            $.uisptools.getMenuItems().then(
+                                function(){
+                                    myDeferred.resolve(result);
+                                },
+                                function(ex){
+                                    myDeferred.reject(ex);
+                                }
+                            )
+                            
                         }
                     },  //End onSuccess
                     error: function (xhr, textStatus, thrownError) {
@@ -1162,7 +1175,7 @@
 
 
             } catch (ex) {
-                $.logToConsole("ERROR uisptools.dal.logout: " + ex.toString());
+                $.logToConsole("ERROR uisptools.logout: " + ex.toString());
                 var objError = $.uisptools.createErrorFromScriptException(ex, "Server error during token refresh.");
                 myDeferred.reject(ex.toString());
             }
@@ -1744,9 +1757,19 @@
                         .then(function (userInfoResults){ //, userSettingResults) {
                             $.uisptools.common.login.userInfo = userInfoResults;
                             $.uisptools.common.login.isUserLoggedIn = true;
+                            $.uisptools.getMenuItems().then(
+                                function(){
+                                    myDeferred.resolve(userInfoResults);
+                                },
+                                function(ex){
+                                    $.logToConsole("ERROR uisptools.login.getUserInfo.getMenuItems: " + objError.message);        
+                                    myDeferred.reject(ex);
+                                }
+                            )
+                            
                             //$.uisptools.common.settings.user = userSettingResults;
 
-                            myDeferred.resolve(userInfoResults);
+                            
                         }, function (userInfoResultsError) { //, userSettingResultsError) {
                             $.uisptools.common.login.isUserLoggedIn = false;
                             $.uisptools._clearLoginAccessTokenRefreshTokenAiToken();
