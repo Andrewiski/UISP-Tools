@@ -122,6 +122,8 @@ jobs:
           # VERSION=latest
           docker tag $PACKAGE_NAME $IMAGE_ID:$APP_VERSION
           docker push $IMAGE_ID:$APP_VERSION
+          docker tag $PACKAGE_NAME $IMAGE_ID:latest
+          docker push $IMAGE_ID:latest
       - name: Log in to the Docker Container registry
         id: step_5
         uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
@@ -147,3 +149,5 @@ jobs:
           # VERSION=latest
           docker tag $PACKAGE_NAME $DOCKER_USERNAME/$PACKAGE_NAME:$APP_VERSION
           docker push $DOCKER_USERNAME/$PACKAGE_NAME:$APP_VERSION
+          docker tag $PACKAGE_NAME $DOCKER_USERNAME/$PACKAGE_NAME:latest
+          docker push $DOCKER_USERNAME/$PACKAGE_NAME:latest
