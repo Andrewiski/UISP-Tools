@@ -15,7 +15,7 @@ db.ut_PageContent.insert(
         "linkStatus" : 1,
         "linkTarget" : "_self",
         "linkText" : "Home",
-        "linkUrl" : "/uisptools",
+        "linkUrl" : "/uisptools/",
         "pageContentGuid" : "00000000-0000-0000-0000-000000000001",
         "pageDescription" : " Website Home Page",
         "pageKeywords" : "",

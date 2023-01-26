@@ -1,0 +1,34 @@
+  uisptools:
+    image: "andrewiski/uisptools:0.0.15"
+    user: "${USER_ID}"
+    ports:
+      - "49443:49443"
+      - "49080:49080"
+    volumes:
+      - ${DATA_DIR}/uisptools/config:/usr/src/uisptools/config
+      - ${DATA_DIR}/uisptools/logs:/usr/src/uisptools/logs
+      - ${DATA_DIR}/cert:/usr/src/uisptools/config/uisp_certs
+    container_name: uisptools
+    depends_on:
+      - uisptools_mongo
+    networks:
+      - internal
+      - public
+    restart: always
+  uisptools_mongo:
+    image: mongo
+    user: "${USER_ID}"
+    container_name: uisptools_mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "uisptools"
+      MONGO_INITDB_ROOT_PASSWORD: "U!spT00ls!"
+      MONGO_INITDB_DATABASE: "uisptools"
+    volumes:
+      - ${DATA_DIR}/uisptools/mongodb/data:/data/db
+      - ${DATA_DIR}/uisptools/mongodb/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "27017:27017"  
+    restart: always
+    networks:
+      - internal
+      - public 

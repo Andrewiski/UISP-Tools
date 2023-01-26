@@ -40,8 +40,8 @@ docker cp unms-nginx:/usr/local/openresty/nginx/templates/conf.d/ ~/data/uisptoo
 
 
 #copy the mongo db init scripts from github (note this are only ran once and only if there is an empty database  I use Studio 3T as windows mongo Client see below)
-wget -o ~/data/uisptools/mongodb/docker-entrypoint-initdb.d/01_createDatabase.js https://raw.githubusercontent.com/Andrewiski/UISP-Tools/main/mongodb/docker-entrypoint-initdb.d/01_createDatabase.js 
-wget -o ~/data/uisptools/mongodb/docker-entrypoint-initdb.d/02_initWebServerPages.js https://raw.githubusercontent.com/Andrewiski/UISP-Tools/main/mongodb/docker-entrypoint-initdb.d/02_initWebServerPages.js 
+wget https://raw.githubusercontent.com/Andrewiski/UISP-Tools/main/mongodb/docker-entrypoint-initdb.d/01_createDatabase.js -O ~/data/uisptools/mongodb/docker-entrypoint-initdb.d/01_createDatabase.js
+wget https://raw.githubusercontent.com/Andrewiski/UISP-Tools/main/mongodb/docker-entrypoint-initdb.d/02_initWebServerPages.js -O ~/data/uisptools/mongodb/docker-entrypoint-initdb.d/02_initWebServerPages.js
 
 
 
@@ -50,7 +50,7 @@ docker-compose down
 
 
 # append the contents of https://github.com/Andrewiski/UISP-Tools/blob/main/dockerCompose/uisp/docker-compose-append.yml to the end of /home/unms/app/docker-compose.yml
-vi docker-compose.yml
+nano docker-compose.yml
 #Note that by changing the version of of uisptools in the docker-compose.yml will allow it to be upgraded with a "docker-compose down" followed by a "docker-compose up -d"
 #restart  uisp including the uisptools services
 #because unms_nginx stores its template in the image a down and up will revert the template back to the docker image
