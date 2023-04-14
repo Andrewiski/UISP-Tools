@@ -146,32 +146,45 @@ var UispToolsApiRequestHandler = function (options) {
                     },
                     function(err){
                         debug("error", "checkApiAccess Error", { "msg": err.message, "stack": err });
-                        res.status(500).json({ "msg": "An Error Occured!", "error": err});
+                        if(res.closed === false){
+                            res.status(500).json({ "msg": "An Error Occured!", "error": err});
+                        }
                     }
                 )
             }else{
                 debug("debug", "checkApiAccess access_token is invalid", req.headers.authorization);
-                res.status(401).json({ "msg": "Invalid AccessToken!", "error": "Invalid AccessToken"}); 
+                if(res.closed === false){
+                    res.status(401).json({ "msg": "Invalid AccessToken!", "error": "Invalid AccessToken"}); 
+                }
             }
             
         } catch (ex) {
             debug("error", "checkApiAccess", { "msg": ex.message, "stack": ex.stack });
-            res.status(500).json({ "msg": "An Error Occured!", "error": ex });
+            if(res.closed === false){
+                res.status(500).json({ "msg": "An Error Occured!", "error": ex });
+            }
         }
     }
 
     var checkSuperAdminApiAccess = function (req, res, next) {
         try {
 
-            if(res.locals.accessToken == undefined){
-                checkApiAccess(req,res)
+            let isSuperAdminNext = function(){
+                if(res.locals.accessToken && res.locals.accessToken.loginData.userType === "nms" && res.locals.accessToken.loginData.nmsLoginData.role === "superadmin" ){
+                    if(next !== undefined || next !== null){
+                        next("route")
+                    }
+                }else{
+                    debug("debug", "checkSuperAdminApiAccess", "Not Super Admin", req.headers.authorization);
+                    res.status(403).json({ "msg": "Invalid AccessToken Not Super Admin!", "error": "Invalid AccessToken Not Super Admin"});    
+                }
             }
-            
-            if(res.locals.accessToken && res.locals.accessToken.loginData.userType === "nms" && res.locals.accessToken.loginData.nmsLoginData.role === "superadmin" ){
-                next("route")
+
+            if(res.locals.accessToken == undefined){
+                checkApiAccess(req,res,isSuperAdminNext)
             }else{
-                debug("debug", "checkSuperAdminApiAccess", "Not Super Admin", req.headers.authorization);
-                res.status(403).json({ "msg": "Invalid AccessToken Not Super Admin!", "error": "Invalid AccessToken Not Super Admin"});    
+            
+                isSuperAdminNext();
             }
                     
             

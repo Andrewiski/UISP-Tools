@@ -695,7 +695,7 @@ var UispToolsApiHandler = function (options) {
                         deferred.reject(ex);
                     }
                 },
-                function(err){
+                function(ex){
                     debug('error', 'getPageContent', ex);
                     deferred.reject(ex);
                 }
