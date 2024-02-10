@@ -54,6 +54,7 @@
                     $.logToConsole("INFO: " + this.name + " create");
                     $element.find(".btnSubmit").on("click", 
                         function(){
+                            $element.find("#uisptools_API_results").text("");
                             let apiPath = $element.find("#uisptools_API_Path").val();
                             $.uisptools.ajax(apiPath).then(
                                 function(results){

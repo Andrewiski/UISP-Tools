@@ -146,21 +146,21 @@ var UispToolsApiRequestHandler = function (options) {
                     },
                     function(err){
                         debug("error", "checkApiAccess Error", { "msg": err.message, "stack": err });
-                        if(res.closed === false){
+                        if(res.writable === true){
                             res.status(500).json({ "msg": "An Error Occured!", "error": err});
                         }
                     }
                 )
             }else{
                 debug("debug", "checkApiAccess access_token is invalid", req.headers.authorization);
-                if(res.closed === false){
+                if(res.writable === true){ //if(res.closed === false){
                     res.status(401).json({ "msg": "Invalid AccessToken!", "error": "Invalid AccessToken"}); 
                 }
             }
             
         } catch (ex) {
             debug("error", "checkApiAccess", { "msg": ex.message, "stack": ex.stack });
-            if(res.closed === false){
+            if(res.writable === true){
                 res.status(500).json({ "msg": "An Error Occured!", "error": ex });
             }
         }

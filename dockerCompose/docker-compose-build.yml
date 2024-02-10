@@ -27,7 +27,7 @@ services:
     networks:
     - express-mongo
     restart: always
-  mongo:
+  uisptools_mongodb:
     image: mongo
     container_name: uisptools_mongodb
     environment:

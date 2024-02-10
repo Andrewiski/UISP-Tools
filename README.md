@@ -1,7 +1,9 @@
 # UISP-Tools
 
-UISP-Tools is an open-source node server that extend the functionality of [UISP](https://https://uisp.ui.com/). 
-This Node.js application runs in a seperate docker instance will interface to your instance of UISP using an Application Key using the UISP API's. [Read more](https://ucrm.docs.apiary.io/#).
+UISP-Tools is an open-source node server that extend the functionality of [UISP](https://uisp.ui.com/). 
+This Node.js application runs in a seperate docker instance will interface to your instance of UISP using an Application Key using the UISP API's. 
+CRM [Read more](https://ucrm.docs.apiary.io/#). 
+NMS [Read more](https://<your-uisp-hostname>/nms/api-docs/).
 
 UISP-Tools is compatible with UCRM 2.10.0+
 

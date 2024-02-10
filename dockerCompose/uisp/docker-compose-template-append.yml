@@ -10,12 +10,12 @@
       - ${DATA_DIR}/cert:/usr/src/uisptools/config/uisp_certs
     container_name: uisptools
     depends_on:
-      - uisptools_mongo
+      - uisptools_mongodb
     networks:
       - internal
       - public
     restart: always
-  uisptools_mongo:
+  uisptools_mongodb:
     image: mongo
     user: "${USER_ID}"
     container_name: uisptools_mongodb

@@ -121,6 +121,30 @@ db.ut_PageContent.insert(
     },
 
     {
+        "content" : "uisptools.fccfabricdata.widgets.fccfabricdata",
+        "contentType": "plugin.widget",
+        "createdBy" : "adevries",
+        "createdDate" : "2015-01-01T00:00:00+00:00",
+        "deleted" : false,
+        "displayOrder" : 107,
+        "extendedData" : null,
+        "linkMenuDisplay" : true,
+        "linkStatus" : 1,
+        "linkTarget" : "_self",
+        "linkText" : "FCC Fabric Data",
+        "linkUrl" : "/uisptools/uisptools/fccfabricdata",
+        "pageContentGuid" : "ac537058-8ea5-4557-f646-f5e07423ddcd",
+        "pageDescription" : "FCC Fabric Data",
+        "pageKeywords" : "",
+        "pageName" : "FCC Fabric Data",
+        "pageTitle" : "FCC Fabric Data",
+        "parentPageContentGuid" : null,
+        "roleId" : "admin",
+        "updatedBy" : "adevries",
+        "updatedDate" : "2015-01-01T00:00:00+00:00"
+    },
+
+    {
         "content" : "uisptools.testing.testapicalls.widgets.testapicalls",
         "contentType": "plugin.widget",
         "createdBy" : "adevries",
