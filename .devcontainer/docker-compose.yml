@@ -14,11 +14,11 @@ services:
 
     volumes:
       - ..:/workspace:cached
-    container_name: uisptools
+    container_name: uisptools_dev
     environment:
       ME_CONFIG_MONGODB_ADMINUSERNAME: "uisptools"
       ME_CONFIG_MONGODB_ADMINPASSWORD: "U!spT00ls!"
-      ME_CONFIG_MONGODB_URL: "mongodb://uisptools:U!spT00ls!@uisptools_mongodb:27017/"
+      ME_CONFIG_MONGODB_URL: "mongodb://uisptools:U!spT00ls!@uisptools_mongodb_dev:27017/"
     # Overrides default command so things don't shut down after the process ends.
     command: sleep infinity
 
@@ -41,7 +41,7 @@ services:
   
   mongo:
     image: mongo:latest
-    container_name: uisptools_mongodb
+    container_name: uisptools_mongodb_dev
     restart: unless-stopped
     volumes:
       - mongodb-data:/data/db

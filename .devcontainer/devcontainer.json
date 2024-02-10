@@ -4,7 +4,7 @@
 {
 	"name": "Node.js & Mongo DB",
 	"dockerComposeFile": "docker-compose.yml",
-	"service": "uisptools",
+	"service": "uisptools_dev",
 	"workspaceFolder": "/workspace",
 
 	// Set *default* container specific settings.json values on container create.

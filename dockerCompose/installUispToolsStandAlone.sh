@@ -121,7 +121,7 @@ PREREQUISITES=(
 )
 
 HTTP_PORT="49080"
-COMPOSE_PROJECT_NAME="andrewiski/uisp-tools:latest"
+COMPOSE_PROJECT_NAME="andrewiski/uisptools:latest"
 COMPOSE_CONTAINER_NAME="uisptools"
 USERNAME="${UISPTOOLS_USER:-$USER}"
 
