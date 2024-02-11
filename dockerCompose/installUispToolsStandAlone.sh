@@ -1,7 +1,7 @@
 #!/bin/bash
 # installUispToolsStandAlone.sh
 
-VERSION=0.0.2.2024-02-11:0002
+VERSION=0.0.2.2024-02-11:0003
 echo installUispToolsStandAlone version $VERSION
 
 UISPTOOLS_USER=""
@@ -133,7 +133,8 @@ COMPOSE_PROJECT_NAME="andrewiski/uisptools:latest"
 COMPOSE_CONTAINER_NAME="uisptools"
 USERNAME="${UISPTOOLS_USER:-$USER}"
 
-if [ -z "${UISPTOOLS_HOME_DIR}" ]; then
+if [ ! -z "${UISPTOOLS_HOME_DIR}" ]; then
+    echo "installdir is set to ${UISPTOOLS_HOME_DIR}"
     HOME_DIR="${UISPTOOLS_HOME_DIR}"
 else
     if [ -x "$(command -v getent)" ]; then
