@@ -41,6 +41,14 @@ while :; do
             cliexit 'ERROR: "--googleapikey" requires a non-empty option argument.'
           fi
           ;;
+        -alias) # Docker Process Allias. 
+          if [ "$2" ]; then
+              UISPTOOLS_ALIAS=-$2
+            shift
+          else
+            cliexit 'ERROR: "--alias" requires a non-empty option argument.'
+          fi
+          ;;
           
         -installdir) # install Directory. 
           if [ "$2" ]; then
@@ -141,19 +149,13 @@ else
     fi
 fi
 
-
-
-
-
 echo "Processing..."
 
 echo "UserName is $USERNAME"
 echo "Home Directoy is $HOME_DIR"
 echo "GOOGLEAPIKEY is $GOOGLEAPIKEY"
+echo "UISPTOOLS_ALIAS is $UISPTOOLS_ALIAS"
 echo "NOCREATEUSER is $NOCREATEUSER"
-
-
-
 
 # UISPTOOLS variables
 
@@ -162,15 +164,10 @@ export UISPTOOLS_APP_DIR="${HOME_DIR}/uisptools/app"
 export UISPTOOLS_DATA_DIR="${HOME_DIR}/uisptools/data"
 export UISPTOOLS_DOCKER_COMPOSE_PATH="${UISPTOOLS_APP_DIR}/docker-compose.yml"
 
-
-
-
 if [ "${SCRIPT_DIR}" = "${UISPTOOLS_APP_DIR}" ]; then
   echo >&2 "Please don't run the installation script in the application directory ${UISPTOOLS_APP_DIR}"
   exit 1
 fi
-
-
 
 #sudo mkdir -p /usr/src/UISPTOOLS
 #sudo chown "$USER":"docker" /usr/src/UISPTOOLS
@@ -197,8 +194,10 @@ fail() {
 pull_install_files(){ 
   echo "downloading ${UISPTOOLS_REPO}/dockerCompose/docker-compose.yml"
   curl -LS "${UISPTOOLS_REPO}/dockerCompose/docker-compose.yml" -o "${UISPTOOLS_APP_DIR}/docker-compose.yml"
-  echo "downloading ${UISPTOOLS_REPO}/mongodb/docker-entrypoint-initdb.d/createDatabase.js"
-	curl -LS "${UISPTOOLS_REPO}/mongodb/docker-entrypoint-initdb.d/createDatabase.js" -o "${UISPTOOLS_DATA_DIR}/mongodb/docker-entrypoint-initdb.d/createDatabase.js"
+  echo "downloading ${UISPTOOLS_REPO}/mongodb/docker-entrypoint-initdb.d/01_createDatabase.js"
+  curl -LS "${UISPTOOLS_REPO}/mongodb/docker-entrypoint-initdb.d/01_createDatabase.js" -o "${UISPTOOLS_DATA_DIR}/mongodb/docker-entrypoint-initdb.d/01_createDatabase.js"
+  echo "downloading ${UISPTOOLS_REPO}/mongodb/docker-entrypoint-initdb.d/02_initWebServerPages.js"
+  curl -LS "${UISPTOOLS_REPO}/mongodb/docker-entrypoint-initdb.d/02_initWebServerPages.js" -o "${UISPTOOLS_DATA_DIR}/mongodb/docker-entrypoint-initdb.d/02_initWebServerPages.js"
  }
 
 create_app_folder() {
@@ -326,8 +325,10 @@ change_owner() {
 
 start_docker_containers() {
   echo "GOOGLEAPIKEY=$GOOGLEAPIKEY" > ${UISPTOOLS_APP_DIR}/uisptools.env
+  echo "UISPTOOLS_ALIAS=$UISPTOOLS_ALIAS" >> ${UISPTOOLS_APP_DIR}/uisptools.env
+  
   echo "Starting UispYools docker containers."
-  docker-compose -p uisptools --env-file "${UISPTOOLS_APP_DIR}/uisptools.env" -f "${UISPTOOLS_DOCKER_COMPOSE_PATH}" up -d uisptools || fail "Failed to start docker containers"
+  docker-compose -p "uisptools" --env-file "${UISPTOOLS_APP_DIR}/uisptools.env" -f "${UISPTOOLS_DOCKER_COMPOSE_PATH}" up -d uisptools || fail "Failed to start docker containers"
 }
 
 
