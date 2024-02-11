@@ -1,7 +1,7 @@
 #!/bin/bash
 # installUispToolsStandAlone.sh
 
-VERSION=0.0.2.2024-02-11:0003
+VERSION=0.0.2.2024-02-11:0004
 echo installUispToolsStandAlone version $VERSION
 
 UISPTOOLS_USER=""
@@ -164,7 +164,7 @@ echo "NOCREATEUSER is $NOCREATEUSER"
 
 # UISPTOOLS variables
 
-export UISPTOOLS_REPO="https://raw.githubusercontent.com/Andrewiski/uisptools/main"
+export UISPTOOLS_REPO="https://raw.githubusercontent.com/Andrewiski/uisp-tools/main"
 export UISPTOOLS_APP_DIR="${HOME_DIR}/uisptools/app"
 export UISPTOOLS_DATA_DIR="${HOME_DIR}/uisptools/data"
 export UISPTOOLS_DOCKER_COMPOSE_PATH="${UISPTOOLS_APP_DIR}/docker-compose.yml"
