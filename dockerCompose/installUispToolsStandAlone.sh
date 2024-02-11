@@ -133,19 +133,23 @@ COMPOSE_PROJECT_NAME="andrewiski/uisptools:latest"
 COMPOSE_CONTAINER_NAME="uisptools"
 USERNAME="${UISPTOOLS_USER:-$USER}"
 
-if [ -x "$(command -v getent)" ]; then
-    if getent passwd "${USERNAME}" >/dev/null; then
-      HOME_DIR="$(getent passwd "${USERNAME}" | cut -d: -f6)"
-    else
-      HOME_DIR="${UISPTOOLS_HOME_DIR:-"/home/${USERNAME}"}"
-    fi
+if [ -z "${UISPTOOLS_HOME_DIR}" ]; then
+    HOME_DIR="${UISPTOOLS_HOME_DIR}"
 else
-    echo "getent could not be found"
-    if [ -z "$UISPTOOLS_HOME_DIR" ]
-    then
-      HOME_DIR=$(bash -c "cd ~$(printf %q "$USERNAME") && pwd")
+    if [ -x "$(command -v getent)" ]; then
+        if getent passwd "${USERNAME}" >/dev/null; then
+        HOME_DIR="$(getent passwd "${USERNAME}" | cut -d: -f6)"
+        else
+        HOME_DIR="${UISPTOOLS_HOME_DIR:-"/home/${USERNAME}"}"
+        fi
     else
-      HOME_DIR="${UISPTOOLS_HOME_DIR}"
+        echo "getent could not be found"
+        if [ -z "$UISPTOOLS_HOME_DIR" ]
+        then
+        HOME_DIR=$(bash -c "cd ~$(printf %q "$USERNAME") && pwd")
+        else
+        HOME_DIR="${UISPTOOLS_HOME_DIR}"
+        fi
     fi
 fi
 
@@ -327,7 +331,7 @@ start_docker_containers() {
   echo "GOOGLEAPIKEY=$GOOGLEAPIKEY" > ${UISPTOOLS_APP_DIR}/uisptools.env
   echo "UISPTOOLS_ALIAS=$UISPTOOLS_ALIAS" >> ${UISPTOOLS_APP_DIR}/uisptools.env
   
-  echo "Starting UispYools docker containers."
+  echo "Starting UispTools docker containers."
   docker-compose -p "uisptools" --env-file "${UISPTOOLS_APP_DIR}/uisptools.env" -f "${UISPTOOLS_DOCKER_COMPOSE_PATH}" up -d uisptools || fail "Failed to start docker containers"
 }
 
