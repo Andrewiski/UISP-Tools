@@ -21,7 +21,7 @@ services:
     environment:
       MONGODB_URL: "mongodb://uisptools:U!spT00ls!@mongo_mongodb${UISPTOOLS_ALIAS}:27017/"
     depends_on:
-      - mongo
+      - uisptools_mongodb
     networks:
     - express-mongo
     restart: always
