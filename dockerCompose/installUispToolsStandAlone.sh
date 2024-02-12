@@ -1,7 +1,7 @@
 #!/bin/bash
 # installUispToolsStandAlone.sh
 
-VERSION=0.0.2.2024-02-12:0002
+VERSION=0.0.2.2024-02-12:0003
 echo installUispToolsStandAlone version $VERSION
 
 UISPTOOLS_USER=""
@@ -240,9 +240,9 @@ create_user() {
     echo >&2 "WARNING: User '${USERNAME}' already exists. We are going to ensure that the"
     echo >&2 "user is in the 'docker' group and that its home '${HOME_DIR}' dir exists and"
     echo >&2 "is owned by the user."
-    if ! [ "$UNATTENDED" = true ]; then
-      confirm "Would you like to continue with the installation?" || exit 1
-    fi
+    #if ! [ "$UNATTENDED" = true ]; then
+    #  confirm "Would you like to continue with the installation?" || exit 1
+    #fi
   fi
 
   if ! getent group docker | grep -q "\b${USERNAME}\b"; then
