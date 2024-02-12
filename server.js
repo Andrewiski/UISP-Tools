@@ -44,6 +44,7 @@ if (process.env.localDebug === 'true') {
 
 var defaultConfig = {
     "configDirectory": configFileOptions.configDirectory,
+    "urlPrefix": "uisptools/",
     "mongoDbServerUrl": process.env.MONGODB_URL || "mongodb://uisptools:U!spT00ls!@uisptools_mongodb:27017/?connectTimeoutMS=300000&authSource=admin",
     "mongoDbDatabaseName": "uisptools",
     "logDirectory": "logs",
@@ -99,6 +100,8 @@ var objOptions = configHandler.config;
 var configFolder = objOptions.configDirectory;
 var certificatesFolder = path.join(objOptions.configDirectory, 'certificates');
 var caFolder = path.join(certificatesFolder, 'ca');
+
+var urlPrefix = objOptions.urlPrefix || "";
 
 var httpsServerKey = null
 var httpsServerCert = null; 
@@ -430,7 +433,7 @@ app.use(function (req, res, next) {
     return;
 })
 
-app.use('/uisptools/javascript/polyfill.io/polyfill.min.js',function(req, res){
+app.use('/' + urlPrefix + 'javascript/polyfill.io/polyfill.min.js',function(req, res){
     polyfillLibrary.getPolyfillString({
         uaString: req.get('user-agent'),
         minify: true,
@@ -443,7 +446,7 @@ app.use('/uisptools/javascript/polyfill.io/polyfill.min.js',function(req, res){
     });
 })
 
-app.use('/uisptools/javascript/polyfill.io/polyfill.js',function(req, res){
+app.use('/' + urlPrefix + 'javascript/polyfill.io/polyfill.js',function(req, res){
     polyfillLibrary.getPolyfillString({
         uaString: req.get('user-agent'),
         minify: false,
@@ -458,18 +461,18 @@ app.use('/uisptools/javascript/polyfill.io/polyfill.js',function(req, res){
 
 
 
-app.use('/uisptools/javascript/socket.io', express.static(path.join(__dirname, 'node_modules', 'socket.io', 'client-dist')));
-app.use('/uisptools/javascript/fontawesome', express.static(path.join(__dirname, 'node_modules', '@fortawesome', 'fontawesome-free')));
-app.use('/uisptools/javascript/bootstrap', express.static(path.join(__dirname, 'node_modules', 'bootstrap', 'dist')));
-app.use('/uisptools/javascript/jquery', express.static(path.join(__dirname, 'node_modules', 'jquery', 'dist')));
-app.use('/uisptools/javascript/moment', express.static(path.join(__dirname, 'node_modules', 'moment', 'min')));
-app.use('/uisptools/javascript/bootstrap-notify', express.static(path.join(__dirname, 'node_modules', 'bootstrap-notify')));
-app.use('/uisptools/javascript/animate-css', express.static(path.join(__dirname, 'node_modules', 'animate.css')));
-app.use('/uisptools/javascript/jsoneditor', express.static(path.join(__dirname, 'node_modules', 'jsoneditor', 'dist')));
-app.use('/uisptools/javascript/js-cookie', express.static(path.join(__dirname, 'node_modules', 'js-cookie', 'dist')));
-app.use('/uisptools/javascript/googlemaps', express.static(path.join(__dirname, 'node_modules', '@googlemaps', 'js-api-loader', 'dist')));
-app.use('/uisptools/javascript/mdb-ui-kit/js', express.static(path.join(__dirname, 'node_modules', 'mdb-ui-kit', 'js')));
-app.use('/uisptools/javascript/mdb-ui-kit/css', express.static(path.join(__dirname, 'node_modules', 'mdb-ui-kit', 'css')));
+app.use('/' + urlPrefix + 'javascript/socket.io', express.static(path.join(__dirname, 'node_modules', 'socket.io', 'client-dist')));
+app.use('/' + urlPrefix + 'javascript/fontawesome', express.static(path.join(__dirname, 'node_modules', '@fortawesome', 'fontawesome-free')));
+app.use('/' + urlPrefix + 'javascript/bootstrap', express.static(path.join(__dirname, 'node_modules', 'bootstrap', 'dist')));
+app.use('/' + urlPrefix + 'javascript/jquery', express.static(path.join(__dirname, 'node_modules', 'jquery', 'dist')));
+app.use('/' + urlPrefix + 'javascript/moment', express.static(path.join(__dirname, 'node_modules', 'moment', 'min')));
+app.use('/' + urlPrefix + 'javascript/bootstrap-notify', express.static(path.join(__dirname, 'node_modules', 'bootstrap-notify')));
+app.use('/' + urlPrefix + 'javascript/animate-css', express.static(path.join(__dirname, 'node_modules', 'animate.css')));
+app.use('/' + urlPrefix + 'javascript/jsoneditor', express.static(path.join(__dirname, 'node_modules', 'jsoneditor', 'dist')));
+app.use('/' + urlPrefix + 'javascript/js-cookie', express.static(path.join(__dirname, 'node_modules', 'js-cookie', 'dist')));
+app.use('/' + urlPrefix + 'javascript/googlemaps', express.static(path.join(__dirname, 'node_modules', '@googlemaps', 'js-api-loader', 'dist')));
+app.use('/' + urlPrefix + 'javascript/mdb-ui-kit/js', express.static(path.join(__dirname, 'node_modules', 'mdb-ui-kit', 'js')));
+app.use('/' + urlPrefix + 'javascript/mdb-ui-kit/css', express.static(path.join(__dirname, 'node_modules', 'mdb-ui-kit', 'css')));
 
 if(fs.existsSync(path.join(__dirname,configFolder, '/public/images', 'favicon.ico' ))){
     app.use(favicon(path.join(__dirname,configFolder, '/public/images', 'favicon.ico' )));
@@ -487,7 +490,7 @@ var routes = express.Router();
 var handlePluginPublicFileRequest = function (req, res) {
     let filePath = req.path;
 
-    if (filePath.startsWith("/uisptools/")){
+    if (filePath.startsWith('/' + urlPrefix)){
         filePath = filePath.substring(10);
     }
 
@@ -532,13 +535,13 @@ var handlePluginPublicFileRequest = function (req, res) {
 var handlePublicFileRequest = function (req, res) {
     var filePath = req.path;
 
-    if (filePath === "/") {
+    if (filePath === "/" && urlPrefix !== "") {
         //filePath = "/index.htm";
-        res.redirect("/uisptools");
+        res.redirect("/" + urlPrefix);
     }
-    if (filePath === "/uisptools/") {
+    if (filePath === '/' + urlPrefix) {
         filePath = "/index.htm";
-    }else if (filePath.startsWith("/uisptools/")){
+    }else if (filePath.startsWith('/' + urlPrefix)){
         filePath = filePath.substring(10);
     }
 
@@ -790,7 +793,7 @@ for (let index = 0; index < objOptions.plugins.length; index++) {
     
 }
 
-routes.get('/uisptools/plugins/*', function (req, res) {
+routes.get('/' + urlPrefix + '/plugins/*', function (req, res) {
     handlePluginPublicFileRequest(req, res);
 });
 
@@ -798,7 +801,7 @@ routes.get('/*', function (req, res) {
     handlePublicFileRequest(req, res);
 });
 
-routes.get('/uisptools/*', function (req, res) {
+routes.get('/' + urlPrefix + '/*', function (req, res) {
     handlePublicFileRequest(req, res);
 });
 
