@@ -13,6 +13,7 @@ MONGODBSERVERURL=""
 MONGODBUSERNAME="" 
 MONGODBPASSWORD="" 
 MONGODBDATABASE="" 
+UNATTENDED="false"
 
 cliexit() {
     printf '%s\n' "$1" >&2
