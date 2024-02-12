@@ -101,7 +101,7 @@ var configFolder = objOptions.configDirectory;
 var certificatesFolder = path.join(objOptions.configDirectory, 'certificates');
 var caFolder = path.join(certificatesFolder, 'ca');
 
-var urlPrefix = objOptions.urlPrefix || "";
+var urlPrefix = objOptions.urlPrefix || "uisptools/";
 
 var httpsServerKey = null
 var httpsServerCert = null; 
@@ -194,7 +194,8 @@ var uispToolsApiHandler = new UispToolsApiHandler({
 var uispToolsApiRequestHandler = new UispToolsApiRequestHandler({
     logUtilHelper:logUtilHelper,
     uispToolsApiHandler:uispToolsApiHandler,
-    googleApiKey: objOptions.googleApiKey
+    googleApiKey: objOptions.googleApiKey,
+    urlPrefix: urlPrefix
 });
 
 
@@ -461,6 +462,8 @@ app.use('/' + urlPrefix + 'javascript/polyfill.io/polyfill.js',function(req, res
 
 
 
+
+
 app.use('/' + urlPrefix + 'javascript/socket.io', express.static(path.join(__dirname, 'node_modules', 'socket.io', 'client-dist')));
 app.use('/' + urlPrefix + 'javascript/fontawesome', express.static(path.join(__dirname, 'node_modules', '@fortawesome', 'fontawesome-free')));
 app.use('/' + urlPrefix + 'javascript/bootstrap', express.static(path.join(__dirname, 'node_modules', 'bootstrap', 'dist')));
@@ -541,8 +544,16 @@ var handlePublicFileRequest = function (req, res) {
     }
     if (filePath === '/' + urlPrefix) {
         filePath = "/index.htm";
-    }else if (filePath.startsWith('/' + urlPrefix)){
-        filePath = filePath.substring(10);
+    }else if (urlPrefix !== "" && filePath.startsWith('/' + urlPrefix)){
+        filePath = filePath.substring(urlPrefix.length + 1);
+    }
+
+    if(filePath.endsWith("scriptsettings.json")){
+        let scriptSettings = {
+            urlPrefix: urlPrefix,
+        }
+        res.json(scriptSettings);
+        return;
     }
 
     
@@ -582,7 +593,10 @@ var handlePublicFileRequest = function (req, res) {
     //}
 
     if (fs.existsSync(path.join(__dirname, 'public',filePath)) === true) {
+       
+       
         res.sendFile(filePath, { root: path.join(__dirname, 'public') });  
+       
     } else {
         filePath = "/index.htm";
         res.sendFile(filePath, { root: path.join(__dirname, 'public') });

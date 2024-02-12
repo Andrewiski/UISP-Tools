@@ -535,7 +535,7 @@ var UispToolsApiHandler = function (options) {
                         client.close();
                     }
                 },
-                function(err){
+                function(ex){
                     debug("error", "getMenuItems", ex);
                     deferred.reject(ex)
                 }    

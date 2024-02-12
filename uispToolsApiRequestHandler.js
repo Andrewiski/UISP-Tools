@@ -53,40 +53,40 @@ var UispToolsApiRequestHandler = function (options) {
         
         try {
             
-            routes.get('/' + urlPrefix + '/api/PageContent/MenuItems', getMenuItems);
-            routes.get('/' + urlPrefix + '/api/PageContent/PageContentGuid/:guid', getPageByPageContentGuid);
-            routes.get('/' + urlPrefix + '/api/PageContent/LinkUrl/*', getPageByLinkUrl);
-            routes.post('/' + urlPrefix + '/login/loginBoth', loginBoth);
+            routes.get('/' + self.objOptions.urlPrefix + 'api/PageContent/MenuItems', getMenuItems);
+            routes.get('/' + self.objOptions.urlPrefix + 'api/PageContent/PageContentGuid/:guid', getPageByPageContentGuid);
+            routes.get('/' + self.objOptions.urlPrefix + 'api/PageContent/LinkUrl/*', getPageByLinkUrl);
+            routes.post('/' + self.objOptions.urlPrefix + 'login/loginBoth', loginBoth);
             
-            routes.get('/' + urlPrefix + '/login/loginData', getLoginData);
-            routes.get('/' + urlPrefix + '/errorHandlerTest', errorHandlerTest);
-            routes.get('/' + urlPrefix + '/errorHandlerTestRawError', errorHandlerTestRawError);
-            routes.get('/' + urlPrefix + '/api/settings/anonymousClientSideSettings', getAnonymousClientSideSettings);
+            routes.get('/' + self.objOptions.urlPrefix + 'login/loginData', getLoginData);
+            routes.get('/' + self.objOptions.urlPrefix + 'errorHandlerTest', errorHandlerTest);
+            routes.get('/' + self.objOptions.urlPrefix + 'errorHandlerTestRawError', errorHandlerTestRawError);
+            routes.get('/' + self.objOptions.urlPrefix + 'api/settings/anonymousClientSideSettings', getAnonymousClientSideSettings);
             //Any Routes above this line are not Checked for Auth and are Public
-            routes.get('/' + urlPrefix + '/api/*', checkApiAccess);
-            routes.get('/' + urlPrefix + '/api/UserInfo', getUserInfo);
-            routes.get('/' + urlPrefix + '/login/logout', checkApiAccess);
-            routes.get('/' + urlPrefix + '/login/logout', logout);
+            routes.get('/' + self.objOptions.urlPrefix + 'api/*', checkApiAccess);
+            routes.get('/' + self.objOptions.urlPrefix + 'api/UserInfo', getUserInfo);
+            routes.get('/' + self.objOptions.urlPrefix + 'login/logout', checkApiAccess);
+            routes.get('/' + self.objOptions.urlPrefix + 'login/logout', logout);
             
             //Any /uisptools/api Routes above this are basic User Authed if below then only SuperAdmin can call them
-            routes.get('/' + urlPrefix + '/api/*', checkSuperAdminApiAccess);
-            routes.post('/' + urlPrefix + '/api/*', checkSuperAdminApiAccess);
-            routes.delete('/' + urlPrefix + '/api/*', checkSuperAdminApiAccess);
+            routes.get('/' + self.objOptions.urlPrefix + 'api/*', checkSuperAdminApiAccess);
+            routes.post('/' + self.objOptions.urlPrefix + 'api/*', checkSuperAdminApiAccess);
+            routes.delete('/' + self.objOptions.urlPrefix + 'api/*', checkSuperAdminApiAccess);
 
             //These should be accessed server side via the baseServerSideJs calls so not to reveil contents
-            //routes.get('/' + urlPrefix + '/api/pluginUserData/:pluginName', handlePluginUserDataRequest);
-            // routes.post('/' + urlPrefix + '/api/pluginData/:pluginName', savePluginData);
-            // routes.post('/' + urlPrefix + '/api/pluginUserData/:pluginName', savePluginUserData);
-            // routes.delete('/' + urlPrefix + '/api/pluginData/:pluginName', deletePluginData);
-            // routes.delete('/' + urlPrefix + '/api/pluginUserData/:pluginName', deletePluginUserData);
+            //routes.get('/' + self.objOptions.urlPrefix + '/api/pluginUserData/:pluginName', handlePluginUserDataRequest);
+            // routes.post('/' + self.objOptions.urlPrefix + '/api/pluginData/:pluginName', savePluginData);
+            // routes.post('/' + self.objOptions.urlPrefix + '/api/pluginUserData/:pluginName', savePluginUserData);
+            // routes.delete('/' + self.objOptions.urlPrefix + '/api/pluginData/:pluginName', deletePluginData);
+            // routes.delete('/' + self.objOptions.urlPrefix + '/api/pluginUserData/:pluginName', deletePluginUserData);
 
             //Only Admin plugins can call these directly plugins should only expose what should exposed as you can pull credit card data etc.
-            routes.get('/' + urlPrefix + '/api/crm/*', getCRM);
-            routes.get('/' + urlPrefix + '/api/nms/*', getNMS);
-            routes.post('/' + urlPrefix + '/api/crm/*', getCRM);
-            routes.post('/' + urlPrefix + '/api/nms/*', getNMS);
-            routes.delete('/' + urlPrefix + '/api/crm/*', getCRM);
-            routes.delete('/' + urlPrefix + '/api/nms/*', getNMS);
+            routes.get('/' + self.objOptions.urlPrefix + 'api/crm/*', getCRM);
+            routes.get('/' + self.objOptions.urlPrefix + 'api/nms/*', getNMS);
+            routes.post('/' + self.objOptions.urlPrefix + 'api/crm/*', getCRM);
+            routes.post('/' + self.objOptions.urlPrefix + 'api/nms/*', getNMS);
+            routes.delete('/' + self.objOptions.urlPrefix + 'api/crm/*', getCRM);
+            routes.delete('/' + self.objOptions.urlPrefix + 'api/nms/*', getNMS);
             
         } catch (ex) {
            debug("error", ex.msg, ex.stack);
@@ -199,7 +199,7 @@ var UispToolsApiRequestHandler = function (options) {
         //We have to strip the _ querystring value sent with Ajax calls else NMS will complain
 
         var url = req.path;
-        url = url.replace('/' + urlPrefix + '/api/crm/', '');
+        url = url.replace('/' + self.objOptions.urlPrefix + '/api/crm/', '');
         if(req.query){
             let queryString = "";
             for (const [key, value] of Object.entries(req.query)) {
@@ -258,7 +258,7 @@ var UispToolsApiRequestHandler = function (options) {
         //We have to strip the _ querystring value sent with Ajax calls else NMS will complain
 
         var url = req.path;
-        url = url.replace('/' + urlPrefix + '/api/nms/', "");
+        url = url.replace('/' + self.objOptions.urlPrefix + '/api/nms/', "");
         if(req.query){
             let queryString = "";
             for (const [key, value] of Object.entries(req.query)) {
@@ -619,7 +619,7 @@ var getMenuItems = function (req, res, next) {
 
 
     var getPageByLinkUrl = function (req, res) {
-        let linkPath = req.path.replace('/' + urlPrefix + '/api/PageContent/LinkUrl/', "");
+        let linkPath = req.path.replace('/' + self.objOptions.urlPrefix + '/api/PageContent/LinkUrl/', "");
         let options = { find: { linkUrl: linkPath }};
         getPage(req, res, options);
     }
