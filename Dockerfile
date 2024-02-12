@@ -1,4 +1,4 @@
-FROM node:14.20-alpine3.15 
+FROM node:16.20.2-alpine3.17 
 
 # get the latest openssl
 #RUN apt-get update
