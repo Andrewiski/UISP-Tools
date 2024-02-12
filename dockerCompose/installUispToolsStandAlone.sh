@@ -1,7 +1,7 @@
 #!/bin/bash
 # installUispToolsStandAlone.sh
 
-VERSION=0.0.2.2024-02-11:0004
+VERSION=0.0.2.2024-02-12:0001
 echo installUispToolsStandAlone version $VERSION
 
 UISPTOOLS_USER=""
@@ -143,14 +143,8 @@ else
         else
         HOME_DIR="${UISPTOOLS_HOME_DIR:-"/home/${USERNAME}"}"
         fi
-    else
-        echo "getent could not be found"
-        if [ -z "$UISPTOOLS_HOME_DIR" ]
-        then
-        HOME_DIR=$(bash -c "cd ~$(printf %q "$USERNAME") && pwd")
-        else
-        HOME_DIR="${UISPTOOLS_HOME_DIR}"
-        fi
+    else  
+      HOME_DIR=$(bash -c "cd ~$(printf %q "$USERNAME") && pwd")        
     fi
 fi
 
