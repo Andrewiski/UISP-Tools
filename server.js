@@ -45,7 +45,7 @@ if (process.env.localDebug === 'true') {
 var defaultConfig = {
     "configDirectory": configFileOptions.configDirectory,
     "urlPrefix": "uisptools/",
-    "mongoDbServerUrl": process.env.MONGODB_URL || "mongodb://uisptools:U!spT00ls!@uisptools_mongodb:27017/?connectTimeoutMS=300000&authSource=admin",
+    "mongoDbServerUrl": process.env.MONGODBSERVERURL || "mongodb://uisptools:U!spT00ls!@uisptools_mongodb:27017/?connectTimeoutMS=300000&authSource=admin",
     "mongoDbDatabaseName": "uisptools",
     "logDirectory": "logs",
     "adminRoute": "/admin",
