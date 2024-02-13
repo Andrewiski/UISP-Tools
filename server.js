@@ -101,8 +101,8 @@ var configFolder = objOptions.configDirectory;
 var certificatesFolder = path.join(objOptions.configDirectory, 'certificates');
 var caFolder = path.join(certificatesFolder, 'ca');
 
-var urlPrefix = objOptions.urlPrefix || "uisptools/";
-
+var urlPrefix = objOptions.urlPrefix;
+console.log("urlPrefix " + urlPrefix);
 var httpsServerKey = null
 var httpsServerCert = null; 
 if(objOptions.httpsServerKey.startsWith("/") === true){
@@ -172,6 +172,7 @@ let logUtilHelper = new LogUtilHelper({
     logRequestsName: "access"
 
 })
+logUtilHelper.log(appLogName, "app", "info", "urlPrfix:" + urlPrefix )
 
 // var appLogger = new Logger({
 //     logLevels: objOptions.logLevels,
@@ -540,6 +541,7 @@ var handlePublicFileRequest = function (req, res) {
 
     if (filePath === "/" && urlPrefix !== "") {
         //filePath = "/index.htm";
+        logUtilHelper.log(appLogName, "app", "info", "redirecting to /" + urlPrefix );
         res.redirect("/" + urlPrefix);
     }
     if (filePath === '/' + urlPrefix) {
