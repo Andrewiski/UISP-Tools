@@ -16,7 +16,7 @@ services:
     depends_on:
       - uisptools_mongodb${UISPTOOLS_ALIAS}
     networks:
-    - uisptoolsnetwork${UISPTOOLS_ALIAS}
+    - uisptoolsnetwork
     restart: always
   uisptools_mongodb:
     image: mongo
@@ -36,7 +36,7 @@ services:
       - "${UISPTOOLS_MONGOPORT:-49017}:27017"  
     restart: always
     networks:
-    - uisptoolsnetwork${UISPTOOLS_ALIAS}
+    - uisptoolsnetwork
 networks:
   uisptoolsnetwork:
     name: uisptoolsnetwork${UISPTOOLS_ALIAS}
