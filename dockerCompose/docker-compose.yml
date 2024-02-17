@@ -13,8 +13,8 @@ services:
     #image: "ghcr.io/andrewiski/uisp-tools/uisptools:latest"
     image: "andrewiski/uisptools:latest"
     ports:
-      - "${UISPTOOLS_HTTPSPORT}:49443"
-      - "${UISPTOOLS_HTTPPORT}:49080"
+      - "${UISPTOOLS_HTTPSPORT:-49443}:49443"
+      - "${UISPTOOLS_HTTPPORT:-49080}:49080"
     volumes:
       - ../data/config:/usr/src/uisptools/config
       - ../data/logs:/usr/src/uisptools/logs
@@ -42,7 +42,7 @@ services:
       - ../data/mongodb/docker-entrypoint-initdb.d/02_initWebServerPages.js:/docker-entrypoint-initdb.d/02_initWebServerPages.js:ro
     #Remove this line for Production only here for development direct connect to mongo
     ports:
-      - "${UISPTOOLS_MONGOPORT}:27017"  
+      - "${UISPTOOLS_MONGOPORT:-49017}:27017"  
     restart: always
     networks:
     - express-mongo

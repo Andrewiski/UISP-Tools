@@ -353,6 +353,9 @@ change_owner() {
 start_docker_containers() {
   echo "GOOGLEAPIKEY=$GOOGLEAPIKEY" > ${UISPTOOLS_APP_DIR}/uisptools.env
   echo "UISPTOOLS_ALIAS=$UISPTOOLS_ALIAS" >> ${UISPTOOLS_APP_DIR}/uisptools.env
+  echo "UISPTOOLS_HTTPSPORT=$UISPTOOLS_HTTPSPORT" >> ${UISPTOOLS_APP_DIR}/uisptools.env
+  echo "UISPTOOLS_HTTPPORT=$UISPTOOLS_HTTPPORT" >> ${UISPTOOLS_APP_DIR}/uisptools.env
+  echo "UISPTOOLS_MONGOPORT=$UISPTOOLS_MONGOPORT" >> ${UISPTOOLS_APP_DIR}/uisptools.env
   
   echo "Starting UispTools docker containers."
   docker compose -p "uisptools" --env-file "${UISPTOOLS_APP_DIR}/uisptools.env" -f "${UISPTOOLS_DOCKER_COMPOSE_PATH}" up -d uisptools || fail "Failed to start docker containers"
