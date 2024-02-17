@@ -1,14 +1,14 @@
 #!/bin/bash
 # installUispToolsStandAlone.sh
 
-VERSION=0.0.2.2024-02-17:0003
+VERSION=0.0.2.2024-02-17:0004
 echo installUispToolsStandAlone version $VERSION
 
 UISPTOOLS_USER=""
 UISPTOOLS_HOME_DIR=""
 
 GOOGLEAPIKEY=""
-NOCREATEUSER=""
+NOCREATEUSER="false"
 MONGODBSERVERURL=""       
 MONGODBUSERNAME="" 
 MONGODBPASSWORD="" 
@@ -119,7 +119,7 @@ while :; do
           fi
           ;;
         -nocreateuser) # do not create user in host operating system. 
-          NOCREATEUSER="TRUE"
+          NOCREATEUSER="true"
         ;;
         -h|-\?|--help) # Display help.
           usage
@@ -397,7 +397,7 @@ curlSilent=""
 #  curlSilent="--silent"
 #fi
 
-if [ -z "$NOCREATEUSER" ]
+if [ "$NOCREATEUSER" == "true" ]
 then
   echo "skipping create user"
 else
