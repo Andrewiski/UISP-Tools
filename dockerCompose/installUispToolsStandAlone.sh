@@ -1,7 +1,7 @@
 #!/bin/bash
 # installUispToolsStandAlone.sh
 
-VERSION=0.0.2.2024-02-17:0001
+VERSION=0.0.2.2024-02-17:0003
 echo installUispToolsStandAlone version $VERSION
 
 UISPTOOLS_USER=""
@@ -356,6 +356,10 @@ start_docker_containers() {
   echo "UISPTOOLS_HTTPSPORT=$UISPTOOLS_HTTPSPORT" >> ${UISPTOOLS_APP_DIR}/uisptools.env
   echo "UISPTOOLS_HTTPPORT=$UISPTOOLS_HTTPPORT" >> ${UISPTOOLS_APP_DIR}/uisptools.env
   echo "UISPTOOLS_MONGOPORT=$UISPTOOLS_MONGOPORT" >> ${UISPTOOLS_APP_DIR}/uisptools.env
+  echo "MONGODBUSERNAME=$MONGODBUSERNAME" >> ${UISPTOOLS_APP_DIR}/uisptools.env
+  echo "MONGODBPASSWORD=$MONGODBPASSWORD" >> ${UISPTOOLS_APP_DIR}/uisptools.env
+  echo "MONGODBDATABASE=$MONGODBDATABASE" >> ${UISPTOOLS_APP_DIR}/uisptools.env
+  echo "MONGODBSERVERURL=$MONGODBSERVERURL" >> ${UISPTOOLS_APP_DIR}/uisptools.env
   
   echo "Starting UispTools docker containers."
   docker compose -p "uisptools" --env-file "${UISPTOOLS_APP_DIR}/uisptools.env" -f "${UISPTOOLS_DOCKER_COMPOSE_PATH}" up -d uisptools || fail "Failed to start docker containers"

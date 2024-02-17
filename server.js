@@ -40,11 +40,17 @@ if (process.env.localDebug === 'true') {
     localDebug = true;
 }
 
+
+
+  
+
 var defaultConfig = {
     "configDirectory": configFileOptions.configDirectory,
     "urlPrefix": "",
-    "mongoDbServerUrl": process.env.MONGODBSERVERURL || "mongodb://uisptools:U!spT00ls!@uisptools_mongodb:27017/?connectTimeoutMS=300000&authSource=admin",
-    "mongoDbDatabaseName": "uisptools",
+    "mongoDbServerUrl": process.env.MONGODBSERVERURL || ((process.env.MONGODBUSERNAME || "mongodb") + ":" + (process.env.MONGODBPASSWORD || "U!spT00ls!") + "@uisptools_mongodb" + (process.env.UISPTOOLS_ALIAS || "") + ":" (UISPTOOLS_MONGOPORT || 49017) + "/?connectTimeoutMS=300000&authSource=admin") ,
+    "googleApiKey": process.env.GOOGLEAPIKEY || "",
+
+    "mongoDbDatabaseName": process.env.MONGODBDATABASE || "uisptools",
     "logDirectory": "logs",
     "adminRoute": "/admin",
     "logLevel": "info",

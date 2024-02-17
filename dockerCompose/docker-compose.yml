@@ -20,7 +20,7 @@ services:
       - ../data/logs:/usr/src/uisptools/logs
     container_name: uisptools${UISPTOOLS_ALIAS}
     environment:
-      MONGODBSERVERURL: "${MONGODBSERVERURL:-mongodb://uisptools:U!spT00ls!@mongo_mongodb${UISPTOOLS_ALIAS}:27017/}" 
+      MONGODBSERVERURL: "${MONGODBSERVERURL:-mongodb://${MONGODBUSERNAME:-uisptools}:${MONGODBPASSWORD:-U!spT00ls}!@mongo_mongodb${UISPTOOLS_ALIAS}:${UISPTOOLS_MONGOPORT:-49017}/}" 
       GOOGLEAPIKEY: "${GOOGLEAPIKEY:-}"
     depends_on:
       - uisptools_mongodb
@@ -31,9 +31,9 @@ services:
     image: mongo
     container_name: uisptools_mongodb${UISPTOOLS_ALIAS}
     environment:
-      MONGO_INITDB_ROOT_USERNAME: "uisptools"
-      MONGO_INITDB_ROOT_PASSWORD: "U!spT00ls!"
-      MONGO_INITDB_DATABASE: "uisptools"
+      MONGO_INITDB_ROOT_USERNAME: "${MONGODBUSERNAME:-uisptools}"
+      MONGO_INITDB_ROOT_PASSWORD: "${MONGODBPASSWORD:-U!spT00ls}"
+      MONGO_INITDB_DATABASE: "${MONGODBUSERNAME:-uisptools}"
     volumes:
       - ../data/mongodb/data/db:/data/db
       - ../data/mongodb/data/configdb:/data/configdb

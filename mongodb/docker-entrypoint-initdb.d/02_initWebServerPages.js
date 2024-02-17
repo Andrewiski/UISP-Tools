@@ -156,7 +156,7 @@ db.ut_PageContent.insert(
         "linkStatus" : 1,
         "linkTarget" : "_self",
         "linkText" : "Test API",
-        "linkUrl" : "/uisptools/testing/testapicalls",
+        "linkUrl" : "/uisptools/testapicalls",
         "pageContentGuid" : "ac5370c8-8e5e-4557-f146-f4e07423afcd",
         "pageDescription" : "Test API Calls",
         "pageKeywords" : "",
