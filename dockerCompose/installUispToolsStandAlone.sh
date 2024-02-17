@@ -1,7 +1,7 @@
 #!/bin/bash
 # installUispToolsStandAlone.sh
 
-VERSION=0.0.2.2024-02-12:0005
+VERSION=0.0.2.2024-02-17:0001
 echo installUispToolsStandAlone version $VERSION
 
 UISPTOOLS_USER=""
