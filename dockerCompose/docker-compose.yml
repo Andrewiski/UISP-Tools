@@ -13,11 +13,11 @@ services:
     #image: "ghcr.io/andrewiski/uisp-tools/uisptools:latest"
     image: "andrewiski/uisptools:latest"
     ports:
-      - "49443:49443"
-      - "49080:49080"
+      - "${UISPTOOLS_HTTPSPORT}:49443"
+      - "${UISPTOOLS_HTTPPORT}:49080"
     volumes:
       - ../data/config:/usr/src/uisptools/config
-      - ../data/log:/usr/src/uisptools/logs
+      - ../data/logs:/usr/src/uisptools/logs
     container_name: uisptools${UISPTOOLS_ALIAS}
     environment:
       MONGODBSERVERURL: "${MONGODBSERVERURL:-mongodb://uisptools:U!spT00ls!@mongo_mongodb${UISPTOOLS_ALIAS}:27017/}" 
@@ -40,11 +40,9 @@ services:
       #- ../data/mongodb/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d:ro
       - ../data/mongodb/docker-entrypoint-initdb.d/01_createDatabase.js:/docker-entrypoint-initdb.d/01_createDatabase.js:ro
       - ../data/mongodb/docker-entrypoint-initdb.d/02_initWebServerPages.js:/docker-entrypoint-initdb.d/02_initWebServerPages.js:ro
-    # this for Production as only need to Expose to internal services inside of Docker
-    expose:
-      - "27017"
+    #Remove this line for Production only here for development direct connect to mongo
     ports:
-      - "27017:27017"  
+      - "${UISPTOOLS_MONGOPORT}:27017"  
     restart: always
     networks:
     - express-mongo

@@ -481,6 +481,9 @@
             if (options.pageContentGuid) {
                 url = '/' + $.uisptools.common.settings.script.urlPrefix + 'api/PageContent/PageContentGuid/' + options.pageContentGuid;
             }else if (options.linkUrl) {
+                if (options.linkUrl[0] === "/"){
+                    options.linkUrl = options.linkUrl.substring(1);
+                }
                 url = '/' + $.uisptools.common.settings.script.urlPrefix + 'api/PageContent/LinkUrl/' + options.linkUrl;
             }
             else {

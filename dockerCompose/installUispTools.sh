@@ -31,7 +31,7 @@ fi
 
 # UISPTOOLS variables
 export UISPTOOLS_REPO="https://raw.githubusercontent.com/Andrewiski/UISP-Tools/main"
-export UISPTOOLS_DOCKER_IMAGE="ghcr.io/andrewiski/uisp-tools/uisptools"
+export UISPTOOLS_DOCKER_IMAGE="andrewiski/uisptools"
 export UISPTOOLS_VERSION="0.0.3"
 export UISPTOOLS_APP_DIR="${HOME_DIR}/app/uisptools"
 export UISPTOOLS_DATA_DIR="${HOME_DIR}/data/uisptools"

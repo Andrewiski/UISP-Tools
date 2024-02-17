@@ -1,6 +1,6 @@
 {
   "name": "uisp-tools",
-  "version": "0.0.22",
+  "version": "0.0.23",
   "description": "Tools for UISP",
   "main": "server.js",
   "license": "GPL-3.0-or-later",
@@ -49,6 +49,7 @@
     "punycode": "^2.1.1",
     "serve-favicon": "^2.5.0",
     "socket.io": "^4.2.0",
+    "tinymce": "^6.8.3",
     "uuid": "^8.3.2"
   }
 }

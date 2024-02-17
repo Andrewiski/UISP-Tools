@@ -1,7 +1,7 @@
 "use strict"
 
 
-import baseClientSide from "/uisptools/plugins/baseClientSide.js";
+import baseClientSide from "../baseClientSide.js";
 import {towerclients} from "./widgets/towerclients/towerclients.js"
 import {freqmapper} from "./widgets/freqmapper/freqmapper.js"
 
@@ -18,7 +18,7 @@ class widgetFactory extends baseClientSide.widgetFactory
                         reject(err);
                     }
                 )
-                $.logToConsole("INFO: wilcowireless widget factory " + this.name + " init");
+                $.logToConsole("INFO: wilcowireless widget factory init");
             });
         }
         //This gets called once per widget created
@@ -30,18 +30,15 @@ class widgetFactory extends baseClientSide.widgetFactory
                         //constructor(widgetFactory, widgetname, element, options) 
                         widget = new towerclients(this, widgetName, element,options);
                         resolve(widget);
-			break;
-		    case "freqmapper":
-			widget = new freqmapper(this, widgetName, element,options);
+                        break;
+                    case "freqmapper":
+                        widget = new freqmapper(this, widgetName, element,options);
                         resolve(widget);
-		    	break;
+                        break;
                 }
             });
         }
     }
-
-
-
 
 
     export {widgetFactory}

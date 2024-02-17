@@ -14,6 +14,9 @@ MONGODBUSERNAME=""
 MONGODBPASSWORD="" 
 MONGODBDATABASE="" 
 UNATTENDED=false
+UISPTOOLS_HTTPSPORT="49443"
+UISPTOOLS_HTTPPORT="49080"
+UISPTOOLS_MONGOPORT="27017"
 
 cliexit() {
     printf '%s\n' "$1" >&2
@@ -32,6 +35,30 @@ while :; do
             shift
           else
             cliexit 'ERROR: "--username" requires a non-empty option argument.'
+          fi
+          ;;
+        -httpport) # http port. 
+          if [ "$2" ]; then
+            UISPTOOLS_HTTPPORT=$2
+            shift
+          else
+            cliexit 'ERROR: "--httpport" requires a non-empty option argument.'
+          fi
+          ;;
+        -httpsport) # https port. 
+          if [ "$2" ]; then
+            UISPTOOLS_HTTPSPORT=$2
+            shift
+          else
+            cliexit 'ERROR: "--httpsport" requires a non-empty option argument.'
+          fi
+          ;;
+        -mongoport) # mongo port. 
+          if [ "$2" ]; then
+            UISPTOOLS_MONGOPORT=$2
+            shift
+          else
+            cliexit 'ERROR: "--mongoport" requires a non-empty option argument.'
           fi
           ;;
         -googleapikey) # google api key. 
@@ -129,7 +156,7 @@ PREREQUISITES=(
   "envsubst|gettext-base"
 )
 
-HTTP_PORT="49080"
+
 COMPOSE_PROJECT_NAME="andrewiski/uisptools:latest"
 COMPOSE_CONTAINER_NAME="uisptools"
 USERNAME="${UISPTOOLS_USER:-$USER}"
@@ -341,7 +368,7 @@ confirm_success() {
     UISPTOOLSRunning=true
     # env -i is to ensure that http[s]_proxy variables are not set
     # Otherwise the check would go through proxy.
-    env -i curl -skL "http://127.0.0.1:${HTTP_PORT}" > /dev/null && break
+    env -i curl -skL "http://127.0.0.1:${UISPTOOLS_HTTPPORT}" > /dev/null && break
     echo "."
     UISPTOOLSRunning=false
     n=$((n+1))

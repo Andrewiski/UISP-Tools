@@ -36,6 +36,10 @@
                 var widgetFactoryFolder = this.widgetFactoryJSPath.substring(0, this.widgetFactoryJSPath.lastIndexOf("/"));
                 return widgetFactoryFolder;
             }
+
+            getBaseUrlPath(){
+                return '/' + this.scriptSettings.urlPrefix;
+            }
         },
 
         /** The widget class for the UISPTools framework
@@ -60,15 +64,24 @@
                 //this is called to start the widget in motion
                 $.logToConsole("INFO: widget " + this.widgetFactory.namespace + " " + this.widgetname + " init");  
                 return new Promise((resolve, reject) => {
-                    resolve();
+                    $.uisptools.ajax("scriptsettings.json").then(
+                        function(scriptSettings){
+                            this.scriptSettings = scriptSettings;
+                            resolve();
+                        },
+                        function(err){
+                            reject(err);
+                        }
+                    );
+                    
                 });                 
             }
 
             getPluginUserData(options){
                     if(options && options.pluginId) {
-                        return $.uisptools.ajax("/uisptools/api/pluginUserData/" + options.pluginId);
+                        return $.uisptools.ajax("/" + this.uispToolsApiRequestHandler.options.urlPrefix + "/api/pluginUserData/" + options.pluginId);
                     }else{
-                        return $.uisptools.ajax("/uisptools/api/pluginUserData/" + this.widgetFactory.namespace + "." + this.widgetname);
+                        return $.uisptools.ajax("/" + this.uispToolsApiRequestHandler.options.urlPrefix + "/api/pluginUserData/" + this.widgetFactory.namespace + "." + this.widgetname);
                     }                
             }
             

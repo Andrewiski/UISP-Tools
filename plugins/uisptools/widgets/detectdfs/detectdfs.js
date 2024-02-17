@@ -1,5 +1,5 @@
     "use strict"
-    import baseClientSide from "/uisptools/plugins/baseClientSide.js";
+    import baseClientSide from "../../../baseClientSide.js";
     /*
     * uisptools  1.0
     * Copyright (c) 2022 Digital Example
@@ -7,7 +7,7 @@
     */
 
     /** 
-    @name uisptools.detectdfs.widget.detectdfs
+    @name uisptools.widget.detectdfs
     @class This is the detectdfs widget class for the UISPTools widget framework
     @description We make a call to nms.devices/ap then for each device call the /devices/{id}/configuration /devices/airos/{id}/configuration and compare frequency to detect if device has changed channel due to dfs
     */
@@ -143,7 +143,7 @@
                 deviceId=device.identification.id;
             }
             if(deviceId){
-                return $.uisptools.ajax("/uisptools/api/nms/devices/airos/" + deviceId + "/configuration",{showErrorDialog:false});
+                return $.uisptools.ajax(this.getUrl("api/nms/devices/airos/" + deviceId + "/configuration"),{showErrorDialog:false});
             }else{
                 return Promise.resolve(null);
             }
@@ -155,7 +155,7 @@
                 deviceId=device.identification.id;
             }
             if(deviceId){
-                return $.uisptools.ajax("/uisptools/api/nms/devices/airmaxes/" + deviceId + "/config/wireless",{showErrorDialog:false});
+                return $.uisptools.ajax(this.getUrl("api/nms/devices/airmaxes/" + deviceId + "/config/wireless"),{showErrorDialog:false});
             }else{
                 return Promise.resolve(null);
             }
@@ -167,7 +167,7 @@
                 deviceId=device.identification.id;
             }
             if(deviceId){
-                return $.uisptools.ajax("/uisptools/api/nms/devices/airmaxes/" + deviceId, {showErrorDialog:false});
+                return $.uisptools.ajax(this.getUrl("api/nms/devices/airmaxes/" + deviceId), {showErrorDialog:false});
             }else{
                 return Promise.resolve(null);
             }
@@ -179,7 +179,7 @@
                 deviceId=device.identification.id;
             }
             if(deviceId){
-                return $.uisptools.ajax("/uisptools/api/nms/devices/aircubes/" + deviceId + "/config/wireless",{showErrorDialog:false});
+                return $.uisptools.ajax(this.getUrl("api/nms/devices/aircubes/" + deviceId + "/config/wireless"),{showErrorDialog:false});
             }else{
                 return Promise.resolve(null);
             }
@@ -191,7 +191,7 @@
                 deviceId=device.identification.id;
             }
             if(deviceId){
-                return $.uisptools.ajax("/uisptools/api/nms/devices/aircubes/" + deviceId, {showErrorDialog:false});
+                return $.uisptools.ajax(this.getUrl("api/nms/devices/aircubes/" + deviceId), {showErrorDialog:false});
             }else{
                 return Promise.resolve(null);
             }
@@ -256,7 +256,7 @@
             let deviceId = $deviceItem.attr("data-deviceId");
             
             
-            let url = '/uisptools/api/nms/devices/' + deviceId +  '/restart';
+            let url = this.getUrl('api/nms/devices/' + deviceId +  '/restart');
             let notifyToast;
             $.uisptools.ajax(url, {method:"POST"}).then(
                 function(result){
@@ -295,7 +295,7 @@
             if(subnetPosition > 0 ){
                 deviceIp = deviceIp.substring(0, subnetPosition);
             }
-            let url = '/uisptools/api/nms/devices/' + deviceId +  '/iplink/redirect';
+            let url = this.getUrl('api/nms/devices/' + deviceId +  '/iplink/redirect');
             $.uisptools.ajax(url, {method:"POST"}).then(
                 function(result){
                     //https://10.100.28.2/ticket.cgi?ticketid=a33e6abf434859a349e0699cb701e692

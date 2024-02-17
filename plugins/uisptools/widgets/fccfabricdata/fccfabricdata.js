@@ -1,5 +1,5 @@
     "use strict"
-    import baseClientSide from "/uisptools/plugins/baseClientSide.js";
+    import baseClientSide from "../../../baseClientSide.js";
     /*
     * uisptools  1.0
     * Copyright (c) 2022 Digital Example
@@ -7,7 +7,7 @@
     */
 
     /** 
-    @name uisptools.fccfabricdata.widget.fccfabricdata
+    @name uisptools.widget.fccfabricdata
     @class This is the fccfabricdata widget class for the UISPTools widget framework
     @description We make a call to nms.devices/ap then for each device call the /devices/{id}/configuration /devices/airos/{id}/configuration and compare frequency to detect if device has changed channel due to dfs
     */
