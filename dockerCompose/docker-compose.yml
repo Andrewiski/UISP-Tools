@@ -1,6 +1,6 @@
 version: "3.7"
 services:
-  uisptools:
+  uisptools${UISPTOOLS_ALIAS}:
     build: 
       context: .
       dockerfile: Dockerfile
@@ -23,11 +23,11 @@ services:
       MONGODBSERVERURL: "${MONGODBSERVERURL:-mongodb://${MONGODBUSERNAME:-uisptools}:${MONGODBPASSWORD:-U!spT00ls}!@mongo_mongodb${UISPTOOLS_ALIAS}:${UISPTOOLS_MONGOPORT:-49017}/}" 
       GOOGLEAPIKEY: "${GOOGLEAPIKEY:-}"
     depends_on:
-      - uisptools_mongodb
+      - uisptools_mongodb${UISPTOOLS_ALIAS}
     networks:
-    - express-mongo
+    - uisptoolsnetwork${UISPTOOLS_ALIAS}
     restart: always
-  uisptools_mongodb:
+  uisptools_mongodb${UISPTOOLS_ALIAS}:
     image: mongo
     container_name: uisptools_mongodb${UISPTOOLS_ALIAS}
     environment:
@@ -45,6 +45,6 @@ services:
       - "${UISPTOOLS_MONGOPORT:-49017}:27017"  
     restart: always
     networks:
-    - express-mongo
+    - uisptoolsnetwork${UISPTOOLS_ALIAS}
 networks:
-  express-mongo:
+  uisptoolsnetwork${UISPTOOLS_ALIAS}:
