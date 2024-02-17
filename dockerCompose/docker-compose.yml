@@ -47,4 +47,5 @@ services:
     networks:
     - uisptoolsnetwork${UISPTOOLS_ALIAS}
 networks:
-  uisptoolsnetwork${UISPTOOLS_ALIAS}:
+  uisptoolsnetwork:
+    name: uisptoolsnetwork${UISPTOOLS_ALIAS}
