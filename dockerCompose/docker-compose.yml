@@ -1,6 +1,6 @@
 version: "3.7"
 services:
-  uisptools${UISPTOOLS_ALIAS}:
+  uisptools:
     build: 
       context: .
       dockerfile: Dockerfile
@@ -27,7 +27,7 @@ services:
     networks:
     - uisptoolsnetwork${UISPTOOLS_ALIAS}
     restart: always
-  uisptools_mongodb${UISPTOOLS_ALIAS}:
+  uisptools_mongodb:
     image: mongo
     container_name: uisptools_mongodb${UISPTOOLS_ALIAS}
     environment:
