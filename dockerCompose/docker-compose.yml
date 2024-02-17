@@ -14,7 +14,7 @@ services:
       MONGODBSERVERURL: "${MONGODBSERVERURL:-mongodb://${MONGODBUSERNAME:-uisptools}:${MONGODBPASSWORD:-U!spT00ls}!@mongo_mongodb${UISPTOOLS_ALIAS}:${UISPTOOLS_MONGOPORT:-49017}/}" 
       GOOGLEAPIKEY: "${GOOGLEAPIKEY:-}"
     depends_on:
-      - uisptools_mongodb${UISPTOOLS_ALIAS}
+      - uisptools_mongodb
     networks:
     - uisptoolsnetwork
     restart: always
