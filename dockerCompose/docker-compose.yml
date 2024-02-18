@@ -11,7 +11,7 @@ services:
       - ../data/logs:/usr/src/uisptools/logs
     container_name: uisptools${UISPTOOLS_ALIAS}
     environment:
-      MONGODBSERVERURL: "${MONGODBSERVERURL:-mongodb://${MONGODBUSERNAME:-uisptools}:${MONGODBPASSWORD:-U!spT00ls}!@mongo_mongodb${UISPTOOLS_ALIAS}:${UISPTOOLS_MONGOPORT:-49017}/}" 
+      MONGODBSERVERURL: "${MONGODBSERVERURL:-mongodb://${MONGODBUSERNAME:-uisptools}:${MONGODBPASSWORD:-U!spT00ls!}@uisptools_mongodb${UISPTOOLS_ALIAS}:${UISPTOOLS_MONGOPORT:-49017}/}" 
       GOOGLEAPIKEY: "${GOOGLEAPIKEY:-}"
     depends_on:
       - uisptools_mongodb
@@ -23,7 +23,7 @@ services:
     container_name: uisptools_mongodb${UISPTOOLS_ALIAS}
     environment:
       MONGO_INITDB_ROOT_USERNAME: "${MONGODBUSERNAME:-uisptools}"
-      MONGO_INITDB_ROOT_PASSWORD: "${MONGODBPASSWORD:-U!spT00ls}"
+      MONGO_INITDB_ROOT_PASSWORD: "${MONGODBPASSWORD:-U!spT00ls!}"
       MONGO_INITDB_DATABASE: "${MONGODBUSERNAME:-uisptools}"
     volumes:
       - ../data/mongodb/data/db:/data/db
@@ -32,6 +32,8 @@ services:
       - ../data/mongodb/docker-entrypoint-initdb.d/01_createDatabase.js:/docker-entrypoint-initdb.d/01_createDatabase.js:ro
       - ../data/mongodb/docker-entrypoint-initdb.d/02_initWebServerPages.js:/docker-entrypoint-initdb.d/02_initWebServerPages.js:ro
     #Remove this line for Production only here for development direct connect to mongo
+    expose:
+      - "${UISPTOOLS_MONGOPORT:-49017}"
     ports:
       - "${UISPTOOLS_MONGOPORT:-49017}:27017"  
     restart: always
