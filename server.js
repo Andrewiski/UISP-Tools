@@ -54,7 +54,7 @@ var defaultConfig = {
     "adminRoute": "/admin",
     "logLevel": "info",
     "useHttp": true,
-    "useHttps": true,
+    "useHttps": false,
     "httpport": 49080,
     "httpsport": 49443,
     "adminUsername": "admin",
@@ -71,12 +71,11 @@ var defaultConfig = {
         "server": {
             "app":"info"
         },
-        "ucrmApiRequestHandler":{"app":"info"},
-        "deApiRequestHandler":{"app":"info"}
+        "uispToolsApiHandler":{"app":"info"},
+        "uispToolsApiRequestHandler":{"app":"info"}
     },
     "plugins":[
-        "uisptools.testing",
-        "uisptools.dfsdetect",
+        "uisptools",        
         "wilcowireless"
       ]
 };
@@ -394,7 +393,10 @@ app.use('/' + urlPrefix + 'javascript/tinymce', express.static(path.join(__dirna
 
 if(fs.existsSync(path.join(__dirname,configFolder, '/public/images', 'favicon.ico' ))){
     app.use(favicon(path.join(__dirname,configFolder, '/public/images', 'favicon.ico' )));
+}else if(fs.existsSync(path.join(__dirname, '/public/images', 'favicon.ico' ))){
+    app.use(favicon(path.join(__dirname, '/public/images', 'favicon.ico' )));
 }
+
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
