@@ -11,7 +11,8 @@ services:
       - ../data/logs:/usr/src/uisptools/logs
     container_name: uisptools${UISPTOOLS_ALIAS}
     environment:
-      MONGODBSERVERURL: "${MONGODBSERVERURL:-mongodb://${MONGODBUSERNAME:-uisptools}:${MONGODBPASSWORD:-U!spT00ls!}@uisptools_mongodb${UISPTOOLS_ALIAS}:${UISPTOOLS_MONGOPORT:-49017}/}" 
+    #Note that the port is always 27017 as we are running with in the same network as the mongodb so not using the port mapping 
+      MONGODBSERVERURL: "${MONGODBSERVERURL:-mongodb://${MONGODBUSERNAME:-uisptools}:${MONGODBPASSWORD:-U!spT00ls!}@uisptools_mongodb${UISPTOOLS_ALIAS}:27017/}" 
       GOOGLEAPIKEY: "${GOOGLEAPIKEY:-}"
     depends_on:
       - uisptools_mongodb
@@ -32,10 +33,10 @@ services:
       - ../data/mongodb/docker-entrypoint-initdb.d/01_createDatabase.js:/docker-entrypoint-initdb.d/01_createDatabase.js:ro
       - ../data/mongodb/docker-entrypoint-initdb.d/02_initWebServerPages.js:/docker-entrypoint-initdb.d/02_initWebServerPages.js:ro
     #Remove this line for Production only here for development direct connect to mongo
-    expose:
-      - "${UISPTOOLS_MONGOPORT:-49017}"
-    ports:
-      - "${UISPTOOLS_MONGOPORT:-49017}:27017"  
+    #expose:
+    #  - "${UISPTOOLS_MONGOPORT:-49017}"
+    #ports:
+    #  - "${UISPTOOLS_MONGOPORT:-49017}:27017"  
     restart: always
     networks:
     - uisptoolsnetwork
