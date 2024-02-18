@@ -39,6 +39,7 @@
             templateCache: {
                 "login": { url: 'scripts/app/templates/login.htm', data: '', isLoaded: false },
                 "error": { url: 'scripts/app/templates/error.htm', data: '', isLoaded: false },
+                "footer": { url: 'footer.htm', data: '', isLoaded: false },
                 "defaultModal" : {url: 'scripts/app/templates/default.modal.htm', data: '', isLoaded: false}
                 
             },
@@ -232,6 +233,7 @@
                             //$.logToConsole("$.uisptools.appInit() DONE");
 
                             $.when(
+                                $.uisptools.updateFooter(),
                                 $.uisptools.getMenuItems(),    
                                 $.uisptools.loadPageContent()
                             ).done(function (x, data) {
@@ -355,6 +357,9 @@
                 
             )
         },
+
+
+       
 
         showPageContent: function (page) {
             document.title = page.pageTitle;
@@ -505,7 +510,13 @@
         },
 
         
-
+        updateFooter: function () {
+            var deferred = $.Deferred();
+            $.uisptools.getTemplateCache("footer").then(function (footer) {
+                let $footer = $("footer").html(footer);
+            });
+            return deferred.promise();
+        },
         
 
         getTemplateContent: function (options) {

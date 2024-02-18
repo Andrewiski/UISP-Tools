@@ -28,13 +28,12 @@ var uisptools = {
                     //Any Routes above this line are not Checked for Auth and are Public
                     router.get('/' + this.uispToolsApiRequestHandler.options.urlPrefix + 'uisptools/api/*', this.checkApiAccess);
                     router.get('/' + this.uispToolsApiRequestHandler.options.urlPrefix + 'uisptools/api/getMenuItems', this.getMenuItems); 
-                    router.get('/' + this.uispToolsApiRequestHandler.options.urlPrefix + 'uisptools/api/getMenuItems', this.getMenuItems); 
                 } catch (ex) {
                    this.debug("error", ex.msg, ex.stack);
                 }
             }
 
-            fetchSiteClients(siteId){
+            getMenuItems(siteId){
                 return $.uisptools.ajax("/" + this.uispToolsApiRequestHandler.options.urlPrefix + "uisptools/api/nms/sites/" + siteId + "/clients");
             }
             

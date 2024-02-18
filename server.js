@@ -231,13 +231,7 @@ var getSocketInfo = function (socket) {
     return { ip: ip };
 };
 
-//config public files are used before public folder files to allow overwrite.
 
-if(fs.existsSync(path.join(__dirname, objOptions.configDirectory, 'public'))){
-    app.use(express.static(path.join(__dirname, objOptions.configDirectory, 'public')));
-}
-
-app.use(express.static(path.join(__dirname, 'public')));
 
 
 // disable the x-power-by express message in the header
@@ -510,11 +504,14 @@ var handlePublicFileRequest = function (req, res) {
 
     //}
 
-    if (fs.existsSync(path.join(__dirname, 'public',filePath)) === true) {
-       
-       
-        res.sendFile(filePath, { root: path.join(__dirname, 'public') });  
-       
+    //config public files are used before public folder files to allow overwrite.
+
+
+
+    if (fs.existsSync(path.join(__dirname, objOptions.configDirectory, 'public',filePath)) === true) {
+        res.sendFile(filePath, { root: path.join(__dirname, objOptions.configDirectory, 'public') });     
+    }else if (fs.existsSync(path.join(__dirname, 'public',filePath)) === true) {       
+        res.sendFile(filePath, { root: path.join(__dirname, 'public') });     
     } else {
         let fileExt = path.extname(filePath);
         if(fileExt === "" || fileExt === ".htm" || fileExt === ".html"){
