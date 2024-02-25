@@ -48,6 +48,7 @@
 
         fetchApDevices(){
             return $.uisptools.ajax("/uisptools/api/nms/devices?role=ap");
+            
         }
         fetchDevice(options){
             return $.uisptools.ajax("/uisptools/api/nms/devices/" + options.deviceId);

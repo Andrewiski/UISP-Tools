@@ -399,7 +399,7 @@ app.use(fileUpload({
 }));
 
 var routes = express.Router();
-
+var pluginRoutes = express.Router();
 
 var handlePluginPublicFileRequest = function (req, res) {
     let filePath = req.path;
@@ -513,8 +513,9 @@ var handlePublicFileRequest = function (req, res) {
     }else if (fs.existsSync(path.join(__dirname, 'public',filePath)) === true) {       
         res.sendFile(filePath, { root: path.join(__dirname, 'public') });     
     } else {
+
         let fileExt = path.extname(filePath);
-        if(fileExt === "" || fileExt === ".htm" || fileExt === ".html"){
+        if( filePath.includes("/api/") == false && (fileExt === "" || fileExt === ".htm" || fileExt === ".html")){
             filePath = "/index.htm";
             res.sendFile(filePath, { root: path.join(__dirname, 'public') });
         }else{
@@ -574,7 +575,7 @@ for (let index = 0; index < objOptions.plugins.length; index++) {
                         plugin.init().then(
                             function(){
                                 try{
-                                    plugin.bindRoutes(routes);
+                                    plugin.bindRoutes(pluginRoutes);
                                 }catch(ex){
                                     logUtilHelper.log(appLogName, "app", "error", "plugin serverSide create", pluginName, serverSideJSPath, ex )
                                 }
@@ -610,6 +611,8 @@ routes.get('/' + urlPrefix + '*', function (req, res) {
     handlePublicFileRequest(req, res);
 });
 
+
+app.use('/', pluginRoutes);
 
 
 

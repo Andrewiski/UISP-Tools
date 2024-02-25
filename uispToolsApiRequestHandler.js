@@ -15,7 +15,8 @@ var UispToolsApiRequestHandler = function (options) {
     var defaultOptions = {
         logUtilHelper:null,
         uispToolsApiHandler: null,
-        urlPrefix: ""
+        urlPrefix: "",
+        allowDirectUispQuerys: true
     };
     
     self.options = extend({}, defaultOptions, options);
@@ -81,13 +82,14 @@ var UispToolsApiRequestHandler = function (options) {
             // routes.delete('/' + self.options.urlPrefix + '/api/pluginUserData/:pluginName', deletePluginUserData);
 
             //Only Admin plugins can call these directly plugins should only expose what should exposed as you can pull credit card data etc.
-            routes.get('/' + self.options.urlPrefix + 'api/crm/*', getCRM);
-            routes.get('/' + self.options.urlPrefix + 'api/nms/*', getNMS);
-            routes.post('/' + self.options.urlPrefix + 'api/crm/*', getCRM);
-            routes.post('/' + self.options.urlPrefix + 'api/nms/*', getNMS);
-            routes.delete('/' + self.options.urlPrefix + 'api/crm/*', getCRM);
-            routes.delete('/' + self.options.urlPrefix + 'api/nms/*', getNMS);
-            
+            if(self.options.allowDirectUispQuerys){
+                routes.get('/' + self.options.urlPrefix + 'api/crm/*', getCRMData);
+                routes.get('/' + self.options.urlPrefix + 'api/nms/*', getNMSData);
+                routes.post('/' + self.options.urlPrefix + 'api/crm/*', getCRMData);
+                routes.post('/' + self.options.urlPrefix + 'api/nms/*', getNMSData);
+                routes.delete('/' + self.options.urlPrefix + 'api/crm/*', getCRMData);
+                routes.delete('/' + self.options.urlPrefix + 'api/nms/*', getNMSData);
+            }
         } catch (ex) {
            debug("error", ex.msg, ex.stack);
         }
@@ -221,7 +223,29 @@ var UispToolsApiRequestHandler = function (options) {
         return url;
     }
 
-    var getCRM = function (req, res) {
+    var crmApiQuery = function (options) {
+        return new Promise((resolve, reject) => {
+            //Need to add Code to Validate that the AccessToken is valid, requester is a Valid NMS Login and then get the NMS Auth Token from nmsLoginData
+            let crmOptions = {
+                url:options.url,  
+                rejectUnauthorized: options.rejectUnauthorized || true, 
+                method : options.method,
+                sendAppKey: options.sendAppKey || true,
+            }
+            self.options.uispToolsApiHandler.handleCrmRequest(crmOptions).then(
+                function(data){
+                    resolve(data);
+                },
+                function(err){
+                    debug("error", "crmApiQuery", { "msg": err.message, "stack": err.stack });
+                    reject(err);
+                }
+            )
+        });            
+    };
+
+
+    var getCRMData = function (req, res) {
         try {
             //Validate that the AccessToken is valid and get the CRM Auth Token from 
             let accessToken = res.locals.accessToken;
@@ -234,7 +258,7 @@ var UispToolsApiRequestHandler = function (options) {
                 method : req.method
                 //ucrmAppKey:accessToken.loginData.nmsLoginData.x-auth-token
             }
-            self.options.uispToolsApiHandler.handleUcrmRequest(ucrmOptions).then(
+            crmApiQuery(ucrmOptions).then(
                 function(data){
                     res.json(data);
                 },
@@ -281,39 +305,50 @@ var UispToolsApiRequestHandler = function (options) {
     }
 
 
-    var getNMS = function (req, res) {
-        try {
+    var nmsApiQuery = function (options) {
+        return new Promise((resolve, reject) => {
             //Need to add Code to Validate that the AccessToken is valid, requester is a Valid NMS Login and then get the NMS Auth Token from nmsLoginData
-
-            let accessToken = res.locals.accessToken;
-
-            let nmsUrl = getNMSUrl(req);
             let unmsOptions = {
-                url:nmsUrl,  //figure this out from request 
-                rejectUnauthorized: true, 
-                nmsAuthToken:accessToken.loginData.nmsLoginData["x-auth-token"],
-                method : req.method
+                url:options.url,  //figure this out from request 
+                rejectUnauthorized: options.rejectUnauthorized || true, 
+                nmsAuthToken:options.accessToken.loginData.nmsLoginData["x-auth-token"],
+                method : options.method
             }
             self.options.uispToolsApiHandler.handleUnmsRequest(unmsOptions).then(
+                function(data){
+                    resolve(data);
+                },
+                function(err){
+                    debug("error", "nmsApiQuery", { "msg": err.message, "stack": err.stack });
+                    reject(err);
+                }
+            )
+        });            
+    };
+
+    var getNMSData = function (req, res) {
+        try {            
+            let unmsOptions = {
+                url:getNMSUrl(req),
+                method : req.method,
+                accessToken:res.locals.accessToken,
+                rejectUnauthorized: true
+            }
+            nmsApiQuery(unmsOptions).then(
                 function(data){
                     res.json(data);
                 },
                 function(err){
-                    debug("error", "getNMS", { "msg": err.message, "stack": err.stack });
+                    debug("error", "getCRM", { "msg": err.message, "stack": err.stack });
                     res.status(500).json({ "msg": "An Error Occured!", "error": err });
                 }
-
-            )
-           
-            
+            );
         } catch (ex) {
-            debug("error", "getCRM", { "msg": ex.message, "stack": ex.stack });
+            debug("error", "getNMSRaw", { "msg": ex.message, "stack": ex.stack });
             res.status(500).json({ "msg": "An Error Occured!", "error": ex });
         }
 
     };
-
-    
 
     var getUserInfo = function (req, res) {
         try {
@@ -637,6 +672,8 @@ var getMenuItems = function (req, res, next) {
     self.getErrorObject = getErrorObject;
     self.checkApiAccess = checkApiAccess;
     self.checkSuperAdminApiAccess = checkSuperAdminApiAccess;
+    self.nmsApiQuery = nmsApiQuery;
+    self.crmApiQuery = crmApiQuery;
 
 };
 module.exports = UispToolsApiRequestHandler;

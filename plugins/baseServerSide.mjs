@@ -84,6 +84,9 @@
                 this.uispToolsApiRequestHandler.checkSuperAdminApiAccess (req, res, next)
             }
 
+           
+            
+
             getPluginUserData = function(res){
                 try {
                     let options = {
@@ -96,8 +99,11 @@
                 }
             }
 
-            getPluginData(){
-                let options = {pluginName : this.namespace}
+            getPluginData(options){
+                if (options == null)    {
+                    options = {pluginName : this.namespace}
+                }
+                //let options = {pluginName : this.namespace}
                 this.uispToolsApiRequestHandler.getPluginData(options);
             }
 

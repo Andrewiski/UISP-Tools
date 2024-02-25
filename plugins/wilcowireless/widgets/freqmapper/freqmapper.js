@@ -44,7 +44,7 @@
         }
 
         fetchApDevices(){
-            return $.uisptools.ajax("/uisptools/api/nms/devices?role=ap");
+            return $.uisptools.ajax("/" + this.getBaseUrlPath() + "wilcowireless/api/freqmapper/devices?role=ap");
         }
 
         wifi5GhzChannelToFrequency(channel){

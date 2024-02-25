@@ -17,8 +17,17 @@
             init(){
                 //this is where if we needed to excute some one time code would go only called first time widgetFactory is created
                 $.logToConsole("INFO: widgetfactory " + this.namespace + " " + this.widgetFactoryJSPath + " init"); 
+                let self = this;
                 return new Promise((resolve, reject) => {
-                    resolve();
+                    $.uisptools.ajax("scriptsettings.json").then(
+                        function(scriptSettings){
+                            self.scriptSettings = scriptSettings;
+                            resolve();
+                        },
+                        function(err){
+                            reject(err);
+                        }
+                    );
                 });
                                   
             }
@@ -37,9 +46,7 @@
                 return widgetFactoryFolder;
             }
 
-            getBaseUrlPath(){
-                return '/' + this.scriptSettings.urlPrefix;
-            }
+            
         },
 
         /** The widget class for the UISPTools framework
@@ -64,25 +71,20 @@
                 //this is called to start the widget in motion
                 $.logToConsole("INFO: widget " + this.widgetFactory.namespace + " " + this.widgetname + " init");  
                 return new Promise((resolve, reject) => {
-                    $.uisptools.ajax("scriptsettings.json").then(
-                        function(scriptSettings){
-                            this.scriptSettings = scriptSettings;
-                            resolve();
-                        },
-                        function(err){
-                            reject(err);
-                        }
-                    );
-                    
+                   resolve();
                 });                 
             }
 
             getPluginUserData(options){
                     if(options && options.pluginId) {
-                        return $.uisptools.ajax("/" + this.uispToolsApiRequestHandler.options.urlPrefix + "/api/pluginUserData/" + options.pluginId);
+                        return $.uisptools.ajax("/" + this.widgetFactory.scriptSettings.urlPrefix + "api/pluginUserData/" + options.pluginId);
                     }else{
-                        return $.uisptools.ajax("/" + this.uispToolsApiRequestHandler.options.urlPrefix + "/api/pluginUserData/" + this.widgetFactory.namespace + "." + this.widgetname);
+                        return $.uisptools.ajax("/" + this.widgetFactory.scriptSettings.urlPrefix + "api/pluginUserData/" + this.widgetFactory.namespace + "." + this.widgetname);
                     }                
+            }
+
+            getBaseUrlPath(){
+                return this.widgetFactory.scriptSettings.urlPrefix;
             }
             
         }

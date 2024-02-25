@@ -28,10 +28,75 @@ var uisptools = {
                     //Any Routes above this line are not Checked for Auth and are Public
                     router.get('/' + this.uispToolsApiRequestHandler.options.urlPrefix + 'uisptools/api/*', this.checkApiAccess);
                     router.get('/' + this.uispToolsApiRequestHandler.options.urlPrefix + 'uisptools/api/getMenuItems', this.getMenuItems); 
+                    router.get('/' + this.uispToolsApiRequestHandler.options.urlPrefix + 'uisptools/api/nms/devices', this.getNMSDevices.bind(this)); 
+                    router.get('/' + this.uispToolsApiRequestHandler.options.urlPrefix + 'uisptools/api/nms/devices/*', this.getNMSDevices.bind(this)); 
+                    router.get('/' + this.uispToolsApiRequestHandler.options.urlPrefix + 'uisptools/api/nms/sites', this.getNMSSites.bind(this)); 
+                    //router.get('/' + this.uispToolsApiRequestHandler.options.urlPrefix + 'uisptools/api/nms/devices/airmaxes/:deviceid/config/wireless', this.getNMSDevices.bind(this)); 
+                    ///airos/" + deviceId + "/configuration
+                    ///airmaxes/" + deviceId + "/config/wireless
                 } catch (ex) {
                    this.debug("error", ex.msg, ex.stack);
                 }
             }
+
+
+            getNMSSites(req, res){
+                
+                let url =  'sites?type=site';
+                
+                
+                var options = { 
+                    url: url,
+                    method: 'GET',
+                    accessToken : res.locals.accessToken
+                }
+                this.uispToolsApiRequestHandler.nmsApiQuery(options).then(  
+                    function(data){
+                        //clean the data so only Site Lat Lon and Names are returned
+                        res.json(data);
+                    },
+                    function(err){
+                        res.status(500).json({ "msg": "An Error Occured!", "error": err });
+                    }
+                )
+            }
+
+            getNMSDevices(req, res){
+                
+                let url =  req.orginalUrl.substring(('/' + this.uispToolsApiRequestHandler.options.urlPrefix + 'uisptools/api/nms/').length);
+                
+                
+                if(req.query){
+                    let queryString = "";
+                    for (const [key, value] of Object.entries(req.query)) {
+                        if(key === "_"){
+        
+                        }else{
+                            if(queryString ===""){
+                                queryString = queryString + "?";
+                            }else{
+                                queryString = queryString + "&";
+                            }
+                            queryString = queryString  + key + "=" + encodeURIComponent(value);
+                        }
+                    }
+                    url = url + queryString;
+                }
+                var options = { 
+                    url: url,
+                    method: 'GET',
+                    accessToken : res.locals.accessToken
+                }
+                this.uispToolsApiRequestHandler.nmsApiQuery(options).then(  
+                    function(data){
+                        res.json(data);
+                    },
+                    function(err){
+                        res.status(500).json({ "msg": "An Error Occured!", "error": err });
+                    }
+                )
+            }
+
 
             getMenuItems(siteId){
                 return $.uisptools.ajax("/" + this.uispToolsApiRequestHandler.options.urlPrefix + "uisptools/api/nms/sites/" + siteId + "/clients");

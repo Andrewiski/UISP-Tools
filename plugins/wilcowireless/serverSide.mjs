@@ -26,15 +26,50 @@ var wilcowireless = {
                 try {
                     super.bindRoutes(router);
                     //Any Routes above this line are not Checked for Auth and are Public
-                    router.get('/uisptools/wilcowireless/api/*', this.checkApiAccess);
-                    router.get('/uisptools/wilcowireless/api/towerclients', this.getTowerSitesClients); 
+                    router.get('/' + this.uispToolsApiRequestHandler.options.urlPrefix + 'wilcowireless/api/*', this.checkApiAccess.bind(this));
+                    router.get('/' + this.uispToolsApiRequestHandler.options.urlPrefix + 'wilcowireless/api/freqmapper/devices', this.getFreqMapperNMSDevices.bind(this)); 
+                    router.get('/' + this.uispToolsApiRequestHandler.options.urlPrefix + 'wilcowireless/api/freqmapper/devices:deviceid', this.getFreqMapperNMSDevices.bind(this)); 
+                    
                 } catch (ex) {
                    this.debug("error", ex.msg, ex.stack);
                 }
             }
 
-            fetchSiteClients(siteId){
-                return $.uisptools.ajax("/uisptools/api/nms/sites/" + siteId + "/clients");
+            
+            getFreqMapperNMSDevices(req, res){
+                let url =  "devices";
+                if(req.params.deviceid){
+                    url = url + "/" + req.params.deviceid;
+                }
+                if(req.query){
+                    let queryString = "";
+                    for (const [key, value] of Object.entries(req.query)) {
+                        if(key === "_"){
+        
+                        }else{
+                            if(queryString ===""){
+                                queryString = queryString + "?";
+                            }else{
+                                queryString = queryString + "&";
+                            }
+                            queryString = queryString  + key + "=" + encodeURIComponent(value);
+                        }
+                    }
+                    url = url + queryString;
+                }
+                var options = { 
+                    url: url,
+                    method: 'GET',
+                    accessToken : res.locals.accessToken
+                }
+                this.uispToolsApiRequestHandler.nmsApiQuery(options).then(  
+                    function(data){
+                        res.json(data);
+                    },
+                    function(err){
+                        res.status(500).json({ "msg": "An Error Occured!", "error": err });
+                    }
+                )
             }
             
             fetchSiteDetails(siteId){
