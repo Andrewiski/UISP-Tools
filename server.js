@@ -171,7 +171,8 @@ var uispToolsApiRequestHandler = new UispToolsApiRequestHandler({
     logUtilHelper:logUtilHelper,
     uispToolsApiHandler:uispToolsApiHandler,
     googleApiKey: objOptions.googleApiKey,
-    urlPrefix: urlPrefix
+    urlPrefix: urlPrefix,
+    allowDirectUispQuerys: objOptions.allowDirectUispQuerys || false
 });
 
 
@@ -180,10 +181,10 @@ var app = express();
 
 if(localDebug){
     //this will allow us to emulate the CSP set by UNMS via the NGINX server
-    app.use(function(req, res, next) {
-        res.setHeader("Content-Security-Policy", "default-src 'self' data: wss: *.tile.openstreetmap.org *.gstatic.com *.googleapis.com geocode.arcgis.com nominatim.openstreetmap.org sp-dir.uwn.com web.delighted.com; style-src 'self' 'unsafe-inline' *.googleapis.com; img-src 'self' *.tile.openstreetmap.org maps.gstatic.com *.googleapis.com blog.ui.com *.svc.ui.com data:; script-src 'self' data: wss: *.tile.openstreetmap.org *.gstatic.com *.googleapis.com geocode.arcgis.com nominatim.openstreetmap.org d2yyd1h5u9mauk.cloudfront.net sp-dir.uwn.com 'sha256-VWlS8Ik7XRVhz/AxeiqW/Fz0x8ZwAlOO7KdRrOwgP0Q='");
-        return next();
-    });
+    // app.use(function(req, res, next) {
+    //     res.setHeader("Content-Security-Policy", "default-src 'self' data: wss: *.tile.openstreetmap.org *.gstatic.com *.googleapis.com geocode.arcgis.com nominatim.openstreetmap.org sp-dir.uwn.com web.delighted.com; style-src 'self' 'unsafe-inline' *.googleapis.com; img-src 'self' *.tile.openstreetmap.org maps.gstatic.com *.googleapis.com blog.ui.com *.svc.ui.com data:; script-src 'self' data: wss: *.tile.openstreetmap.org *.gstatic.com *.googleapis.com geocode.arcgis.com nominatim.openstreetmap.org d2yyd1h5u9mauk.cloudfront.net sp-dir.uwn.com 'sha256-VWlS8Ik7XRVhz/AxeiqW/Fz0x8ZwAlOO7KdRrOwgP0Q='");
+    //     return next();
+    // });
 }
 
 var commonData = {
@@ -196,7 +197,6 @@ var commonData = {
         arch: process.arch  
     },
     serverCertificates: null
-    
 };
 
 var privateData = {
@@ -516,6 +516,11 @@ var handlePublicFileRequest = function (req, res) {
 
         let fileExt = path.extname(filePath);
         if( filePath.includes("/api/") == false && (fileExt === "" || fileExt === ".htm" || fileExt === ".html")){
+            if(commonData.menutItemsRefreshed === undefined || moment().diff(commonData.menutItemsRefreshed, 'minutes') > 5){
+                uispToolsApiHandler.getMenuItems({})
+            }else{
+                
+            }
             filePath = "/index.htm";
             res.sendFile(filePath, { root: path.join(__dirname, 'public') });
         }else{

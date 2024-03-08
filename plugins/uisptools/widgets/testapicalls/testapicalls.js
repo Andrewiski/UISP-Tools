@@ -70,7 +70,7 @@
 
                     $element.find("#uisptools_API_Path_Select").on("change",
                         function(evt){
-                            $element.find("#uisptools_API_Path").val($element.find("#uisptools_API_Path_Select").val());
+                            $element.find("#uisptools_API_Path").val(self.getBaseUrlPath() + $element.find("#uisptools_API_Path_Select").val());
                         }
                     )
                     resolve();

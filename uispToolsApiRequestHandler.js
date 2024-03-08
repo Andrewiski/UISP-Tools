@@ -16,7 +16,7 @@ var UispToolsApiRequestHandler = function (options) {
         logUtilHelper:null,
         uispToolsApiHandler: null,
         urlPrefix: "",
-        allowDirectUispQuerys: true
+        allowDirectUispQuerys: false
     };
     
     self.options = extend({}, defaultOptions, options);
@@ -201,7 +201,7 @@ var UispToolsApiRequestHandler = function (options) {
         //We have to strip the _ querystring value sent with Ajax calls else NMS will complain
 
         var url = req.path;
-        url = url.replace('/' + self.options.urlPrefix + '/api/crm/', '');
+        url = url.replace('/' + self.options.urlPrefix + 'api/crm/', '');
         if(req.query){
             let queryString = "";
             for (const [key, value] of Object.entries(req.query)) {
@@ -232,7 +232,7 @@ var UispToolsApiRequestHandler = function (options) {
                 method : options.method,
                 sendAppKey: options.sendAppKey || true,
             }
-            self.options.uispToolsApiHandler.handleCrmRequest(crmOptions).then(
+            self.options.uispToolsApiHandler.handleUcrmRequest(crmOptions).then(
                 function(data){
                     resolve(data);
                 },
