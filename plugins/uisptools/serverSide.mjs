@@ -32,6 +32,7 @@ var uisptools = {
                     router.get('/' + this.uispToolsApiRequestHandler.options.urlPrefix + 'uisptools/api/nms/devices', this.getNMSDevices.bind(this)); 
                     router.get('/' + this.uispToolsApiRequestHandler.options.urlPrefix + 'uisptools/api/nms/devices/*', this.getNMSDevices.bind(this));
                     router.post('/' + this.uispToolsApiRequestHandler.options.urlPrefix + 'uisptools/api/nms/devices/:deviceid/iplink/redirect', this.postNMSDevices.bind(this)); 
+                    router.post('/' + this.uispToolsApiRequestHandler.options.urlPrefix + 'uisptools/api/nms/devices/:deviceid/iplink/restart', this.postNMSDevices.bind(this));
                     router.get('/' + this.uispToolsApiRequestHandler.options.urlPrefix + 'uisptools/api/nms/sites', this.getNMSSites.bind(this)); 
                     //router.get('/' + this.uispToolsApiRequestHandler.options.urlPrefix + 'uisptools/api/nms/devices/airmaxes/:deviceid/config/wireless', this.getNMSDevices.bind(this)); 
                     ///airos/" + deviceId + "/configuration
