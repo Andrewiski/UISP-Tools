@@ -7,6 +7,48 @@ NMS [Read more](https://<your-uisp-hostname>/nms/api-docs/).
 
 UISP-Tools is compatible with UCRM 2.10.0+
 
+## There are Now two install first is the easiest and will work with a Cloud Hosted and Self Hosted the Second Method only will Self Hosted but becasue it runs inside of UISP Docker Compse it will be able to access the UISP Postgres Directly 
+
+
+#Method One (Cloud Hosted and Self Hosted) Running as a seperate Docker Container on either sperate server or same server as UISP
+
+## How does it work?
+* uisptools docker container is created and runs on a seperate ip or port and url as UISP
+* uisptools docker container is configured to use the UISP API's via API Key to access the UISP data via built in UISP API functions
+
+## How to install
+
+### Step 1: Install Docker on the server
+
+### Step 2: Add your account to the docker group and log out and back in or run newgrp groupName
+```
+sudo usermod -a -G docker $USER
+newgrp groupName
+
+'''
+
+### Step 3: Download the installUispToolsStandAlone.sh script from github 
+```
+curl -H 'Cache-Control: no-cache, no-store' -sL https://raw.githubusercontent.com/Andrewiski/UISP-Tools/main/dockerCompose/installUispToolsStandAlone.sh -o installUispToolsStandAlone.sh
+```
+
+### Step 4: Run the installUispToolsStandAlone.sh script
+```
+  ./installUispToolsStandAlone.sh -alias uisptools -googleapikey "AIAASSSrB1Ek-000000-0000000" -installdir "/home/$USER/uisptools" -httpport 46080 -httpsport 46443 -nocreateuser 
+```
+
+### Step 5: Edit the config.json file to add your UISP API Key and Set the UNMS and UCRM URLs
+```
+  nano /home/$USER/uisptools/config/config.json
+```
+
+### Step 6: Open the UISP-Tools in your browser
+```
+  http://<your-uisptools-hostname>:46080
+```
+
+#Method Two (Self Hosted Only) Running Inside of UISP Docker Compose by Injecting the UISP Tools Docker Containers into the UISP Docker Compose
+
 ## How does it work?
 * uisptools docker services are added to the UISP docker-compose.yaml file that is created during the UISP install process located at /home/unms/app/docker-compose.yml
 * next the /uisptools path is added to the unms-nginx conf.d so that it can accessed using the UNMS url  /uisp
