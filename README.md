@@ -42,9 +42,21 @@ curl -H 'Cache-Control: no-cache, no-store' -sL https://raw.githubusercontent.co
   nano /home/$USER/uisptools/config/config.json
 ```
 
-### Step 6: Open the UISP-Tools in your browser
+### Step 6: Open the UISP-Tools in your browser, login using your UISP NMS credentials, note that the single login will allow you to login using CRM but not give you access to the ADMIN tools. 
 ```
   http://<your-uisptools-hostname>:46080
+```
+
+## To Upgrade UISP-Tools  run the installUispToolsStandAlone.sh script with the -upgrade flag
+```
+  ./installUispToolsStandAlone.sh -alias uisptools -googleapikey "AIAASSSrB1Ek-000000-0000000" -installdir "/home/$USER/uisptools" -httpport 46080 -httpsport 46443 -nocreateuser -upgrade
+```
+
+## Optional Install NGIX to handle SSL and Reverse Proxy
+```
+  sudo apt-get install nginx
+  sudo nano /etc/nginx/sites-available/uisptools
+```
 ```
 
 #Method Two (Self Hosted Only) Running Inside of UISP Docker Compose by Injecting the UISP Tools Docker Containers into the UISP Docker Compose
