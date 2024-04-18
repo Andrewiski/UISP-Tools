@@ -53,6 +53,7 @@ var defaultConfig = {
     "logDirectory": "logs",
     "adminRoute": "/admin",
     "logLevel": "info",
+    "redirectClientsToCRMOnLogin": true,
     "useHttp": true,
     "useHttps": false,
     "httpport": 49080,
@@ -446,7 +447,7 @@ var handlePluginPublicFileRequest = function (req, res) {
 
 
 
-var handlePublicFileRequest = function (req, res) {
+var handlePublicFileRequest = function (req, res, next) {
     var filePath = req.path;
 
     if (filePath === "/" && urlPrefix !== "") {
@@ -462,7 +463,7 @@ var handlePublicFileRequest = function (req, res) {
 
     if(filePath.endsWith("scriptsettings.json")){
         let scriptSettings = {
-            urlPrefix: urlPrefix,
+            urlPrefix: urlPrefix
         }
         res.json(scriptSettings);
         return;
@@ -516,15 +517,14 @@ var handlePublicFileRequest = function (req, res) {
 
         let fileExt = path.extname(filePath);
         if( filePath.includes("/api/") == false && (fileExt === "" || fileExt === ".htm" || fileExt === ".html")){
-            if(commonData.menutItemsRefreshed === undefined || moment().diff(commonData.menutItemsRefreshed, 'minutes') > 5){
-                uispToolsApiHandler.getMenuItems({})
-            }else{
-                
-            }
+            
             filePath = "/index.htm";
             res.sendFile(filePath, { root: path.join(__dirname, 'public') });
         }else{
-            res.sendStatus(404);
+            if (uispToolsApiRequestHandler.checkForRedirect(req, res) == false){
+                res.sendStatus(404);
+            }
+            
         }
     }
     
@@ -532,7 +532,7 @@ var handlePublicFileRequest = function (req, res) {
 
  
 
-uispToolsApiRequestHandler.bindRoutes(routes);
+uispToolsApiRequestHandler.bindRoutes({"express": app});
 
 
 
@@ -608,13 +608,7 @@ routes.get('/' + urlPrefix + 'plugins/*', function (req, res) {
     handlePluginPublicFileRequest(req, res);
 });
 
-routes.get('/*', function (req, res) {
-    handlePublicFileRequest(req, res);
-});
 
-routes.get('/' + urlPrefix + '*', function (req, res) {
-    handlePublicFileRequest(req, res);
-});
 
 
 app.use('/', pluginRoutes);
@@ -624,8 +618,17 @@ app.use('/', pluginRoutes);
 app.use('/', routes);
 
 
+routes.get('/*', function (req, res, next) {
+    
+    handlePublicFileRequest(req, res,next);
+    
+});
 
-
+if(urlPrefix !== ""){
+    routes.get('/' + urlPrefix + '*', function (req, res) {
+        handlePublicFileRequest(req, res);
+    });
+}
 
 
 var io = null;

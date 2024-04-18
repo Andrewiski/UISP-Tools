@@ -500,7 +500,15 @@ var UispToolsApiHandler = function (options) {
                 projections : { linkText: 1, linkUrl: 1, linkTarget: 1, pageContentGuid: 1, roleId: 1, contentType: 1, parentPageContentGuid: 1} ,               
                 sort: [['displayOrder', 1 ]['parentPageContentGuid', 1 ]]
             };
-
+            if(options.find){
+                fetchOptions.find = options.find;
+            }
+            if(options.projections){
+                fetchOptions.projections = options.projections;
+            }
+            if(options.sort){
+                fetchOptions.sort = options.sort;
+            }
             if(options.menuGuid){
                 fetchOptions.find.menuGuid = options.menuGuid;
             }

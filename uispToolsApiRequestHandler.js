@@ -2,7 +2,7 @@
 const appName = "uispToolsApiRequestHandler";
 const extend = require('extend');
 const Defer = require('node-promise').defer;
-
+const express = require('express');
 
 var moment = require('moment');
 
@@ -16,7 +16,8 @@ var UispToolsApiRequestHandler = function (options) {
         logUtilHelper:null,
         uispToolsApiHandler: null,
         urlPrefix: "",
-        allowDirectUispQuerys: false
+        allowDirectUispQuerys: false,
+        routes: null
     };
     
     self.options = extend({}, defaultOptions, options);
@@ -50,9 +51,12 @@ var UispToolsApiRequestHandler = function (options) {
 
     
 
-    var BindRoutes = function (routes) {
+    var BindRoutes = function (options) {
         
         try {
+            self.options.app = options.express
+            self.options.routes = express.Router();
+            let routes = self.options.routes;
             
             routes.get('/' + self.options.urlPrefix + 'api/PageContent/MenuItems', getMenuItems);
             routes.get('/' + self.options.urlPrefix + 'api/PageContent/PageContentGuid/:guid', getPageByPageContentGuid);
@@ -90,13 +94,49 @@ var UispToolsApiRequestHandler = function (options) {
                 routes.delete('/' + self.options.urlPrefix + 'api/crm/*', getCRMData);
                 routes.delete('/' + self.options.urlPrefix + 'api/nms/*', getNMSData);
             }
+            self.options.app.use('/', routes);
+            
         } catch (ex) {
            debug("error", ex.msg, ex.stack);
         }
         
     }
 
-    
+    var checkForRedirect = function (req, res, next) {
+        try {
+            let fetchOptions = {
+                find: { deleted: false, contentType: { $eq: "redirect" }, linkUrl: req.path},
+                projections : { linkUrl: 1, contentType: 1, content: 1},               
+                sort: [['displayOrder', 1 ]['parentPageContentGuid', 1 ]]
+            }
+            self.options.uispToolsApiHandler.getMenuItems(fetchOptions).then(
+                function (menuItems) {                    
+                        for (let i = 0; i < menuItems.length; i++) {
+                            var menuItem = menuItems[i];
+                            res.redirect(menuItem.content);
+                            return true;                                
+                        }
+                        if(next !== undefined || next !== null){
+                            next();
+                        }
+                        return false;
+                },
+                function (error) {
+                    debug("error", "BindRoutes getMenuItems", error);
+                    if(next !== undefined || next !== null){
+                        next();
+                    }
+                    return false;
+                }
+            );
+        } catch (ex) {
+            debug("error", "checkForRedirect", { "msg": ex.message, "stack": ex.stack });
+            if(next !== undefined || next !== null){
+                next();
+            }
+            return false;
+        }
+    }
 
     var getAnonymousClientSideSettings = function(req, res, next){
         try {
@@ -617,8 +657,8 @@ var getMenuItems = function (req, res, next) {
     try {
         let options = {}
         self.options.uispToolsApiHandler.getMenuItems(options).then(
-            function (docs) {
-                res.json(docs);
+            function (menuItems) {
+                res.json(menuItems);
             },
             function(err){
                 handleHttpRequestError(req, res, err);
@@ -674,6 +714,7 @@ var getMenuItems = function (req, res, next) {
     self.checkSuperAdminApiAccess = checkSuperAdminApiAccess;
     self.nmsApiQuery = nmsApiQuery;
     self.crmApiQuery = crmApiQuery;
+    self.checkForRedirect = checkForRedirect;
 
 };
 module.exports = UispToolsApiRequestHandler;
