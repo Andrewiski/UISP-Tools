@@ -116,14 +116,14 @@ var UispToolsApiRequestHandler = function (options) {
                             res.redirect(menuItem.content);
                             return true;                                
                         }
-                        if(next !== undefined || next !== null){
+                        if(next !== undefined && next !== null){
                             next();
                         }
                         return false;
                 },
                 function (error) {
                     debug("error", "BindRoutes getMenuItems", error);
-                    if(next !== undefined || next !== null){
+                    if(next !== undefined && next !== null){
                         next();
                     }
                     return false;
@@ -131,7 +131,7 @@ var UispToolsApiRequestHandler = function (options) {
             );
         } catch (ex) {
             debug("error", "checkForRedirect", { "msg": ex.message, "stack": ex.stack });
-            if(next !== undefined || next !== null){
+            if(next !== undefined && next !== null){
                 next();
             }
             return false;

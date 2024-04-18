@@ -70,7 +70,7 @@
             init(){
                 //this is called to start the widget in motion
                 $.logToConsole("INFO: widget " + this.widgetFactory.namespace + " " + this.widgetname + " init");  
-                return new Promise((resolve, reject) => {
+                return new Promise( (resolve, reject) => {
                    resolve();
                 });                 
             }

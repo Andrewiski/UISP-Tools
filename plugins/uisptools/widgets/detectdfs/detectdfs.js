@@ -17,7 +17,7 @@
     class detectdfs extends baseClientSide.widget
      {
         
-        self = null;
+        
         
         loadTemplate(){
             return new Promise((resolve, reject) => {
@@ -29,11 +29,11 @@
                         url:  url,
                         dataType: 'html'
                     }).then(
-                        function (widgetHtml) {
+                        (widgetHtml)  => {
                             $element.html(widgetHtml);
                             resolve();
                         },
-                        function (err) {
+                         (err)  => {
                             $.logToConsole("Error: uisptools.loadWidget.onLoad.getWidgetHtml failed " + err);
                             reject(err);
                         }
@@ -47,11 +47,21 @@
         }
 
         fetchApDevices(){
-            return $.uisptools.ajax("/uisptools/api/nms/devices?role=ap");
+            return new Promise((resolve, reject) => {
+                $.uisptools.ajax(this.getBaseUrlPath() + "/uisptools/api/nms/devices?role=ap").then(
+                    (results) => {resolve(results)},
+                    (err)  => {reject(err)}                       
+                );
+            })
             
         }
         fetchDevice(options){
-            return $.uisptools.ajax("/uisptools/api/nms/devices/" + options.deviceId);
+            return new Promise((resolve, reject) => {
+                $.uisptools.ajax(this.getBaseUrlPath() + "/uisptools/api/nms/devices/" + options.deviceId).then(
+                    (results) => {resolve(results)},
+                    (err)  => {reject(err)}                       
+                );
+            })
         }
 
         
@@ -94,8 +104,8 @@
                 
                 switch(deviceType){
                     case "airmax":
-                        Promise.all([self.fetchDeviceAirMax(device), self.fetchDeviceAirMaxWirelessConfig(device)]).then(
-                            function(results){
+                        Promise.all([this.fetchDeviceAirMax(device), this.fetchDeviceAirMaxWirelessConfig(device)]).then(
+                            (results)  => {
                                 let airmax, airmaxConfigWireless;
                                 airmax = results[0];
                                 airmaxConfigWireless = results[1];
@@ -107,14 +117,14 @@
                                
                                 resolve(device.deviceConfig);
                             },
-                            function(err){
+                            (err)  => {
                                 resolve(null);
                             }
                         )
                         break;
                         case "aircube":
-                            Promise.all([self.fetchDeviceAirCube(device), self.fetchDeviceAirCubeWirelessConfig(device)]).then(
-                                function(results){
+                            Promise.all([this.fetchDeviceAirCube(device), this.fetchDeviceAirCubeWirelessConfig(device)]).then(
+                                (results)  => {
                                     let aircube, aircubeConfigWireless;
                                     aircube = results[0];
                                     aircubeConfigWireless = results[1];
@@ -126,7 +136,7 @@
                                    
                                     resolve(device.deviceConfig);
                                 },
-                                function(err){
+                                (err)  => {
                                     resolve(null);
                                 }
                             )
@@ -144,7 +154,12 @@
                 deviceId=device.identification.id;
             }
             if(deviceId){
-                return $.uisptools.ajax(this.getUrl("api/nms/devices/airos/" + deviceId + "/configuration"),{showErrorDialog:false});
+                return new Promise((resolve, reject) => {
+                    $.uisptools.ajax(this.getBaseUrlPath() + "/uisptools/api/nms/devices/airos/" + deviceId + "/configuration",{showErrorDialog:false}).then(
+                        (results) => {resolve(results)},
+                        (err)  => {reject(err)}                       
+                    );
+                })
             }else{
                 return Promise.resolve(null);
             }
@@ -156,7 +171,12 @@
                 deviceId=device.identification.id;
             }
             if(deviceId){
-                return $.uisptools.ajax(this.getUrl("api/nms/devices/airmaxes/" + deviceId + "/config/wireless"),{showErrorDialog:false});
+                return new Promise((resolve, reject) => {
+                    $.uisptools.ajax(this.getBaseUrlPath() + "/uisptools/api/nms/devices/airmaxes/" + deviceId + "/config/wireless",{showErrorDialog:false}).then(
+                        (results) => {resolve(results)},
+                        (err)  => {reject(err)}                       
+                    );
+                })
             }else{
                 return Promise.resolve(null);
             }
@@ -168,7 +188,12 @@
                 deviceId=device.identification.id;
             }
             if(deviceId){
-                return $.uisptools.ajax(this.getUrl("api/nms/devices/airmaxes/" + deviceId), {showErrorDialog:false});
+                return new Promise((resolve, reject) => {
+                    $.uisptools.ajax(this.getBaseUrlPath() + "/uisptools/api/nms/devices/airmaxes/" + deviceId, {showErrorDialog:false}).then(
+                        (results) => {resolve(results)},
+                        (err)  => {reject(err)}                       
+                    );
+                })
             }else{
                 return Promise.resolve(null);
             }
@@ -180,7 +205,12 @@
                 deviceId=device.identification.id;
             }
             if(deviceId){
-                return $.uisptools.ajax(this.getUrl("api/nms/devices/aircubes/" + deviceId + "/config/wireless"),{showErrorDialog:false});
+                return new Promise((resolve, reject) => {
+                    $.uisptools.ajax(this.getBaseUrlPath() + "/uisptools/api/nms/devices/aircubes/" + deviceId + "/config/wireless",{showErrorDialog:false}).then(
+                        (results) => {resolve(results)},
+                        (err)  => {reject(err)}                       
+                    );
+                })
             }else{
                 return Promise.resolve(null);
             }
@@ -192,7 +222,12 @@
                 deviceId=device.identification.id;
             }
             if(deviceId){
-                return $.uisptools.ajax(this.getUrl("api/nms/devices/aircubes/" + deviceId), {showErrorDialog:false});
+                return new Promise((resolve, reject) => {
+                    $.uisptools.ajax(this.getBaseUrlPath() + "/uisptools/api/nms/devices/aircubes/" + deviceId, {showErrorDialog:false}).then(
+                        (results) => {resolve(results)},
+                        (err)  => {reject(err)}                       
+                    );
+                })
             }else{
                 return Promise.resolve(null);
             }
@@ -210,13 +245,16 @@
                 var device = options.device;
                 
                 var $deviceItem = options.$deviceItem
-                self.updateDeviceStatus($deviceItem, "refresh");
-                self.fetchDeviceConfiguration(device).then(
-                    function(deviceConfig){
-                        self.updateDeviceItem(options);
+                this.updateDeviceStatus($deviceItem, "refresh");
+                this.fetchDeviceConfiguration(device).then(
+                    (deviceConfig) => {
+                        this.updateDeviceItem(options);
                         resolve(options);
                     },
-                    function(err){
+                    (err)  => {
+                        if(console.error){
+                            console.error(err);
+                        }
                         resolve(options);
                     }
                 );
@@ -233,20 +271,22 @@
             //<i class="fa-solid fa-arrow-rotate-right"></i>
             let $deviceItem = $(evt.currentTarget).parents(".deviceListItem");
             let deviceId = $deviceItem.attr("data-deviceId");
-            self.updateDeviceStatus($deviceItem, "refresh");
-            self.fetchDevice({deviceId:deviceId}).then(
-                function(device){
-                    self.updateDeviceItem({device:device, $deviceItem:$deviceItem})
+            this.updateDeviceStatus($deviceItem, "refresh");
+            this.fetchDevice({deviceId:deviceId}).then(
+                (device)  => {
+                    this.updateDeviceItem({device:device, $deviceItem:$deviceItem})
                     //let device = {identification: {id:deviceId}};
-                    self.fetchDeviceConfigurationUpdateDisplay({device:device, $deviceItem:$deviceItem}).then(
-                        function(options){
+                    this.fetchDeviceConfigurationUpdateDisplay({device:device, $deviceItem:$deviceItem}).then(
+                        (options)  => {
                             //$deviceItem.addClass("table-success"); 
-                            self.updateDeviceStatus($deviceItem, "ok");     
+                            this.updateDeviceStatus($deviceItem, "ok");     
                         }
                     )
                 },
-                function(ex){
-
+                (err)  => {
+                    if(console.error){
+                        console.error(err);
+                    }
                 }
             )
         }
@@ -255,12 +295,10 @@
             
             let $deviceItem = $(evt.currentTarget).parents(".deviceListItem");
             let deviceId = $deviceItem.attr("data-deviceId");
-            
-            
-            let url = this.getUrl('api/nms/devices/' + deviceId +  '/restart');
+            let url = this.getBaseUrlPath() + '/uisptools/api/nms/devices/' + deviceId +  '/restart';
             let notifyToast;
             $.uisptools.ajax(url, {method:"POST"}).then(
-                function(result){
+                (result)  => {
                      
                     if(result.result === true){
                         notifyToast = $.uisptools.notify({title:"Device Reset Success", body:'<span>Device has been sent a reset</span>', type:"success"});
@@ -275,7 +313,10 @@
                         
                     }
                 },
-                function(err){
+                (err) => {
+                    if(console.error){
+                        console.error(err);
+                    }
                     $.uisptools.notify({title:"Device Reset Error", body:'<span>Device failed to reset</span></br>' + err, type:"danger"}).then(
                         function(toast){
                             notifyToast = toast;
@@ -296,9 +337,9 @@
             if(subnetPosition > 0 ){
                 deviceIp = deviceIp.substring(0, subnetPosition);
             }
-            let url = this.getUrl('api/nms/devices/' + deviceId +  '/iplink/redirect');
+            let url = this.getBaseUrlPath() + 'api/nms/devices/' + deviceId +  '/iplink/redirect';
             $.uisptools.ajax(url, {method:"POST"}).then(
-                function(result){
+                (result)  =>{
                     //https://10.100.28.2/ticket.cgi?ticketid=a33e6abf434859a349e0699cb701e692
                     let httpsPort = "";
                     if(result.httpsPort && result.httpsPort !== 443){
@@ -306,7 +347,7 @@
                     }
                     window.open("https://" + deviceIp + httpsPort + "/ticket.cgi?ticketid=" + result.token, "_blank");
                 },
-                function(err){
+                (err)  => {
                     window.open("https://" + deviceIp, "_blank");
                 }
             )
@@ -375,12 +416,12 @@
             }
             
             if(device.overview && device.overview.status === "active"){
-                self.updateDeviceStatus($deviceItem, "ok");
+                this.updateDeviceStatus($deviceItem, "ok");
                 $deviceItem.removeClass("table-danger");
             }else{
                 if(device.overview && device.overview.status){
                     
-                    self.updateDeviceStatus($deviceItem, "offline");
+                    this.updateDeviceStatus($deviceItem, "offline");
                     
                 }
                 $deviceItem.addClass("table-danger");
@@ -402,20 +443,23 @@
                         if(device.deviceConfig.airmax && device.deviceConfig.airmax.airmax && device.deviceConfig.airmax.airmax.frequency){
                             currentFrequency = device.deviceConfig.airmax.airmax.frequency;
                         }
-                        if(device.deviceConfig.airmaxConfigWireless && device.deviceConfig.airmaxConfigWireless.controlFrequency ){
-                            configFrequency = device.deviceConfig.airmaxConfigWireless.controlFrequency;
+                        // if(device.deviceConfig.airmaxConfigWireless && device.deviceConfig.airmaxConfigWireless.controlFrequency ){
+                        //     configFrequency = device.deviceConfig.airmaxConfigWireless.controlFrequency;
+                        // }
+                        if(device.deviceConfig.airmaxConfigWireless && device.deviceConfig.airmaxConfigWireless.centerFrequency ){
+                            configFrequency = device.deviceConfig.airmaxConfigWireless.centerFrequency;
                         }
                     case "airCube":
                         if(device.deviceConfig.aircube
                             && device.deviceConfig.aircube.aircube 
                             && device.deviceConfig.aircube.aircube.wifi5Ghz
                             && device.deviceConfig.aircube.aircube.wifi5Ghz.channel){
-                                currentFrequency = self.wifi5GhzChannelToFrequency(device.deviceConfig.aircube.aircube.wifi5Ghz.channel);
+                                currentFrequency = this.wifi5GhzChannelToFrequency(device.deviceConfig.aircube.aircube.wifi5Ghz.channel);
                         }
                         if(device.deviceConfig.aircubeConfigWireless 
                             && device.deviceConfig.aircubeConfigWireless.wifi5Ghz 
                             && device.deviceConfig.aircubeConfigWireless.wifi5Ghz.channel){
-                                configFrequency = self.wifi5GhzChannelToFrequency(device.deviceConfig.aircubeConfigWireless.wifi5Ghz.channel);
+                                configFrequency = this.wifi5GhzChannelToFrequency(device.deviceConfig.aircubeConfigWireless.wifi5Ghz.channel);
                         }
                 }
                 
@@ -444,64 +488,68 @@
 
         bindDevices(devices){
             
-            let $element = $(self.element);
+            let $element = $(this.element);
             let $deviceList = $element.find(".deviceList").empty();
             let $deviceItemTemplate = $element.find(".templates").find(".deviceListTemplate").find(".deviceListItem");
             for(var i = 0; i < devices.length; i++){
-           
-                
                 let device = devices[i];
                 if(device.identification.type !== "airCube"){
                     let $deviceItem = $deviceItemTemplate.clone();
-                    self.updateDeviceItem({device:device, $deviceItem: $deviceItem});
+                    this.updateDeviceItem({device:device, $deviceItem: $deviceItem});
                     $deviceList.append($deviceItem);
                     if(device.overview && device.overview.status === "active"){
-                        self.fetchDeviceConfigurationUpdateDisplay({device:device, $deviceItem:$deviceItem}).then(
-                            function(options){
+                        this.fetchDeviceConfigurationUpdateDisplay({device:device, $deviceItem:$deviceItem}).then(
+                            (options) => {
                                 
                                 //$deviceItem.addClass("table-success"); 
-                                self.updateDeviceStatus($deviceItem, "ok");     
+                                this.updateDeviceStatus($deviceItem, "ok");     
                             }
                         )
                     }
                 }
             }
            
-            $deviceList.find(".btnDeviceOpen").on("click",this.onDeviceOpenClick)
-            $deviceList.find(".btnDeviceRestart").on("click", this.onDeviceRestartClick)
-            $deviceList.find(".btnDeviceRefresh").on("click", this.onDeviceRefreshClick)
+            $deviceList.find(".btnDeviceOpen").on("click", (evt) => {
+                this.onDeviceOpenClick(evt);
+            })
+            $deviceList.find(".btnDeviceRestart").on("click", (evt) => {
+                 this.onDeviceRestartClick(evt)
+            })
+            $deviceList.find(".btnDeviceRefresh").on("click", (evt) => {
+                this.onDeviceRefreshClick(evt)
+            })
             
         }
 
         bind(){
             return new Promise((resolve, reject) => {
-                Promise.all([self.fetchApDevices()]).then(
-                    function(results){
+                Promise.all([this.fetchApDevices()]).then(
+                    (results) =>{
                         let devices = results[0];
-                        self.bindDevices(devices);
-                        
-                        
+                        this.bindDevices(devices); 
                     }
                 )
             });
         }
 
         init(){
-            self = this;
+            
             return new Promise((resolve, reject) => {
-                self.loadTemplate().then(
-                    function(){
-                        self.bind().then(
-                            function(){
+                
+                this.loadTemplate().then(
+                    () => {
+                        
+                        this.bind().then(
+                            () => {
                                 resolve();
                             },
-                            function(err){
+                            (err) => {
                                 reject(err)
                             }
 
                         );
                     },
-                    function(err){
+                    (err) =>{
                         reject(err)
                     } 
                 )
