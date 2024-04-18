@@ -1,6 +1,6 @@
 {
   "name": "uisp-tools",
-  "version": "0.0.29",
+  "version": "0.0.30",
   "description": "Tools for UISP",
   "main": "server.js",
   "license": "GPL-3.0-or-later",
