@@ -2,12 +2,12 @@
 
 UISP-Tools is an open-source node server that extend the functionality of [UISP](https://uisp.ui.com/). 
 This Node.js application runs in a seperate docker instance that will interface to your instance of UISP using an Application Key using the UISP API's. 
-CRM [Read more](https://ucrm.docs.apiary.io/#). 
-NMS [Read more](https://<your-uisp-hostname>/nms/api-docs/).
+CRM [API docs](https://ucrm.docs.apiary.io/#). 
+NMS [API docs](https://unms.docs.apiary.io/#).
 
 UISP-Tools is compatible with UCRM 2.10.0+
 
-**There are now two install methods, the first one is the easiest and will work with a Cloud Hosted and Self Hosted, the second method only will Self Hosted but becasue it runs with Docker inside of UISP; it will be able to access the UISP Postgres Directly**
+**There are now two install methods, the [first one](#method-one) is the easiest and will work with a Cloud Hosted and Self Hosted, the [second method](#method-two) only will Self Hosted but becasue it runs with Docker inside of UISP; it will be able to access the UISP Postgres Directly**
 
 ## Method One
 
