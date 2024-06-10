@@ -4,6 +4,7 @@ const extend = require('extend');
 const Defer = require('node-promise').defer;
 const http = require('http');
 const https = require('https');
+const { type } = require('os');
 var MongoClient = require('mongodb').MongoClient;
 
 //const crypto = require('crypto');
@@ -107,7 +108,15 @@ var UispToolsApiHandler = function (options) {
                     var error = null;
                     try {
                         if (res.statusCode === 200) {
-                            retval = JSON.parse(data); 
+                            if(res.headers["content-type"] === "application/json" || res.headers["content-type"] === "application/json; charset=utf-8" || options.forceJsonParse === true){
+                                retval = JSON.parse(data); 
+                            }else{
+                                if(options.forceNonJsonResposneToJson === true){
+                                    retval = {"response" : data};
+                                }else{
+                                    retval = data;
+                                }
+                            }
                             if (options.injectCookies) {
                                 retval.cookies = res.cookies;
                             }

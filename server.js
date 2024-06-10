@@ -5,6 +5,7 @@ const https = require('https');
 const path = require('path');
 const extend = require('extend');
 const express = require('express');
+var bodyParser = require('body-parser')
 const favicon = require('serve-favicon');
 const cookieParser = require('cookie-parser');
 const polyfillLibrary = require('polyfill-library');
@@ -333,7 +334,10 @@ function checkUser(username, password, ipAddress, resetLoginFailedIfSuccess) {
 }
 
 app.use(basicAuth);
-
+// parse application/x-www-form-urlencoded
+//app.use(bodyParser.urlencoded({ extended: false }))
+// parse application/json
+app.use(bodyParser.json())
 //This function will get called on every request and if useHttpsClientCertAuth is turned on only allow request with a client cert
 app.use(function (req, res, next) {
     var connInfo = getConnectionInfo(req);

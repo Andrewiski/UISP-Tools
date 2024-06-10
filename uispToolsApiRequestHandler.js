@@ -352,7 +352,8 @@ var UispToolsApiRequestHandler = function (options) {
                 url:options.url,  //figure this out from request 
                 rejectUnauthorized: options.rejectUnauthorized || true, 
                 nmsAuthToken:options.accessToken.loginData.nmsLoginData["x-auth-token"],
-                method : options.method
+                method : options.method,
+                data:options.data
             }
             self.options.uispToolsApiHandler.handleUnmsRequest(unmsOptions).then(
                 function(data){

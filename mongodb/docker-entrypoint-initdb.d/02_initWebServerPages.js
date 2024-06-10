@@ -97,7 +97,7 @@ db.ut_PageContent.insert(
     },
 
     {
-        "content" : "uisptools.detectdfs.widgets.detectdfs",
+        "content" : "uisptools.widgets.detectdfs",
         "contentType": "plugin.widget",
         "createdBy" : "adevries",
         "createdDate" : "2015-01-01T00:00:00+00:00",
@@ -121,7 +121,7 @@ db.ut_PageContent.insert(
     },
 
     {
-        "content" : "uisptools.fccfabricdata.widgets.fccfabricdata",
+        "content" : "uisptools.widgets.fccfabricdata",
         "contentType": "plugin.widget",
         "createdBy" : "adevries",
         "createdDate" : "2015-01-01T00:00:00+00:00",
@@ -145,7 +145,7 @@ db.ut_PageContent.insert(
     },
 
     {
-        "content" : "uisptools.testing.testapicalls.widgets.testapicalls",
+        "content" : "uisptools.widgets.testapicalls",
         "contentType": "plugin.widget",
         "createdBy" : "adevries",
         "createdDate" : "2015-01-01T00:00:00+00:00",
@@ -234,6 +234,30 @@ db.ut_PageContent.insert(
         "pageKeywords" : "",
         "pageName" : "AP Map",
         "pageTitle" : "AP Map",
+        "parentPageContentGuid" : null,
+        "roleId" : "admin",
+        "updatedBy" : "adevries",
+        "updatedDate" : "2022-01-01T00:00:00+00:00"
+    },
+
+    {
+        "content" : "uisptools.widgets.migratesite",
+        "contentType": "plugin.widget",
+        "createdBy" : "adevries",
+        "createdDate" : "2024-01-01T00:00:00+00:00",
+        "deleted" : false,
+        "displayOrder" : 106,
+        "extendedData" : null,
+        "linkMenuDisplay" : true,
+        "linkStatus" : 1,
+        "linkTarget" : "_self",
+        "linkText" : "Migrate Site",
+        "linkUrl" : "/uisptools/migratesite",
+        "pageContentGuid" : "cb5570e9-8f5d-3557-f146-f4a03629afcd",
+        "pageDescription" : "Migrate Site",
+        "pageKeywords" : "",
+        "pageName" : "Migrate Site",
+        "pageTitle" : "Migrate Site",
         "parentPageContentGuid" : null,
         "roleId" : "admin",
         "updatedBy" : "adevries",

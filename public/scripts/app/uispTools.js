@@ -459,7 +459,7 @@
                             $toast.addClass("bg-success");
                             break;
                         case "danger":
-                            $toast.addClass("bg-success");
+                            $toast.addClass("bg-danger");
                             break;
                         case "info":
                             $toast.addClass("bg-info");

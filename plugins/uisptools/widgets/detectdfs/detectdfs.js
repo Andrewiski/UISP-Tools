@@ -390,7 +390,7 @@
             $deviceItem.find(".deviceModel").text(device.identification.model);
             $deviceItem.find(".deviceIpAddress").text(device.ipAddress);
             $deviceItem.find(".deviceType").text(device.identification.type);
-            if(device.attributes.ssid){
+            if(device.attributes && device.attributes.ssid){
                 $deviceItem.find(".deviceLinkName").text(device.attributes.ssid);
             }else{
                 $deviceItem.find(".deviceLinkName").text("");

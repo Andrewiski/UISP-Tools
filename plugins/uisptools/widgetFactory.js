@@ -6,6 +6,7 @@ import {detectdfs} from "./widgets/detectdfs/detectdfs.js"
 import {testapicalls} from "./widgets/testapicalls/testapicalls.js"
 import {fccfabricdata} from "./widgets/fccfabricdata/fccfabricdata.js"
 import {contenteditor} from "./widgets/contenteditor/contenteditor.js"
+import {migratesite} from "./widgets/migratesite/migratesite.js"
 class widgetFactory extends baseClientSide.widgetFactory
     {
         init(){
@@ -47,6 +48,11 @@ class widgetFactory extends baseClientSide.widgetFactory
                         widget = new testapicalls(this, widgetName, element,options);
                         resolve(widget);
                         break;
+                    case "migratesite":
+                        //constructor(widgetFactory, widgetname, element, options) 
+                        widget = new migratesite(this, widgetName, element,options);
+                        resolve(widget);
+                        break;
                     }
                 }
             );
@@ -62,4 +68,5 @@ class widgetFactory extends baseClientSide.widgetFactory
     export {fccfabricdata}
     export {testapicalls}
     export {contenteditor}
+    export {migratesite}
     export default widgetFactory
