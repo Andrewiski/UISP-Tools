@@ -341,7 +341,7 @@ app.use(bodyParser.json())
 //This function will get called on every request and if useHttpsClientCertAuth is turned on only allow request with a client cert
 app.use(function (req, res, next) {
     var connInfo = getConnectionInfo(req);
-    logUtilHelper.log(appLogName, "browser", 'debug',  "path:" + req.path + ", ip:" + connInfo.ip + ", port:" + connInfo.port + ", ua:" + connInfo.ua);
+    logUtilHelper.log(appLogName, "browser", 'debug',  "path:" + req.path + ", ip:" + connInfo.ip + ", port:" + connInfo.port + ", ua:" + connInfo.ua, req.query);
     next();
     return;
 })
@@ -581,6 +581,7 @@ for (let index = 0; index < objOptions.plugins.length; index++) {
                         logUtilHelper.log(appLogName, "app", "error", "plugin serverSide import failed", pluginName, serverSideJSPath, "Unable to load module by name or default" )
                     }
                     if(plugin){
+                        //plugin.init.apply(plugin).then(
                         plugin.init().then(
                             function(){
                                 try{

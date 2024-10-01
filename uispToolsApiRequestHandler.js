@@ -656,7 +656,7 @@ var handleHttpRequestError = function (req, res, err, debugData) {
 
 var getMenuItems = function (req, res, next) {
     try {
-        let options = {}
+        let options = {sort: [['displayOrder', 1 ],['parentPageContentGuid', 1 ]]};
         self.options.uispToolsApiHandler.getMenuItems(options).then(
             function (menuItems) {
                 res.json(menuItems);
@@ -716,6 +716,7 @@ var getMenuItems = function (req, res, next) {
     self.nmsApiQuery = nmsApiQuery;
     self.crmApiQuery = crmApiQuery;
     self.checkForRedirect = checkForRedirect;
+    self.uispToolsApiHandler = self.options.uispToolsApiHandler;
 
 };
 module.exports = UispToolsApiRequestHandler;

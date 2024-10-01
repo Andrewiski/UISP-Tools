@@ -1,6 +1,6 @@
 "use strict"
 import baseServerSide from "../baseServerSide.mjs";
-    
+ 
 var uisptools = {
   plugin :  class plugin extends baseServerSide.plugin
         {
@@ -10,6 +10,7 @@ var uisptools = {
                     //this is where if I needed to excute some one time code would go
                     super.init().then(
                         function(){
+
                             resolve();
                         },
                         function(err){
@@ -26,6 +27,10 @@ var uisptools = {
                 try {
                     super.bindRoutes(router);
                     //Any Routes above this line are not Checked for Auth and are Public
+                   
+                    //router.get('/' + this.uispToolsApiRequestHandler.options.urlPrefix + 'uisptools/api/twilio/callFlow', this.twilioCallFlow.bind(this));
+                    //router.get('/' + this.uispToolsApiRequestHandler.options.urlPrefix + 'uisptools/api/twilio/messageFlow', this.twilioMessageFlow.bind(this));
+
                     router.get('/' + this.uispToolsApiRequestHandler.options.urlPrefix + 'uisptools/api/*', this.checkApiAccess.bind(this));
                     router.post('/' + this.uispToolsApiRequestHandler.options.urlPrefix + 'uisptools/api/*', this.checkApiAccess.bind(this));
                     router.get('/' + this.uispToolsApiRequestHandler.options.urlPrefix + 'uisptools/api/getMenuItems', this.getMenuItems.bind(this)); 

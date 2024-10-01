@@ -1,5 +1,6 @@
 "use strict";
 const appName = 'uispToolsApiHandler';
+const e = require('express');
 const extend = require('extend');
 const Defer = require('node-promise').defer;
 const http = require('http');
@@ -506,7 +507,7 @@ var UispToolsApiHandler = function (options) {
         try {
             let fetchOptions = {
                 find: { linkMenuDisplay: true, deleted: false }, 
-                projections : { linkText: 1, linkUrl: 1, linkTarget: 1, pageContentGuid: 1, roleId: 1, contentType: 1, parentPageContentGuid: 1} ,               
+                projections : { linkText: 1, linkUrl: 1, linkTarget: 1, linkType: 1, pageContentGuid: 1, roleId: 1, contentType: 1, parentPageContentGuid: 1} ,               
                 sort: [['displayOrder', 1 ]['parentPageContentGuid', 1 ]]
             };
             if(options.find){
@@ -570,60 +571,238 @@ var UispToolsApiHandler = function (options) {
 
 
     var getPluginData = function(options){
-        var deferred = Defer();
-        try {
-            const client = new MongoClient(objOptions.mongoDbServerUrl,objOptions.mongoClientOptions);
-            // Use connect method to connect to the Server
-            client.connect().then( 
-                function () {
-                    try {
-                        const db = client.db(objOptions.mongoDbDatabaseName);
-                        const collection = db.collection('ut_PluginData');
-                        var findQuery = {};
-                        if(options.pluginId){
-                            findQuery.pluginId = options.pluginId;
-                        }else if(options.pluginName) {
-                                findQuery.pluginName =  options.pluginName ;
-                        }else{
-                            throw new Error("pluginID or pluginName must be set");
+        return new Promise((resolve, reject) => {
+            try {
+                const client = new MongoClient(objOptions.mongoDbServerUrl,objOptions.mongoClientOptions);
+                // Use connect method to connect to the Server
+                client.connect().then( 
+                    function () {
+                        try {
+                            const db = client.db(objOptions.mongoDbDatabaseName);
+                            let findQuery = options.findQuery || {};
+                            let sort = options.sort || {pluginDataId:1};
+                            let projections = options.projections || {_id: 0};
+                            let findOne = options.findOne || false;
+                            let colllectionName = 'ut_PluginData';
+                            if(options.collectionName){
+                                colllectionName = 'ut_PluginData_' + options.collectionName;
+                            }else{
+                                if(options.pluginName) {
+                                    findQuery.pluginName =  options.pluginName;
+                                }else{
+                                    throw new Error("pluginName must be set");
+                                }
+                                if(options.pluginDataId){
+                                    findQuery.pluginDataId = options.pluginDataId;
+                                    findOne = true;
+                                }
+                                if(options.pluginDataType){
+                                    findQuery.pluginDataType = options.pluginDataType;
+                                }
+                            }
+                            const collection = db.collection(colllectionName);
+                            if (collection) {
+                                if(findOne){
+                                    collection.findOne(findQuery, projections).then(
+                                        function ( doc) {   
+                                            client.close();
+                                            resolve(doc);
+                                        },
+                                        function(err){
+                                            debug('error', 'getPluginData', err);
+                                            client.close();
+                                            reject(err);
+                                        }
+                                    );
+                                }else{
+
+                                    collection.find(findQuery)
+                                    .project(projections)
+                                    .sort(sort)
+                                    .toArray()
+                                    .then(
+                                            function ( docs) {   
+                                                client.close();
+                                                resolve(docs);
+                                            },
+                                            function(ex){
+                                                debug('error', 'getPluginData', ex);
+                                                reject(ex);
+                                                client.close();
+                                            }
+                                        );
+                                }
+                            } else {
+                                resolve(null);;
+                            }
+                        } catch (ex) {
+                            debug('error', 'getPluginData', ex);
+                            reject(ex);
+                            client.close();
                         }
-                        if (collection) {
-                            collection.findOne(findQuery).then(
-                                    function ( doc) {   
-                                        client.close();
-                                        deferred.resolve(doc);
-                                    },
-                                    function(ex){
-                                        debug('error', 'getPluginData', ex);
-                                        deferred.reject(ex);
-                                        client.close();
-                                    }
-                                );
-                        } else {
-                            deferred.resolve(null);;
-                        }
-                    } catch (ex) {
+                    },
+                    function(ex){
                         debug('error', 'getPluginData', ex);
-                        deferred.reject(ex);
-                        client.close();
-                    }
-                },
-                function(ex){
-                    debug('error', 'getPluginData', ex);
-                    deferred.reject(ex);
-                }    
-            );
-            
-        } catch (ex) {
-            debug('error', 'getPluginData', ex);
-            deferred.reject(ex);
-        }
-        return deferred.promise;
+                        reject(ex);
+                    }    
+                );
+                
+            } catch (ex) {
+                debug('error', 'getPluginData', ex);
+                reject(ex);
+            }
+        });
     }
 
     var getPluginUserData = function(options){
-        var deferred = Defer();
-        try {
+        return new Promise((resolve, reject) => {
+            try {
+                const client = new MongoClient(objOptions.mongoDbServerUrl,objOptions.mongoClientOptions);
+                // Use connect method to connect to the Server
+                client.connect().then( 
+                    function () {
+                        try {
+                            const db = client.db(objOptions.mongoDbDatabaseName);
+                            const collection = db.collection('ut_PluginUserData');
+                            var findQuery = options.findQuery || {};
+                            //can be passed in as a guid or as pluginName    
+                            if(options.pluginName) {
+                                findQuery.pluginName =  options.pluginName;
+                            }else{
+                                throw new Error("pluginName must be set");
+                            }
+                            if(options.userId){
+                                findQuery.userId =  options.userId;
+                            }else{
+                                throw new Error("userId must be set");
+                            }
+                            if(options.pluginDataId){
+                                findQuery.pluginDataId = options.pluginDataId;
+                            }
+                            if(options.pluginDataType){
+                                findQuery.pluginDataType = options.pluginDataType;
+                            }
+                            if (collection) {
+                                collection.findOne(findQuery).then(
+                                        function ( doc) {   
+                                            client.close();
+                                            resolve(doc);
+                                        },
+                                        function(err){
+                                            debug('error', 'getPluginUserData', err);
+                                            client.close();
+                                            reject(err);
+                                            
+                                        }
+                                    );
+                            } else {
+                                return null;
+                            }
+                        } catch (ex) {
+                            debug('error', 'getPluginUserData', ex);
+                            reject(ex);
+                            client.close();
+                        }
+                    },
+                    function(err){
+                        debug('error', 'getPluginUserData', err);
+                        reject(err);
+                    }    
+                );
+            } catch (ex) {
+                debug('error', 'getPluginUserData', ex);
+                reject(ex);
+            }
+        });
+    }
+
+    var savePluginData = function(options){
+        return new Promise((resolve, reject) => {
+            try {
+                const client = new MongoClient(objOptions.mongoDbServerUrl,objOptions.mongoClientOptions);
+                // Use connect method to connect to the Server
+                client.connect().then( 
+                    function () {
+                        try {
+                            const db = client.db(objOptions.mongoDbDatabaseName);
+                            let colllectionName = 'ut_PluginData';
+                            let findQuery = options.findQuery || {};
+                            let updateMany = options.updateMany || false;
+                            let updateOptions = options.updateOptions || {upsert:true};
+                            if(options.collectionName){
+                                colllectionName = 'ut_PluginData_' + options.collectionName;
+                            }else{
+                                if(options.pluginName) {
+                                    findQuery.pluginName =  options.pluginName;
+                                }else{
+                                    throw new Error("pluginName must be set");
+                                }
+                                if(options.pluginDataId){
+                                    findQuery.pluginDataId = options.pluginDataId;
+                                }
+                                if(options.pluginDataType){
+                                    findQuery.pluginDataType = options.pluginDataType;
+                                }
+                            }
+                            const collection = db.collection(colllectionName);
+
+                            if (collection) {
+                                if(updateMany == false){
+                                    collection.updateOne(findQuery,options.pluginData, updateOptions ).then(                            
+                                        function (doc) {
+                                            client.close();
+                                        
+                                            resolve(doc);
+                                        },
+                                        function(err){
+                                            debug("error", "savePluginData", { "msg": err.message, "stack": err.stack });
+                                            client.close();
+                                            reject({ "code": 500, "msg": err.message, "error": err });
+                                        }
+                                            
+                                    );
+                                }else{
+                                    collection.updateMany(findQuery,options.pluginData, updateOptions).then(                            
+                                        function (doc) {
+                                            client.close();
+                                        
+                                            resolve(doc);
+                                        },
+                                        function(err){
+                                            debug("error", "savePluginData", { "msg": err.message, "stack": err.stack });
+                                            client.close();
+                                            reject({ "code": 500, "msg": err.message, "error": err });
+                                        }
+                                            
+                                    );
+                                }
+                            } else {
+                                debug('error', 'savePluginData', ex);
+                                reject(ex);
+                                client.close();
+                            }
+                        } catch (ex) {
+                            debug('error', 'savePluginData', ex);
+                            reject(ex);
+                            client.close();
+                        }
+                    },
+                    function(ex){
+                        debug('error', 'savePluginData', ex);
+                        reject(ex);
+                    }    
+                );
+                
+            } catch (ex) {
+                debug('error', 'getPluginData', ex);
+                reject(ex);
+            }
+        });
+    }
+
+    var savePluginUserData = function(options){
+        return new Promise((resolve, reject) => {
+            try {
                 const client = new MongoClient(objOptions.mongoDbServerUrl,objOptions.mongoClientOptions);
                 // Use connect method to connect to the Server
                 client.connect().then( 
@@ -645,38 +824,193 @@ var UispToolsApiHandler = function (options) {
                             }else{
                                 throw new Error("userId must be set");
                             }
+                            if(options.pluginUserDataId){
+                                findQuery.pluginUserDataId = options.pluginUserDataId;
+                            }
                             if (collection) {
-                                collection.findOne(findQuery).then(
-                                        function ( doc) {   
-                                            client.close();
-                                            deferred.resolve(doc);
-                                        },
-                                        function(err){
-                                            debug('error', 'getPluginUserData', err);
-                                            client.close();
-                                            deferred.reject(err);
-                                            
-                                        }
-                                    );
+                                collection.updateOne(findQuery,options.pluginUserData,{upsert:true}).then(                            
+                                    function (doc) {
+                                        client.close();
+                                       
+                                        deferred.resolve(doc);
+                                    },
+                                    function(err){
+                                        debug("error", "savePluginUserData", { "msg": err.message, "stack": err.stack });
+                                        client.close();
+                                        deferred.reject({ "code": 500, "msg": err.message, "error": err });
+                                    }
+                                        
+                                );
                             } else {
-                                return null;
+                                debug('error', 'savePluginUserData', ex);
+                                deferred.reject(ex);
+                                client.close();
                             }
                         } catch (ex) {
-                            debug('error', 'getPluginUserData', ex);
+                            debug('error', 'savePluginUserData', ex);
                             deferred.reject(ex);
                             client.close();
                         }
                     },
                     function(err){
-                        debug('error', 'getPluginUserData', err);
+                        debug('error', 'savePluginUserData', err);
                         deferred.reject(err);
                     }    
                 );
             } catch (ex) {
-                debug('error', 'getPluginUserData', ex);
+                debug('error', 'savePluginUserData', ex);
                 deferred.reject(ex);
             }
-            return deferred.promise;
+        });
+    }
+
+
+    var deletePluginData = function(options){
+        return new Promise((resolve, reject) => {
+            try {
+                const client = new MongoClient(objOptions.mongoDbServerUrl,objOptions.mongoClientOptions);
+                // Use connect method to connect to the Server
+                client.connect().then( 
+                    function () {
+                        try {
+                            const db = client.db(objOptions.mongoDbDatabaseName);
+
+                            let colllectionName = 'ut_PluginData';
+                            let findQuery = options.findQuery || {};
+                            let deleteMany = options.deleteMany || false;
+                            let deleteOptions = options.deleteOptions || {};
+                            if(options.collectionName){
+                                colllectionName = 'ut_PluginData_' + options.collectionName;
+                            }else{
+                                if(options.pluginName) {
+                                    findQuery.pluginName =  options.pluginName;
+                                }else{
+                                    throw new Error("pluginName must be set");
+                                }
+                                if(options.pluginDataId){
+                                    findQuery.pluginDataId = options.pluginDataId;
+                                }
+                                if(options.pluginDataType){
+                                    findQuery.pluginDataType = options.pluginDataType;
+                                }
+                            }
+                            const collection = db.collection(colllectionName);
+                            if (collection) {
+                                if(deleteMany == false){
+                                    collection.deleteOne(findQuery).then(                            
+                                        function (result) {
+                                            client.close();
+                                        
+                                            deferred.resolve(result);
+                                        },
+                                        function(err){
+                                            debug("error", "deletePluginData", { "msg": err.message, "stack": err.stack });
+                                            client.close();
+                                            deferred.reject({ "code": 500, "msg": err.message, "error": err });
+                                        }
+                                            
+                                    );
+                                }else{
+                                    collection.deleteMany(findQuery, deleteOptions).then(                            
+                                        function (result) {
+                                            client.close();
+                                        
+                                            deferred.resolve(result);
+                                        },
+                                        function(err){
+                                            debug("error", "deletePluginData", { "msg": err.message, "stack": err.stack });
+                                            client.close();
+                                            deferred.reject({ "code": 500, "msg": err.message, "error": err });
+                                        }
+                                            
+                                    );
+                                }
+                            } else {
+                                debug('error', 'deletePluginData', ex);
+                                deferred.reject(ex);
+                                client.close();
+                            }
+                        } catch (ex) {
+                            debug('error', 'deletePluginData', ex);
+                            deferred.reject(ex);
+                            client.close();
+                        }
+                    },
+                    function(ex){
+                        debug('error', 'deletePluginData', ex);
+                        deferred.reject(ex);
+                    }    
+                );
+                
+            } catch (ex) {
+                debug('error', 'deletePluginData', ex);
+                deferred.reject(ex);
+            }
+        });
+    }
+
+    var deletePluginUserData = function(options){
+        return new Promise((resolve, reject) => {
+            try {
+                const client = new MongoClient(objOptions.mongoDbServerUrl,objOptions.mongoClientOptions);
+                // Use connect method to connect to the Server
+                client.connect().then( 
+                    function () {
+                        try {
+                            const db = client.db(objOptions.mongoDbDatabaseName);
+                            const collection = db.collection('ut_PluginUserData');
+                            var findQuery = {};
+                            //can be passed in as a guid or as pluginName    
+                            if(options.pluginId){
+                                findQuery.pluginId = options.pluginId;
+                            }else if (options.pluginName){
+                                findQuery.pluginName = options.pluginName;
+                            }else{
+                                throw new Error("pluginId or pluginName must be set");
+                            }
+                            if(options.userId){
+                                findQuery.userId =  options.userId;
+                            }else{
+                                throw new Error("userId must be set");
+                            }
+                            if(options.pluginUserDataId){
+                                findQuery.pluginUserDataId = options.pluginUserDataId;
+                            }
+                            if (collection) {
+                                collection.deleteOne(findQuery).then(                            
+                                    function (result) {
+                                        client.close();
+                                       
+                                        deferred.resolve(result);
+                                    },
+                                    function(err){
+                                        debug("error", "savePluginUserData", { "msg": err.message, "stack": err.stack });
+                                        client.close();
+                                        deferred.reject({ "code": 500, "msg": err.message, "error": err });
+                                    }
+                                        
+                                );
+                            } else {
+                                debug('error', 'savePluginUserData', ex);
+                                deferred.reject(ex);
+                                client.close();
+                            }
+                        } catch (ex) {
+                            debug('error', 'savePluginUserData', ex);
+                            deferred.reject(ex);
+                            client.close();
+                        }
+                    },
+                    function(err){
+                        debug('error', 'savePluginUserData', err);
+                        deferred.reject(err);
+                    }    
+                );
+            } catch (ex) {
+                debug('error', 'savePluginUserData', ex);
+                deferred.reject(ex);
+            }
+        });
     }
 
     var getPageContent = function (options) {
@@ -1064,6 +1398,10 @@ var UispToolsApiHandler = function (options) {
     self.getPageContent = getPageContent;
     self.getPluginData = getPluginData;
     self.getPluginUserData = getPluginUserData;
+    self.savePluginData = savePluginData;
+    self.savePluginUserData = savePluginUserData;
+    self.deletePluginData = deletePluginData;
+    self.deletePluginUserData = deletePluginUserData;
     self.createRefreshToken = createRefreshToken;
     self.createAccessToken = createAccessToken;
     self.getRefreshToken = getRefreshToken;

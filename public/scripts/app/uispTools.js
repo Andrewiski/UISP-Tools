@@ -373,7 +373,16 @@
                         $.uisptools.displayError({error:err});
                     }
                 )
-                
+            }else if(page.contentType === "htmlfile"){
+                    $.uisptools.getHtmlFileContent({filePath: page.content}).then(
+                        function(htmlContent){
+                            $(".pageContent").html(htmlContent);
+                        },
+                        function(err){
+                            $.uisptools.displayError({error:err});
+                        }
+                    )
+                   
             }else if(page.contentType === "plugin.widget"){
                 
                 var $element = $("<div></div>")
@@ -526,7 +535,7 @@
                 templatePath = templatePath.substring(1);
             }
             //remove any attempts to double dot move up folders
-            templatePath = templatePath.replace(/../g, "")
+            templatePath = templatePath.replace(/\.\./g, "")
             var url = '/' + $.uisptools.common.settings.script.urlPrefix + 'scripts/app/templates/' + templatePath;
             $.uisptools.ajax({
                 method: 'GET',
@@ -544,6 +553,35 @@
             return deferred.promise();
         },
 
+        getHtmlFileContent: function (options) {
+            var deferred = $.Deferred();
+            let filePath = options.filePath;
+            if (filePath && filePath[0] === "/"){
+                filePath = filePath.substring(1);
+            }
+            //remove any attempts to double dot move up folders
+            filePath = filePath.replace(/\.\./g, "")
+            let url = '/'; 
+            if($.uisptools.common.settings.script.urlPrefix) {
+                url = url + $.uisptools.common.settings.script.urlPrefix + '/';
+            }  
+            url = url + filePath;
+            $.uisptools.ajax({
+                method: 'GET',
+                url:  url,
+                dataType: 'html'
+            }).then(
+                function (fileContent) {
+                    deferred.resolve(fileContent);
+                },
+                function (reason) {
+                    $.logToConsole("Error: uisptools.getHtmlFileContent failed " + reason);
+                    deferred.reject();
+                }
+            );
+            return deferred.promise();
+        },
+
         getMenuItems: function () {
             var deferred = $.Deferred();
             $.uisptools.ajax({
@@ -553,21 +591,46 @@
                 function (menuItems) {
                     $.uisptools.common.menu.menuItems = menuItems;
                     let $menuItemTemplate = $(".menuItemTemplate").find(".menuItem");
+                    let $menuItemDropdownTemplate = $(".menuItemDropdownTemplate").find(".dropdown");
                     let $menuItemsContainer = $(".menuItems");
                     $menuItemsContainer.empty();
                     $.each(menuItems, function (index, item) {
-                        if (item.roleId === undefined || item.roleId === null || item.roleId === '' || $.uisptools.isUserInRoleName(item.roleId)){
-                            let $menuItem = $menuItemTemplate.clone();
-                            if (item.contentType === "link") {
-                                $menuItem.find("a").attr("href", item.linkUrl).attr("data-id", item.pageContentGuid).text(item.linkText);
-                                if (item.linkTarget) {
-                                    $menuItem.find("a").attr("target", item.linkTarget);
+                        //Only Render Top Level Menu Items
+                        if(item.parentPageContentGuid == null){
+                        //Only show menu items that are not role specific or the user is in the role
+                            if (item.roleId === undefined || item.roleId === null || item.roleId === '' || $.uisptools.isUserInRoleName(item.roleId)){
+                                let $menuItem = null;
+                                if (item.contentType === "dropdownMenu") {
+                                    $menuItem = $menuItemDropdownTemplate.clone();
+                                    $menuItem.find(".dropdown-toggle").text(item.linkText);
+                                    let $subMenu = $menuItem.find(".dropdown-menu");
+                                    let subMenuItems = menuItems.filter((subItem) => {return subItem.parentPageContentGuid == item.pageContentGuid});
+                                    $.each(subMenuItems, function (index, subItem) {
+                                        let $subMenuItem = $menuItemTemplate.clone();
+                                        if (item.contentType === "link") {
+                                            $subMenuItem.find("a").attr("href", subItem.linkUrl).attr("data-id", subItem.pageContentGuid).text(subItem.linkText);
+                                            if (subItem.linkTarget) {
+                                                $subMenuItem.find("a").attr("target", subItem.linkTarget);
+                                            }
+                                        } else {
+                                            //.attr("href", "javascript:void(0)")
+                                            $subMenuItem.find("a").attr("data-id", subItem.pageContentGuid).text(subItem.linkText).on("click", $.uisptools.menuItemClick);
+                                        }
+                                        $subMenu.append($subMenuItem);
+                                    });
+                                } else if (item.contentType === "link") {
+                                    $menuItem = $menuItemTemplate.clone();
+                                    $menuItem.find("a").attr("href", item.linkUrl).attr("data-id", item.pageContentGuid).text(item.linkText);
+                                    if (item.linkTarget) {
+                                        $menuItem.find("a").attr("target", item.linkTarget);
+                                    }
+                                } else {
+                                    $menuItem = $menuItemTemplate.clone();
+                                    //.attr("href", "javascript:void(0)")
+                                    $menuItem.find("a").attr("data-id", item.pageContentGuid).text(item.linkText).on("click", $.uisptools.menuItemClick);
                                 }
-                            } else {
-                                //.attr("href", "javascript:void(0)")
-                                $menuItem.find("a").attr("data-id", item.pageContentGuid).text(item.linkText).on("click", $.uisptools.menuItemClick);
+                                $menuItemsContainer.append($menuItem);
                             }
-                            $menuItemsContainer.append($menuItem);
                         }
                     });
                     

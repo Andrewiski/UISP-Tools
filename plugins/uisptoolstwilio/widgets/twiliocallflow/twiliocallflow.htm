@@ -1,0 +1,398 @@
+<div>
+    <div class="container-fluid">
+        <div class="row"><h3>Call Flow Editor </h3></div>
+        
+              <div class="float-end">
+                <div class="btn-group" role="group" aria-label="Actions">
+                  
+                  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#callFlowNew">New</button>
+                  <button type="button" class="btn btn-primary" id="btnCallFlowLoad"  >Load</button>
+                  <button class="btn btn-primary" title="Save CallFlow" data-bs-toggle="modal" data-bs-target="#callFlowSave" >Save</button>
+                  <button type="button" class="btn btn-primary" id="btnCallFlowDelete"  >Delete</button>
+                  
+                </div>
+              </div>
+              
+              
+              <div class="mb-3">
+                <div id="ErrorDisplay" class="alert alert-danger hidden" role="alert">
+                </div>
+              </div>
+              
+              <div class="mb-3">
+                <div class="row">
+                  <div class="col">
+                    <label for="callFlowList" class="form-label">Callflow</label>
+                    <select id="callFlowList" class="form-select" aria-label="Select CallFlow"></select>
+                  </div>
+                </div>
+                
+              </div>
+              
+              
+              <div class="mb-3">
+                <label for="GreetingSay" class="form-label">Greeting Say</label>
+                <input type="text" class="form-control" id="GreetingSay" placeholder="Thank you for Calling. Please wait while we locate an Agent. Call may be Recorded for Training Purposes." value="">
+              </div>
+              <div class="mb-3">
+                <label for="GreetingPlay" class="form-label">Greeting Play</label>
+                <input type="text" class="form-control" id="GreetingPlay" placeholder="http://example.com/sample.mp3">
+              </div>
+      
+              <div class="mb-3">
+                <label for="HuntSay" class="form-label">Hunt Say</label>
+                <input type="text" class="form-control" id="HuntSay" placeholder="Please wait while we locate an Agent." value="">
+              </div>
+              <div class="mb-3">
+                <label for="HuntPlay" class="form-label">Hunt Play</label>
+                <input type="text" class="form-control" id="HuntPlay" placeholder="http://example.com/sample.mp3">
+              </div>
+              
+              <div class="mb-3">
+                <label class="form-label">Numbers to Call (numbers can be +15555551212 or sip:+15555551212@example.com seperated by commas)</label>
+                <div class="DialContainer">
+                </div>
+              </div>
+              
+              <div class="mb-3">
+                <div class="Voicemail">
+                  <div class="card">
+                    <div class="card-body">
+                      <label class="form-label">Voicemail</label>
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="Enable">
+                        <label class="form-check-label" for="Enable">
+                          Enable Voicemail if No Answer
+                        </label>
+                      </div>
+                      <div class="mb-3">
+                        <label for="Say" class="form-label">Say</label>
+                        <input type="text" class="form-control" id="Say" placeholder="Please Leave a Message." value="">
+                      </div>
+                      <div class="mb-3">
+                        <label for="Play" class="form-label">Play</label>
+                        <input type="text" class="form-control" id="Play" placeholder="http://example.com/sample.mp3">
+                      </div>
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="PlayBeep">
+                        <label class="form-check-label" for="PlayBeep">
+                          Voicemail PlayBeep
+                        </label>
+                      </div>
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="Transcribe">
+                        <label class="form-check-label" for="Transcribe">
+                          Voicemail Transcribe
+                        </label>
+                      </div>
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="SmsNotify">
+                        <label class="form-check-label" for="SmsNotify">
+                          Voicemail Send SMS
+                        </label>
+                      </div>
+                      <div class="mb-3">
+                        <label for="SmsNotifyNumbers" class="form-label">SMS Notify Numbers</label>
+                        <input type="text" class="form-control" id="SmsNotifyNumbers" placeholder="+15555551212">
+                      </div>
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="EmailNotify">
+                        <label class="form-check-label" for="EmailNotify">Voicemail Send Email</label>
+                      </div>
+                      <div class="mb-3">
+                        <label for="EmailNotifyAddresses" class="form-label">Email Address</label>
+                        <input type="text" class="form-control" id="EmailNotifyAddresses" placeholder="john@example.com, joe@example.com">
+                      </div>
+                      <div class="mb-3">
+                        <label for="EmailNotifyFrom" class="form-label">Email From Address</label>
+                        <input type="email" class="form-control" id="EmailNotifyFrom" placeholder="john@example.com">
+                      </div>
+                      <div class="mb-3">
+                        <label for="EmailNotifySubject" class="form-label">Email Subject</label>
+                        <input type="text" class="form-control" id="EmailNotifySubject" placeholder="Voicemail Message">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>  
+              
+              <div class="mb-3">
+                <div>
+                  <textarea id="resultJson" class="form-control" style="min-width: 100%; min-height: 300px;"></textarea>
+                </div>
+              </div>
+            </div>
+            
+            <div class="modal fade" id="confirmDelete" tabindex="-1" role="dialog" aria-labelledby="confirmDelete" aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">Confirm Delete</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                    <div class="mb-3">
+                      <h3 id="prompt"></h3>
+                      
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" id="btnDelete" class="btn btn-primary">Delete</button>
+                    <button type="button" id="btnCancel" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+      
+            <div class="modal fade" id="confirmDialog" tabindex="-1" role="dialog" aria-labelledby="confirmDialog" aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">Confirm</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                    <div class="mb-3">
+                      <h3 id="prompt"></h3>
+                      
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" id="btnConfirm" class="btn btn-primary">Confirm</button>
+                    <button type="button" id="btnCancel" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+      
+            <div class="modal fade" id="assetOpen" tabindex="-1" role="dialog" aria-labelledby="assetOpen" aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">Open Asset</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                    <label class="label">Asset Name</label>
+                    <ul class="list-group assetList" role="tablist">
+                      
+                      
+                    </ul>
+                    <div class="mb-3">
+                      <div id="assetOpenError" class="alert alert-danger hidden" style="display: none;" role="alert">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" title="Create New Asset" data-bs-target="#assetNew">New</button>
+                    <button type="button" class="btn btn-primary btnOpen">Open</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+      
+            <div class="modal fade" id="assetSave" tabindex="-1" role="dialog" aria-labelledby="assetSave" aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">Save Asset</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                    <label class="label">Asset Name</label>
+                    <ul class="list-group assetList" role="tablist">
+                      
+                      
+                    </ul>
+                    <div class="mb-3">
+                      <div id="assetSaveError" class="alert alert-danger hidden" style="display: none;" role="alert">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" title="Create New Asset" data-bs-target="#assetNew">New</button>
+                    <button type="button" class="btn btn-primary btnSaveAsset">Save</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+      
+      
+            <div class="modal fade" id="assetNew" tabindex="-1" role="dialog" aria-labelledby="assetNew" aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">New Asset</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                    <div class="mb-3">
+                      <label for="FriendlyName" class="form-label">Friendly Name</label>
+                      <input type="text" class="form-control" id="FriendlyName" placeholder="Friendly Name" value="">
+                    </div>
+                    <div class="mb-3">
+                      <label for="Path" class="form-label">Path</label>
+                      <input type="text" class="form-control" id="Path" placeholder="/DefaultFlow.json" value="/DefaultFlow.json">
+                    </div>
+                    <div class="mb-3">
+                      <div id="assetNewError" class="alert alert-danger hidden" style="display: none;" role="alert">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-primary btnCreateAsset">Create</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+      
+            
+      
+      
+            <div class="modal fade" id="serviceNew" tabindex="-1" role="dialog" aria-labelledby="serviceNew" aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">New Service</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                    <div class="mb-3">
+                      <label for="UniqueName" class="form-label">Unique Name</label>
+                      <input type="text" class="form-control" id="UniqueName" placeholder="Unique Name" value="">
+                    </div>
+                    <div class="mb-3">
+                      <label for="FriendlyName" class="form-label">Friendly Name</label>
+                      <input type="text" class="form-control" id="FriendlyName" placeholder="Friendly Name" value="">
+                    </div>
+                    <div class="mb-3 form-check">
+                      <input type="checkbox" class="form-check-input" id="UiEditable" value="" checked="checked">
+                      <label for="UiEditable" class="form-check-label">UI Editable</label>
+                    </div>
+                    <div class="mb-3">
+                      <div id="NewServiceError" class="alert alert-danger" style="display: none;" role="alert">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-primary btnCreateService">Create Service</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+      
+      
+            <div class="hidden" id="templates" style="display:none" >
+              <select class="serviceListTemplate">
+                <option selected>Open this select menu</option>
+                
+              </select>
+      
+              <ul class="assetListTemplate">
+                
+                <li class="list-group-item asset" data-name="" role="tab" aria-controls="assetTemplate">Template</li>
+              </ul>
+      
+      
+              <div class="Dial">
+                <div class="card">
+                  <div class="card-body">
+                    <div class="input-group">
+                      <label for="Numbers" class="form-label">Numbers</label>
+                      <input type="text" class="form-control" id="Numbers" placeholder="+15555551212">
+                    </div>
+                    <div class="input-group">
+                      <label for="DialTimeout" class="form-label">Answer Timeout</label>
+                      <input type="text" class="form-control" id="CallTimeout" placeholder="5">
+                      <label for="DialTimelimit" class="form-label">Call Timelimit</label>
+                      <input type="text" class="form-control" id="DialTimelimit" placeholder="3600">
+                      <label for="DialRecordTrim" class="form-label">Record Trim</label>
+                      <select type="text" class="form-control" id="DialTimelimit">
+                        <option value="trim-silence">trim-silence</option>
+                        <option value="trim-silence">do-not-trim</option>
+                      </select>
+                    </div>
+                    <div class="input-group">
+                      <div class="form-check ms-2">
+                        <input class="form-check-input" type="checkbox" value="" id="Simulring">
+                        <label class="form-check-label" for="Simulring">
+                          Simulring <i class="bi bi-question-circle" title="Ring all numbers at same time"></i>
+                        </label>
+                      </div>
+                      <div class="form-check ms-2">
+                        <input class="form-check-input" type="checkbox" value="" id="CallerIdUseCalled">
+                        <label class="form-check-label" for="CallerIdUseCalled">
+                           Caller ID Use Called <i class="bi bi-question-circle" title="Outbound Caller ID will be set to Called number to Alert Answerer that is a forwarded call"></i>
+                        </label>
+                      </div>
+                    </div>
+                    <div class="input-group">
+                      <div class="form-check ms-2">
+                        <input class="form-check-input" type="checkbox" value="" id="Record">
+                        <label class="form-check-label" for="Record">
+                          Record Call
+                        </label>
+                      </div>
+                      <div class="form-check ms-2">
+                        <input class="form-check-input" type="checkbox" value="" id="RecordSmsNotify">
+                        <label class="form-check-label" for="RecordSmsNotify">
+                          Record Send SMS <i class="bi bi-question-circle" title="Send SMS to the SMS Notify Numbers and/or Number that Answered"></i>
+                        </label>
+                      </div>
+                      <div class="form-check ms-2">
+                        <input class="form-check-input" type="checkbox" value="" id="SmsNotifyCalled">
+                        <label class="form-check-label" for="SmsNotifyCalled">
+                          Record Send SMS To Called <i class="bi bi-question-circle" title="Send SMS to the number that was called and answered this call"></i>
+                        </label>
+                      </div>
+                      
+                      <div class="form-check ms-2">
+                        <input class="form-check-input" type="checkbox" value="" id="Transcibe">
+                        <label class="form-check-label" for="Transcribe">
+                          Transcribe <i class="bi bi-question-circle" title="Transcribe Answered Call"></i>
+                        </label>
+                      </div>
+                      <div class="form-check ms-2">
+                        <input class="form-check-input" type="checkbox" value="" id="TranscibeSmsNotify">
+                        <label class="form-check-label" for="TranscribeSmsNotify">
+                          Transcribe Send SMS <i class="bi bi-question-circle" title="Send a SMS with Transcribed Message to Notify Numbers "></i>
+                        </label>
+                      </div>
+                      <div class="form-check ms-2">
+                        <input class="form-check-input" type="checkbox" value="" id="TranscibeSmsNotify">
+                        <label class="form-check-label" for="TranscribeSmsNotify">
+                          Transcribe Send SMS Called <i class="bi bi-question-circle" title="Send a SMS with Transcribed Message to Called and Answered Number "></i>
+                        </label>
+                      </div>
+                    </div>
+                    <div>
+                      <label for="SmsNotifyNumbers" class="form-label">Sms Notify Numbers</label>
+                      <input type="text" class="form-control" id="SmsNotifyNumbers" placeholder="+15555551212">
+                    </div>
+                    <div>
+                      <label for="SmsNotifyTitle" class="form-label">Sms Notify Title</label>
+                      <input type="text" class="form-control" id="SmsNotifyTitle" placeholder="Call Recorded">
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+            </div>
+    </div>
+</div>

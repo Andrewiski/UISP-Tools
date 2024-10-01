@@ -20,13 +20,13 @@ db.createCollection("ut_DeviceDetails")
 
 db.createCollection("ut_PluginData")
 
-db.ut_PluginData.createIndex( { "pluginId": 1 }, { unique: true } )
-db.ut_PluginData.createIndex( { "pluginName": 1 }, { unique: true } )
+db.ut_PluginData.createIndex( { "pluginName": 1, "pluginDataId": 1 }, { unique: true } )
+db.ut_PluginData.createIndex( { "pluginName": 1, "pluginDataType": 1 }, { unique: false } )
 
 db.createCollection("ut_PluginUserData")
 
-db.ut_PluginData.createIndex( { "pluginId": 1, "userId": 1 } , { unique: true } )
-db.ut_PluginData.createIndex( { "pluginName": 1, "userId": 1 } , { unique: true }  )
+db.ut_PluginUserData.createIndex( { "pluginName": 1, "userId": 1, "pluginDataId": 1  } , { unique: true }  )
+db.ut_PluginUserData.createIndex( { "pluginName": 1, "userId": 1, "pluginDataType": 1  } , { unique: false }  )
 
 
 
