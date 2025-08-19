@@ -40,6 +40,7 @@ var uisptools = {
                     router.post('/' + this.uispToolsApiRequestHandler.options.urlPrefix + 'uisptools/api/nms/devices/:deviceid/iplink/redirect', this.postNMSDevices.bind(this)); 
                     router.post('/' + this.uispToolsApiRequestHandler.options.urlPrefix + 'uisptools/api/nms/devices/system/unms/key', this.postNMSDevices.bind(this));
                     router.get('/' + this.uispToolsApiRequestHandler.options.urlPrefix + 'uisptools/api/nms/sites', this.getNMSSites.bind(this)); 
+                    router.get('/' + this.uispToolsApiRequestHandler.options.urlPrefix + 'uisptools/api/nms/sites/:siteId', this.getNMSSites.bind(this)); 
                     
                     //router.get('/' + this.uispToolsApiRequestHandler.options.urlPrefix + 'uisptools/api/nms/devices/airmaxes/:deviceid/config/wireless', this.getNMSDevices.bind(this)); 
                     ///airos/" + deviceId + "/configuration
@@ -50,7 +51,26 @@ var uisptools = {
             }
 
             getNMSSites(req, res){
-                let url =  'sites?type=site';
+                let url =  'sites';
+                if(req.params.siteId){
+                    url = 'sites/' + req.params.siteId; 
+                }
+                if(req.query){
+                    let queryString = "";
+                    for (const [key, value] of Object.entries(req.query)) {
+                        if(key === "_"){
+        
+                        }else{
+                            if(queryString ===""){
+                                queryString = queryString + "?";
+                            }else{
+                                queryString = queryString + "&";
+                            }
+                            queryString = queryString  + key + "=" + encodeURIComponent(value);
+                        }
+                    }
+                    url = url + queryString;
+                }
                 var options = { 
                     url: url,
                     method: 'GET',

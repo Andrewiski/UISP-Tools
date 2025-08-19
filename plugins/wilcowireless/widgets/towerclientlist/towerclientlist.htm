@@ -1,0 +1,75 @@
+<div>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-4">
+                <label for="siteList" class="form-label">Site</label>
+                <select class="form-select" aria-label="Sites" id="siteList">
+                        <option value="">Select Site</option>
+                </select>
+            </div>  
+            <div class="col-md-4">
+                <label for="siteDeviceList" class="form-label">Device</label>
+                
+                <select class="form-select" aria-label="Devices" id="siteDeviceList">
+                        <option value="">All Devices</option>
+                </select>
+                <small class="form-text text-muted">Not Working Select a device to filter clients by device</small>
+            </div>  
+            <div class="col-md-2 form-group">
+                <label for="ipFilter" class="form-label">IP Filter</label>
+                
+                <input class="form-input" aria-label="IP Filter" id="ipFilter"/>                    
+                <small class="form-text text-muted">Enter a subnet to filter clients by IP Address (e.g., 192.168.1.0/24)</small>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-primary" id="btnFetchClients"><span style="display:none" class="spinner spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>Fetch Clients</button>
+            </div>
+        </div>
+        <div class="row">
+            <div>
+                <div class="col-md-12">
+                    <table class="table table-striped">
+                        <thead>
+                          <tr>
+                            <th scope="col">STATUS</th>
+                            <th scope="col">SITE</th>
+                            <th scope="col">NAME</th>
+                            <th scope="col">EMAIL</th>
+                            <th scope="col">PHONE</th>
+                            <th scope="col">IP ADDRESS</th>
+                            <th scope="col">ACTIVE FROM</th>
+                            <th scope="col">ADDRESS</th>
+                            
+                          </tr>
+                        </thead>
+                        <tbody class="clientList">
+                          
+                        </tbody>
+                      </table>       
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="templates" style="display:hidden">
+        <div class="clientListTemplate">
+            <table>
+                <tr class="clientListItem">
+                    <td class="clientStatus">
+                        <i class="fa-solid fa-check text-success clientStatusOk" role="status" style="display:none"></i>
+                        <i class="fa-solid fa-circle-exclamation text-warning clientStatusWarning" role="status" style="display:none"></i>
+                        <i class="fa-solid fa-circle-exclamation text-danger clientStatusError" role="status" style="display:none"></i>
+                        <i class="fa-solid fa-circle-exclamation text-danger clientStatusOffline" role="status" style="display:none"></i>
+                    </td>
+                    <td class="clientSite"></td>
+                    <td class="clientName"></td>
+                    <td class="clientEmail"></td>
+                    <td class="clientPhone"></td>
+                    <td class="clientIpAddress"></td>
+                    <td class="clientActiveFrom"></td>
+                    <td class="clientAddress"></td>
+                    
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>

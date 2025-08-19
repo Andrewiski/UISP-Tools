@@ -178,6 +178,25 @@ db.ut_PageContent.insert(
     },
 
     {
+        "content" : "wilcowireless.widgets.towerclientlist",
+        "contentType": "plugin.widget",
+        "deleted" : false,
+        "displayOrder" : 112,
+        "extendedData" : null,
+        "linkMenuDisplay" : true,
+        "linkTarget" : "_self",
+        "linkText" : "Tower Client List",
+        "linkUrl" : "/wilcowireless/towerclientlist",
+        "pageContentGuid" : "ad5570c8-8f5e-4557-f146-f4a07423aaad",
+        "pageDescription" : "Tower Client List",
+        "pageKeywords" : "",
+        "pageName" : "Tower Client List",
+        "pageTitle" : "Tower Client List",
+        "parentPageContentGuid" : null,
+        "roleId" : "admin"
+    },
+
+    {
         "content" : "wilcowireless.widgets.freqmapper",
         "contentType": "plugin.widget",
         "deleted" : false,
@@ -310,6 +329,30 @@ db.ut_PageContent.insert(
         "pageTitle" : "Twilio Callflow",
         "parentPageContentGuid" : "fc5370c9-8e3e-4507-f147-f4e07523afcd",
         "roleId" : "admin"
+    },
+    {
+        "content" : "uisptools.widgets.contenteditor",
+        "contentType" : "plugin.widget",
+        "createdBy" : "adevries",
+        "createdDate" : "2024-01-01T00:00:00+00:00",
+        "deleted" : false,
+        "displayOrder" : NumberInt(18),
+        "extendedData" : null,
+        "linkMenuDisplay" : true,
+        "linkStatus" : NumberInt(1),
+        "linkTarget" : "_self",
+        "linkText" : "Content",
+        "linkUrl" : "/uisptools/contenteditor",
+        "pageContentGuid" : "ac5570e9-8f5d-3557-a146-f4d03629afcd",
+        "pageDescription" : "Migrate Site",
+        "pageKeywords" : "",
+        "pageName" : "Content Editor",
+        "pageTitle" : "Content Editor",
+        "parentPageContentGuid" : null,
+        "roleId" : "admin",
+        "updatedBy" : "adevries",
+        "updatedDate" : "2022-01-01T00:00:00+00:00"
+        
     }
 
     ]

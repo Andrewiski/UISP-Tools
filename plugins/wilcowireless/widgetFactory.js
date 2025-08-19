@@ -3,6 +3,7 @@
 
 import baseClientSide from "../baseClientSide.js";
 import {towerclients} from "./widgets/towerclients/towerclients.js"
+import {towerclientlist} from "./widgets/towerclientlist/towerclientlist.js"
 import {freqmapper} from "./widgets/freqmapper/freqmapper.js"
 
 class widgetFactory extends baseClientSide.widgetFactory
@@ -35,6 +36,11 @@ class widgetFactory extends baseClientSide.widgetFactory
                         widget = new freqmapper(this, widgetName, element,options);
                         resolve(widget);
                         break;
+                    case "towerclientlist":
+                        //constructor(widgetFactory, widgetname, element, options) 
+                        widget = new towerclientlist(this, widgetName, element,options);
+                        resolve(widget);
+                        break;
                 }
             });
         }
@@ -43,4 +49,5 @@ class widgetFactory extends baseClientSide.widgetFactory
 
     export {widgetFactory}
     export {towerclients}
+    export {towerclientlist}
     export default widgetFactory

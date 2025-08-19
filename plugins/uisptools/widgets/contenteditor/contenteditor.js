@@ -53,7 +53,15 @@
                 'textarea#tinymce-content',
                 tinymce.init({
                     selector: 'textarea#tinymce-content',
-                    plugins: 'lists link image table code help wordcount'
+                    plugins: 'lists link image table code help wordcount',
+                    toolbar: 'customInsertButton',
+                    setup: (editor) => {
+
+                        editor.ui.registry.addButton('customInsertButton', {
+                          text: 'My Button',
+                          onAction: (_) => editor.insertContent(`&nbsp;<strong>It's my button!</strong>&nbsp;`)
+                        });
+                    }
                 });
             });
         }
